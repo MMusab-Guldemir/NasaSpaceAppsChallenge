@@ -40,6 +40,7 @@ from trend.fetch import (
     POWER_VARIABLES,
     TRANSIENT_STATUS,
     DataSourceError,
+    PROCESSED_DIR,
     available_variable_keys,
     fetch_power_area,
     load_processed,
@@ -196,14 +197,20 @@ def game_page(lang: str) -> str:
     return render_game_html(lang)
 
 
+def data_files() -> tuple:
+    """Names of the cached data files. The two caches below are keyed on it, so a NASA file that
+    arrives while the app is running shows up at once instead of after the next restart."""
+    return tuple(sorted(path.name for path in PROCESSED_DIR.glob("*.csv")))
+
+
 @st.cache_data(show_spinner=False)
-def measured_somewhere() -> frozenset:
+def measured_somewhere(files: tuple) -> frozenset:
     """Measurements with a cached file in at least one prepared region (others are not shown)."""
     return frozenset(key for region_key in REGIONS for key in available_variable_keys(region_key))
 
 
 @st.cache_data(show_spinner=False)
-def world_board() -> dict:
+def world_board(files: tuple) -> dict:
     """Verdicts for every prepared region and measurement (full records), for the World board."""
     return world_cells(load_monthly)
 
@@ -422,7 +429,7 @@ def open_famous_case(example) -> None:
 
 def show_world_board(lang: str) -> None:
     """Every prepared region and measurement at once, and the 'same clue, opposite trends' finds."""
-    cells = world_board()
+    cells = world_board(data_files())
     names = {key: variable_text(lang, variable)["name"] for key, variable in VARIABLES.items()}
     short = SHORT_NAMES.get(lang, SHORT_NAMES["en"])
     st.markdown(WORLD_STYLE, unsafe_allow_html=True)
@@ -792,7 +799,7 @@ BOARD_GROUPS = (
     ("group_carbon_green", ("co2", "ndvi", "tree_cover")),
 )
 board_cells = []
-measured = measured_somewhere()
+measured = measured_somewhere(data_files())
 for group_key, group_variables in BOARD_GROUPS:
     keys = [k for k in group_variables if k in VARIABLES and k in measured]
     if not keys:
