@@ -1,72 +1,89 @@
 """Earth System Trend Detective: Streamlit app.
 
 Written with AI assistance (Claude Opus 5.5, Anthropic) for Team Avni,
-NASA Space Apps Challenge 2026. The idea, the "expert detective" theme and all product decisions come
-from Team Avni; the board-and-case-file layout was suggested by the AI and approved by the team.
+NASA Space Apps Challenge 2026. The idea, the "expert detective" theme, the pick-then-verdict flow
+and the Turkish option come from Team Avni; the board-and-case-file layout was suggested by the AI and
+approved by the team.
 
 Run locally:  streamlit run app.py
 """
 from __future__ import annotations
 
+import html
+import math
+
 import pandas as pd
 import streamlit as st
 
-from trend.charts import annual_trend_figure, monthly_figure
+from trend.charts import annual_trend_figure, monthly_figure, sparkline_figure
 from trend.fetch import available_variable_keys, load_processed
-from trend.regions import REGIONS, Region
-from trend.stats import (
-    MIN_YEARS,
-    TrendResult,
-    analyze_trend,
-    p_text,
-    to_annual,
-    trend_line_band,
+from trend.i18n import (
+    LANGUAGES,
+    METHODS,
+    chance_phrase,
+    lower_first,
+    num,
+    p_phrase,
+    region_name,
+    status_text,
+    t,
+    variable_text,
 )
-from trend.variables import VARIABLES, Variable
+from trend.regions import REGIONS
+from trend.stats import MIN_YEARS, RECOMMENDED_YEARS, TrendResult, analyze_trend, to_annual, trend_line_band
+from trend.variables import VARIABLES
 
 st.set_page_config(page_title="Earth System Trend Detective", page_icon="🔎", layout="wide")
 
 STYLE = """
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Special+Elite&display=swap');
-.case-label {
-  font-family: 'Special Elite', 'Courier New', monospace;
-  letter-spacing: 0.12em; text-transform: uppercase; color: #52514e; font-size: 0.85rem;
+.eyebrow {
+  font-family: 'Special Elite', 'Courier New', monospace; letter-spacing: 0.12em;
+  text-transform: uppercase; color: #52514e; font-size: 0.85rem;
 }
+.step { font-weight: 700; color: #2a78d6; letter-spacing: 0.02em; margin: 0.6rem 0 0.2rem 0; }
 .stamp {
   display: inline-block; font-family: 'Special Elite', 'Courier New', monospace;
   font-size: 0.95rem; letter-spacing: 0.08em; text-transform: uppercase;
   padding: 2px 10px; border: 2px solid currentColor; border-radius: 4px;
-  transform: rotate(-3deg); margin: 6px 0 8px 0; background: rgba(255, 255, 255, 0.6);
+  transform: rotate(-3deg); margin: 4px 0 6px 0; background: rgba(255, 255, 255, 0.6);
 }
 .stamp.confirmed { color: #1c5cab; }
 .stamp.noevidence { color: #52514e; }
 .stamp.disputed, .stamp.weak { color: #a8501b; }
 .stamp.open { color: #898781; border-style: dashed; }
-.clue-value { font-size: 1.35rem; font-weight: 700; color: #0b0b0b; }
+.clue-name { font-size: 0.78rem; letter-spacing: 0.06em; color: #52514e; min-height: 2.2em; }
+.clue-value { font-size: 1.45rem; font-weight: 700; color: #0b0b0b; line-height: 1.2; }
+.clue-unit { font-size: 0.82rem; color: #52514e; min-height: 2.6em; }
+.hero {
+  background: #ffffff; border: 1px solid #e1e0d9; border-left: 8px solid #2a78d6;
+  border-radius: 10px; padding: 18px 22px 14px 22px; margin: 6px 0 10px 0;
+}
+.hero.chance { border-left-color: #898781; }
+.hero-title { font-size: 1.55rem; font-weight: 800; color: #0b0b0b; line-height: 1.25; }
+.hero-q { margin-top: 8px; color: #52514e; font-size: 0.95rem; }
+.meter { margin: 30px 0 4px 0; }
+.meter-track { position: relative; height: 14px; border-radius: 7px; background: #e1e0d9; }
+.meter-zone { position: absolute; left: 0; top: 0; bottom: 0; background: #b7d3f6; border-radius: 7px 0 0 7px; }
+.meter-threshold { position: absolute; top: -6px; bottom: -6px; width: 2px; background: #52514e; }
+.meter-threshold span {
+  position: absolute; top: -22px; transform: translateX(-50%); font-size: 0.72rem;
+  color: #52514e; white-space: nowrap;
+}
+.meter-marker {
+  position: absolute; top: -5px; width: 24px; height: 24px; margin-left: -12px; border-radius: 50%;
+  background: #2a78d6; border: 3px solid #fcfcfb; box-shadow: 0 0 0 1px #1c5cab;
+}
+.hero.chance .meter-marker { background: #898781; box-shadow: 0 0 0 1px #52514e; }
+.meter-labels { display: flex; justify-content: space-between; font-size: 0.8rem; color: #52514e; margin-top: 8px; }
 </style>
 """
-
-STATUS_TEXT = {
-    "confirmed": ("Confirmed", "A real trend: both tests agree."),
-    "disputed": ("Disputed", "The headline test sees a trend, the second witness does not."),
-    "noevidence": ("No evidence", "No significant trend detected."),
-    "weak": ("Weak clue", "Only the second witness sees a trend."),
-    "open": ("Open case", "Evidence still being collected."),
-}
 
 
 @st.cache_data(show_spinner=False)
 def load_monthly(region_key: str, variable_key: str) -> pd.DataFrame | None:
     return load_processed(region_key, variable_key)
-
-
-def lower_first(text: str) -> str:
-    return text[:1].lower() + text[1:]
-
-
-def chance_phrase(p: float) -> str:
-    return "less than 0.1% of the time" if p < 0.001 else f"only about {p * 100:.1f}% of the time"
 
 
 def case_status(result: TrendResult | None) -> str:
@@ -77,66 +94,67 @@ def case_status(result: TrendResult | None) -> str:
     return "noevidence" if result.agrees else "weak"
 
 
-def stamp(status: str) -> str:
-    return f"<span class='stamp {status}'>{STATUS_TEXT[status][0]}</span>"
+def stamp(lang: str, status: str) -> str:
+    return f"<span class='stamp {status}'>{html.escape(status_text(lang, status)[0])}</span>"
 
 
-def verdict_sentence(result: TrendResult, variable: Variable, region: Region) -> str:
-    unit = variable.annual_unit
-    period = f"{result.start_year} to {result.end_year}"
-    subject = lower_first(variable.annual_label)
-    if result.significant:
-        verb = "rose" if result.slope_per_year > 0 else "fell"
-        return (
-            f"In **{region.name}**, the {subject} **{verb} by about "
-            f"{abs(result.slope_per_decade):.2f} {unit} per decade** from {period}, about "
-            f"{abs(result.total_change):.2f} {unit} in total along the trend line. If there were no "
-            f"real trend, a trend this strong would appear by chance {chance_phrase(result.p_value)}."
-        )
+def upper(text: str, lang: str) -> str:
+    """Uppercase that keeps the Turkish dotted and dotless i correct."""
+    if lang == "tr":
+        text = text.replace("i", "İ").replace("ı", "I")
+    return text.upper()
+
+
+def chance_meter(p: float, lang: str, real: bool) -> str:
+    """Marker on a log scale from p = 0.0001 (left) to p = 1 (right), with the 5% line."""
+    def position(value: float) -> float:
+        return (min(max(math.log10(max(value, 1e-12)), -4.0), 0.0) + 4.0) / 4.0 * 100
+
+    threshold = position(0.05)
     return (
-        f"In **{region.name}**, **no significant trend was detected** in the {subject} from {period}. "
-        f"The values go up and down, but the overall direction cannot be told apart from natural "
-        f"year-to-year variation ({p_text(result.p_value)})."
+        "<div class='meter'><div class='meter-track'>"
+        f"<div class='meter-zone' style='width:{threshold:.1f}%'></div>"
+        f"<div class='meter-threshold' style='left:{threshold:.1f}%'>"
+        f"<span>{html.escape(t(lang, 'meter_threshold'))}</span></div>"
+        f"<div class='meter-marker' style='left:{position(p):.1f}%'></div>"
+        "</div><div class='meter-labels'>"
+        f"<span>{html.escape(t(lang, 'meter_left'))}</span>"
+        f"<span>{html.escape(t(lang, 'meter_right'))}</span></div></div>"
     )
-
-
-def second_witness(result: TrendResult, variable: Variable) -> str:
-    found = {
-        "increasing": "an increasing trend",
-        "decreasing": "a decreasing trend",
-        "no trend": "no significant trend",
-    }[result.mk_trend]
-    detail = (
-        f"the {result.mk_method} test, which does not assume a straight line, finds {found} "
-        f"({p_text(result.mk_p_value)}; Sen's slope {result.sen_slope_per_decade:+.2f} "
-        f"{variable.annual_unit} per decade)."
-    )
-    if result.agrees:
-        return f"✅ **The second witness agrees:** {detail}"
-    return f"⚠️ **The second witness disagrees:** {detail} Treat this verdict with caution."
 
 
 def open_case(variable_key: str) -> None:
     st.session_state["case"] = variable_key
 
 
+# --- Language (top right) and header -------------------------------------------------------------
+
+if "lang" not in st.session_state:
+    requested = st.query_params.get("lang")
+    st.session_state["lang"] = requested if requested in LANGUAGES else "en"
+
 st.markdown(STYLE, unsafe_allow_html=True)
+head_left, head_right = st.columns([6, 1], vertical_alignment="center")
+with head_right:
+    st.segmented_control(
+        "Language", options=list(LANGUAGES), format_func=lambda k: LANGUAGES[k], key="lang",
+        label_visibility="collapsed",
+    )
+lang = st.session_state.get("lang") or "en"
+st.query_params["lang"] = lang
+separators = ",." if lang == "tr" else ".,"
 
-# --- Header ----------------------------------------------------------------------------------
-
-st.markdown("<div class='case-label'>NASA Earth data · Statistical investigation</div>",
-            unsafe_allow_html=True)
-st.title("Earth System Trend Detective")
-st.caption(
-    "Every place leaves clues in NASA's satellite records. Open a case file to find out what is "
-    "changing, by how much, and whether the change is real or just chance."
-)
+with head_left:
+    st.markdown(f"<div class='eyebrow'>{html.escape(t(lang, 'eyebrow'))}</div>", unsafe_allow_html=True)
+st.title(t(lang, "title"))
+st.caption(t(lang, "subtitle"))
 
 region_key = st.selectbox(
-    "Region under investigation", list(REGIONS), format_func=lambda key: REGIONS[key].name,
-    key="region",
+    t(lang, "region_label"), list(REGIONS),
+    format_func=lambda key: region_name(lang, key, REGIONS[key].name), key="region",
 )
 region = REGIONS[region_key]
+region_label = region_name(lang, region_key, region.name)
 cached = set(available_variable_keys(region_key))
 
 annual_by_key: dict[str, pd.DataFrame] = {}
@@ -148,153 +166,225 @@ for key, variable in VARIABLES.items():
         continue
     annual, incomplete = to_annual(load_monthly(region_key, key), variable)
     annual_by_key[key], incomplete_by_key[key] = annual, incomplete
-    board_results[key] = analyze_trend(annual["year"], annual["value"]) if len(annual) >= MIN_YEARS else None
+    board_results[key] = (
+        analyze_trend(annual["year"], annual["value"]) if len(annual) >= MIN_YEARS else None
+    )
 
 if not annual_by_key:
-    st.warning("No evidence has been collected for this region yet.")
+    st.warning(t(lang, "no_data_region"))
     st.stop()
 
 available = [key for key in VARIABLES if key in annual_by_key]
 if st.session_state.get("case") not in available:
     st.session_state["case"] = available[0]
 
-# --- Investigation board ---------------------------------------------------------------------
+# --- Step 1: choose a clue -----------------------------------------------------------------------
 
-st.subheader(f"Investigation board · {region.name}")
-st.caption("Four clues from NASA Earth data, each over its full record. Open a case file for the evidence.")
+st.markdown(f"<div class='step'>{html.escape(t(lang, 'step1'))}</div>", unsafe_allow_html=True)
+st.caption(t(lang, "step1_caption"))
 for column, (key, variable) in zip(st.columns(len(VARIABLES)), VARIABLES.items()):
+    texts = variable_text(lang, variable)
     result = board_results[key]
     status = case_status(result)
+    selected = st.session_state["case"] == key
     with column.container(border=True):
-        st.caption(variable.name.upper())
+        st.markdown(
+            f"<div class='clue-name'>{html.escape(upper(texts['name'], lang))}</div>",
+            unsafe_allow_html=True,
+        )
         if result is not None:
             arrow = "▲" if result.slope_per_year > 0 else "▼"
             st.markdown(
-                f"<div class='clue-value'>{arrow} {result.slope_per_decade:+.2f}</div>"
-                f"<div>{variable.annual_unit} per decade · {result.start_year}–{result.end_year}</div>",
+                f"<div class='clue-value'>{arrow} {num(result.slope_per_decade, lang, signed=True)}</div>"
+                f"<div class='clue-unit'>{html.escape(texts['annual_unit'])} "
+                f"{html.escape(t(lang, 'per_decade'))}<br>{result.start_year}–{result.end_year}</div>",
                 unsafe_allow_html=True,
             )
+            annual = annual_by_key[key]
+            st.plotly_chart(
+                sparkline_figure(annual, trend_line_band(annual["year"], annual["value"])),
+                width="stretch", theme=None, key=f"spark_{key}",
+                config={"staticPlot": True, "displayModeBar": False},
+            )
         else:
-            st.markdown("<div class='clue-value'>—</div><div>Evidence pending</div>",
-                        unsafe_allow_html=True)
-        st.markdown(stamp(status), unsafe_allow_html=True)
+            st.markdown(
+                "<div class='clue-value'>—</div>"
+                f"<div class='clue-unit'>{html.escape(t(lang, 'evidence_pending'))}<br>&nbsp;</div>",
+                unsafe_allow_html=True,
+            )
+            st.markdown("<div style='height:64px'></div>", unsafe_allow_html=True)
+        st.markdown(stamp(lang, status), unsafe_allow_html=True)
         st.button(
-            "Open case file", key=f"open_{key}", on_click=open_case, args=(key,),
-            disabled=key not in annual_by_key, width="stretch",
-            type="primary" if st.session_state["case"] == key else "secondary",
+            t(lang, "selected") if selected else t(lang, "investigate"), key=f"open_{key}",
+            on_click=open_case, args=(key,), disabled=key not in annual_by_key, width="stretch",
+            type="primary" if selected else "secondary",
         )
 
 # --- Case file -------------------------------------------------------------------------------
 
 case_key = st.session_state["case"]
 variable = VARIABLES[case_key]
+texts = variable_text(lang, variable)
+unit = texts["annual_unit"]
+subject = lower_first(texts["annual_label"])
 annual_all = annual_by_key[case_key]
 monthly = load_monthly(region_key, case_key)
-unit = variable.annual_unit
 
 st.divider()
-st.markdown(f"<div class='case-label'>Case file · {region.name} · {variable.name}</div>",
-            unsafe_allow_html=True)
-st.header(f"Is the {lower_first(variable.annual_label)} in {region.name} changing?")
-
-st.markdown("##### 1 · The question")
-st.write(
-    f"**{variable.name}:** {variable.definition} Each piece of evidence below is one "
-    f"{lower_first(variable.annual_label)}."
+st.markdown(
+    f"<div class='eyebrow'>{html.escape(t(lang, 'case_label', region=region_label, variable=texts['name']))}</div>",
+    unsafe_allow_html=True,
 )
+st.header(t(lang, "question", subject=subject, region=region_label))
+st.write(t(lang, "question_body", name=texts["name"], definition=texts["definition"], subject=subject))
 
-st.markdown("##### 2 · The evidence")
+# Step 2: choose the period
+st.markdown(f"<div class='step'>{html.escape(t(lang, 'step2'))}</div>", unsafe_allow_html=True)
 first_year, last_year = int(annual_all["year"].min()), int(annual_all["year"].max())
 start_year, end_year = st.slider(
-    "Period under investigation", min_value=first_year, max_value=last_year,
+    t(lang, "period_label"), min_value=first_year, max_value=last_year,
     value=(first_year, last_year), key=f"period_{case_key}",
 )
 annual = annual_all[annual_all["year"].between(start_year, end_year)].reset_index(drop=True)
 if len(annual) < MIN_YEARS:
-    st.error(
-        f"Not enough evidence: a trend test needs at least {MIN_YEARS} complete years, "
-        f"and this period has {len(annual)}. Pick a longer period."
-    )
+    st.error(t(lang, "too_short", min=MIN_YEARS, n=len(annual)))
     st.stop()
 
 result = analyze_trend(annual["year"], annual["value"])
 band = trend_line_band(annual["year"], annual["value"])
-trend_label = f"{result.slope_per_decade:+.2f} {unit} per decade"
-st.plotly_chart(
-    annual_trend_figure(annual, band, variable, trend_label),
-    width="stretch", theme=None, config={"displaylogo": False},
+status = case_status(result)
+rate = num(result.slope_per_decade, lang, signed=True)
+
+# Step 3: real or chance?
+st.markdown(f"<div class='step'>{html.escape(t(lang, 'step3'))}</div>", unsafe_allow_html=True)
+if result.significant:
+    headline = t(lang, "headline_up" if result.slope_per_year > 0 else "headline_down")
+else:
+    headline = t(lang, "headline_chance")
+hero_class = "real" if result.significant else "chance"
+st.markdown(
+    f"<div class='hero {hero_class}'>"
+    f"<div class='hero-title'>{html.escape(headline)}</div>"
+    f"<div class='hero-q'>{html.escape(t(lang, 'meter_question'))} "
+    f"<b>{html.escape(chance_phrase(result.p_value, lang))}</b> "
+    f"({html.escape(p_phrase(result.p_value, lang))})</div>"
+    f"{chance_meter(result.p_value, lang, result.significant)}</div>",
+    unsafe_allow_html=True,
 )
-incomplete = incomplete_by_key[case_key]
-dropped = [y for y in incomplete if start_year - 1 <= y <= end_year + 1]
-basis = f"Based on {result.n_years} complete years ({result.start_year} to {result.end_year})."
+st.markdown(
+    stamp(lang, status) + f"&nbsp; {html.escape(status_text(lang, status)[1])}",
+    unsafe_allow_html=True,
+)
+tile_how, tile_total, tile_used = st.columns(3)
+with tile_how.container(border=True):
+    st.caption(t(lang, "how_much"))
+    st.markdown(f"**{rate} {unit} {t(lang, 'per_decade')}**")
+    low, high = result.ci_per_decade
+    st.caption(t(lang, "ci", low=num(low, lang, signed=True), high=num(high, lang, signed=True)))
+with tile_total.container(border=True):
+    st.caption(t(lang, "total_change"))
+    st.markdown(f"**{num(result.total_change, lang, signed=True)} {unit}**")
+    st.caption(t(lang, "along_trend"))
+with tile_used.container(border=True):
+    st.caption(t(lang, "evidence_used"))
+    st.markdown(f"**{t(lang, 'years_count', n=result.n_years)}**")
+    st.caption(f"{result.start_year}–{result.end_year}")
+
+if result.significant:
+    st.markdown(
+        t(
+            lang, "verdict_sig", region=region_label, subject=subject,
+            verb=t(lang, "verb_up" if result.slope_per_year > 0 else "verb_down"),
+            rate=num(abs(result.slope_per_decade), lang), unit=unit, start=result.start_year,
+            end=result.end_year, total=num(abs(result.total_change), lang),
+            chance=chance_phrase(result.p_value, lang),
+        )
+    )
+else:
+    st.markdown(
+        t(
+            lang, "verdict_nosig", region=region_label, subject=subject, start=result.start_year,
+            end=result.end_year, p=p_phrase(result.p_value, lang),
+        )
+    )
+if result.n_years < RECOMMENDED_YEARS:
+    st.warning(t(lang, "warn_short", n=result.n_years, rec=RECOMMENDED_YEARS))
+
+# Step 4: the evidence
+st.markdown(f"<div class='step'>{html.escape(t(lang, 'step4'))}</div>", unsafe_allow_html=True)
+st.plotly_chart(
+    annual_trend_figure(
+        annual, band,
+        series_name=texts["annual_label"],
+        trend_name=t(lang, "trend_name", rate=f"{rate} {unit} {t(lang, 'per_decade')}"),
+        band_name=t(lang, "band_name"),
+        x_title=texts["year_axis_label"],
+        y_title=f"{texts['name']} ({unit})",
+        unit=unit,
+        separators=separators,
+    ),
+    width="stretch", theme=None, config={"displaylogo": False}, key="evidence_chart",
+)
+dropped = [y for y in incomplete_by_key[case_key] if start_year - 1 <= y <= end_year + 1]
+basis = t(lang, "based_on", n=result.n_years, start=result.start_year, end=result.end_year)
 if dropped:
-    basis += " Not used because incomplete: " + ", ".join(str(y) for y in dropped) + "."
+    basis += t(lang, "not_used", years=", ".join(str(y) for y in dropped))
 st.caption(basis)
 
-st.markdown("##### 3 · The verdict")
-status = case_status(result)
-st.markdown(stamp(status) + f"&nbsp; {STATUS_TEXT[status][1]}", unsafe_allow_html=True)
-tile_what, tile_where, tile_how, tile_sig = st.columns(4)
-with tile_what.container(border=True):
-    st.caption("WHAT")
-    st.markdown(f"**{variable.name}**")
-with tile_where.container(border=True):
-    st.caption("WHERE")
-    st.markdown(f"**{region.name}**")
-with tile_how.container(border=True):
-    st.caption("HOW MUCH")
-    st.markdown(f"**{result.slope_per_decade:+.2f} {unit} per decade**")
-    low, high = result.ci_per_decade
-    st.caption(f"95% CI {low:+.2f} to {high:+.2f}")
-with tile_sig.container(border=True):
-    st.caption("SIGNIFICANT?")
-    if result.significant:
-        st.markdown(f"**Yes** ({p_text(result.p_value)})")
-    else:
-        st.markdown(f"**No significant trend detected** ({p_text(result.p_value)})")
-st.markdown(verdict_sentence(result, variable, region))
-if result.warning:
-    st.warning(result.warning)
-
-st.markdown("##### 4 · The second witness")
-st.markdown(second_witness(result, variable))
+# Step 5: the second witness
+st.markdown(f"<div class='step'>{html.escape(t(lang, 'step5'))}</div>", unsafe_allow_html=True)
+found = t(lang, {"increasing": "found_increasing", "decreasing": "found_decreasing"}.get(
+    result.mk_trend, "found_none"))
+st.markdown(
+    t(
+        lang, "witness_agrees" if result.agrees else "witness_disagrees", method=result.mk_method,
+        found=found, p=p_phrase(result.mk_p_value, lang),
+        sen=num(result.sen_slope_per_decade, lang, signed=True), unit=unit,
+    )
+)
 if result.end_year == last_year and result.n_years - 1 >= MIN_YEARS:
     without_last = analyze_trend(annual["year"].iloc[:-1], annual["value"].iloc[:-1])
     st.caption(
-        f"Cross-examination: leaving out the newest year ({last_year}), whose data can still be "
-        f"revised, gives {without_last.slope_per_decade:+.2f} {unit} per decade "
-        f"({p_text(without_last.p_value)}, "
-        f"{'significant' if without_last.significant else 'not significant'})."
+        t(
+            lang, "cross_exam", year=last_year,
+            rate=num(without_last.slope_per_decade, lang, signed=True), unit=unit,
+            p=p_phrase(without_last.p_value, lang),
+            sig=t(lang, "significant" if without_last.significant else "not_significant"),
+        )
     )
 
-st.markdown("##### 5 · Case notes")
-if variable.caveats:
-    with st.expander("Keep in mind"):
-        st.markdown("\n".join(f"- {c}" for c in variable.caveats))
+# Case notes
+st.markdown(f"<div class='step'>{html.escape(t(lang, 'case_notes'))}</div>", unsafe_allow_html=True)
+if texts["caveats"]:
+    with st.expander(t(lang, "keep_in_mind")):
+        st.markdown("\n".join(f"- {c}" for c in texts["caveats"]))
 
-with st.expander("Monthly values (with the seasonal cycle)"):
-    st.caption("Monthly values still include the seasonal cycle, so they swing up and down every year.")
+with st.expander(t(lang, "monthly_title")):
+    st.caption(t(lang, "monthly_caption"))
     in_period = monthly[monthly["date"].dt.year.between(start_year - 1, end_year)]
     st.plotly_chart(
-        monthly_figure(in_period, variable), width="stretch", theme=None,
-        config={"displaylogo": False},
+        monthly_figure(
+            in_period, x_title=t(lang, "month_axis"), y_title=f"{texts['name']} ({texts['unit']})",
+            unit=texts["unit"], separators=separators,
+        ),
+        width="stretch", theme=None, config={"displaylogo": False}, key="monthly_chart",
     )
 
-with st.expander("Data table and downloads"):
+with st.expander(t(lang, "table_title")):
     table = annual.rename(
         columns={
-            "year": variable.year_axis_label.split(" (")[0],
-            "value": f"{variable.annual_label} ({unit})",
-            "n_months": "Months used",
+            "year": texts["year_axis_label"].split(" (")[0],
+            "value": f"{texts['annual_label']} ({unit})",
+            "n_months": t(lang, "months_used"),
         }
     )
     st.dataframe(table, hide_index=True, width="stretch")
     if "source" in monthly.columns:
-        st.caption(f"Source recorded when the data was fetched: {monthly['source'].iloc[0]}")
+        st.caption(t(lang, "source_recorded", source=monthly["source"].iloc[0]))
     results_row = {
         "region": region.name,
         "variable": variable.name,
-        "unit": unit,
+        "unit": variable.annual_unit,
         "start_year": result.start_year,
         "end_year": result.end_year,
         "n_years": result.n_years,
@@ -309,57 +399,22 @@ with st.expander("Data table and downloads"):
         "robustness_p_value": result.mk_p_value,
         "sen_slope_per_decade": result.sen_slope_per_decade,
         "lag1_autocorrelation": result.lag1_autocorrelation,
-        "verdict": STATUS_TEXT[status][0],
+        "verdict": status_text("en", status)[0],
     }
     col_a, col_b = st.columns(2)
     col_a.download_button(
-        "Download the annual series (CSV)",
-        annual.to_csv(index=False).encode("utf-8"),
-        file_name=f"{region_key}_{case_key}_annual.csv",
-        mime="text/csv",
+        t(lang, "dl_annual"), annual.to_csv(index=False).encode("utf-8"),
+        file_name=f"{region_key}_{case_key}_annual.csv", mime="text/csv",
     )
     col_b.download_button(
-        "Download the case results (CSV)",
-        pd.DataFrame([results_row]).to_csv(index=False).encode("utf-8"),
-        file_name=f"{region_key}_{case_key}_case_results.csv",
-        mime="text/csv",
+        t(lang, "dl_results"), pd.DataFrame([results_row]).to_csv(index=False).encode("utf-8"),
+        file_name=f"{region_key}_{case_key}_case_results.csv", mime="text/csv",
     )
 
-with st.expander("How the detective works (methods and limitations)"):
-    st.markdown(
-        f"""
-- **Area average:** the value for {region.name} is the average of all data grid cells whose
-  centres lie inside or on the edge of the region's box, weighted by the cosine of latitude.
-  Cells centred on the edge reach about a quarter of a degree beyond the box.
-- **One value per year:** monthly values are combined into one value per year, which removes the
-  seasonal cycle. A year is used only if all of its months are available.
-- **Headline test:** a straight line is fitted with ordinary least squares (OLS). We report its
-  slope, the 95% confidence interval of the slope and the p-value of a two-sided t-test.
-  The **p-value** is the chance of seeing a trend at least this strong if there were really no trend.
-  We call a trend significant when p < 0.05.
-- **Year-to-year persistence:** when a year's departure from the trend line tends to be followed by
-  a similar departure (positive autocorrelation), the uncertainty is widened using an effective
-  sample size (Santer et al., 2000), so the result is not overconfident.
-- **Second witness:** the Mann-Kendall test checks for a steady rise or fall without assuming a
-  straight line; Sen's slope is a robust estimate of the rate. If the residuals of the straight
-  line are correlated from one year to the next, the Hamed-Rao corrected version is used.
-- **Stamps:** *Confirmed* = significant and the second witness agrees; *Disputed* = significant
-  but the second witness disagrees; *No evidence* = no significant trend; *Weak clue* = only the
-  second witness sees a trend.
-- **Total change** is the slope multiplied by the number of years, not the last value minus the first.
-- **Confidence band:** the shaded band is the 95% confidence band of the fitted line, not a range
-  for individual years.
-- **Short periods:** at least {MIN_YEARS} years are required; fewer than 20 years gives a warning.
-- **Many tests:** if you test many measurements, regions and periods, about 1 in 20 tests can look
-  significant by chance alone.
-- **No significant trend detected** does not mean "no change"; a longer record may reveal one.
-"""
-    )
+with st.expander(t(lang, "methods_title")):
+    st.markdown(METHODS[lang].format(region=region_label, min_years=MIN_YEARS))
 
 st.divider()
 doi = f" DOI: [{variable.doi}](https://doi.org/{variable.doi})." if variable.doi else ""
-st.caption(f"**Data:** {variable.product}, {variable.provider}. {variable.citation}{doi}")
-st.caption(
-    "Team Avni · NASA Space Apps Challenge 2026 · Built with AI assistance (Claude by Anthropic); "
-    "see the README for details. Not affiliated with or endorsed by NASA."
-)
+st.caption(f"**{t(lang, 'data_label')}:** {variable.product}, {variable.provider}. {variable.citation}{doi}")
+st.caption(t(lang, "footer"))

@@ -11,8 +11,9 @@ Pick a place and a measurement from NASA Earth data, and find out **what** is ch
 
 1. An **investigation board** shows every clue for a region (Colorado first; more regions to come):
    one card per measurement with its rate of change and a verdict stamp.
-2. Opening a **case file** walks through the question, the evidence (chart and period selector),
-   the verdict and a second witness.
+2. The user picks a clue, chooses the **period**, and immediately gets a large
+   **"Real or chance?"** verdict with a chance meter, followed by the evidence (chart) and a
+   second witness. An **EN / TR** switch (top right) shows the whole app in English or Turkish.
 3. Behind the scenes, NASA monthly data become one value per year (removing the seasonal cycle).
 4. The app fits a linear trend and reports:
    - the **rate of change per decade** with its 95% confidence interval,

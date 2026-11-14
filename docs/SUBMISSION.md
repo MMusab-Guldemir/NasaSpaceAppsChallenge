@@ -36,11 +36,13 @@ in Turkish.
 
 **What it does.** The user opens an **investigation board** for a region: one clue card per
 measurement, each with its rate of change and a verdict stamp (Confirmed, Disputed, No evidence,
-Weak clue or Open case). Opening a **case file** shows (1) the question, (2) the evidence: a chart
-of annual values with the fitted trend line, its 95% confidence band and a period selector, (3) the
-verdict: What / Where / How much / Significant? plus a plain-language explanation, (4) the second
-witness: an independent test, and (5) case notes with caveats, monthly data, a data table, CSV
-downloads and the methods.
+Weak clue or Open case) and a small sparkline. After picking a clue, the user (1) chooses the
+period, (2) immediately sees a large **"Real or chance?"** verdict with a chance meter that places
+the p-value against the 5% line, plus how much changed per decade and in total, (3) inspects the
+evidence: annual values with the fitted trend line and its 95% confidence band, (4) hears the
+second witness: an independent test, and (5) reads case notes with caveats, monthly data, a data
+table, CSV downloads and the methods. An EN / TR switch in the top right shows the whole app in
+English (default) or Turkish.
 
 **How it works.**
 1. *Data:* monthly area averages over the region, from NASA POWER (MERRA-2 based temperature and
