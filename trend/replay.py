@@ -173,10 +173,11 @@ def replay_summary(table: pd.DataFrame) -> dict:
         first_kept -= 1
     summary["year"] = int(table["end_year"].iloc[first_kept])
     summary["kind"] = "always" if first_kept == 0 else "closed"
-    if summary["kind"] == "closed" and confirmed[0]:
-        unconfirmed = np.flatnonzero(~confirmed[:first_kept])
-        if unconfirmed.size:
-            summary["n_first"] = int(lengths[unconfirmed[-1]])
+    by_chance = table["status"].isin(["noevidence", "weak"]).to_numpy()
+    if summary["kind"] == "closed" and not by_chance[0]:
+        chance_rows = np.flatnonzero(by_chance[:first_kept])
+        if chance_rows.size:
+            summary["n_first"] = int(lengths[chance_rows[-1]])
     return summary
 
 

@@ -49,7 +49,8 @@ SEASON_TEXT = {
         ),
         "sentence": (
             "In a typical year the monthly value swings by {swing} {unit} between its highest and lowest "
-            "month. The trend is {rate} {unit} per decade, about {ratio} times smaller, so the detective "
+            "month. The fitted line changes the monthly value by {rate} {unit} per decade, about {ratio} "
+            "times less, so the detective "
             "removes the seasons first: here by comparing each month with its own usual value, and in "
             "the verdict by using one value per year."
         ),
@@ -67,8 +68,9 @@ SEASON_TEXT = {
             "ortalamasıdır."
         ),
         "sentence": (
-            "Olağan bir yılda aylık değer, en yüksek ve en düşük ay arasında {swing} {unit} oynar. Eğilim "
-            "ise on yılda {rate} {unit}, yani yaklaşık {ratio} kat daha küçük; bu yüzden dedektif önce "
+            "Olağan bir yılda aylık değer, en yüksek ve en düşük ay arasında {swing} {unit} oynar. Çizgiye "
+            "göre aylık değer ise on yılda {rate} {unit} değişiyor, yani yaklaşık {ratio} kat daha az; bu "
+            "yüzden dedektif önce "
             "mevsimleri çıkarır: burada her ayı kendi olağan değeriyle karşılaştırarak, kararda ise yılda "
             "tek değer kullanarak."
         ),

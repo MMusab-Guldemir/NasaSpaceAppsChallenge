@@ -38,6 +38,7 @@ from trend.charts import annual_trend_figure, monthly_figure, sparkline_figure
 from trend.examples import EXAMPLES, example_key, example_label, examples_title
 from trend.fetch import (
     POWER_VARIABLES,
+    TRANSIENT_STATUS,
     DataSourceError,
     available_variable_keys,
     fetch_power_area,
@@ -225,14 +226,14 @@ def live_monthly(variable_key: str, bbox: tuple[float, float, float, float]) -> 
 GRID_CACHE = Path(os.environ.get("TREND_GRID_CACHE") or Path(tempfile.gettempdir()) / "trend_grid_cache")
 
 
-@st.cache_data(show_spinner=False, ttl=24 * 3600, max_entries=64)
+@st.cache_data(show_spinner=False, ttl=24 * 3600, max_entries=16)
 def grid_cells(variable_key: str, bbox: tuple[float, float, float, float]) -> pd.DataFrame:
     """Monthly values of every NASA POWER grid cell in the area (kept on disk and for a day)."""
     cells, _ = fetch_cells(variable_key, bbox, cache_dir=GRID_CACHE, timeout=(10, 45))
     return cells
 
 
-@st.cache_data(show_spinner=False, max_entries=128)
+@st.cache_data(show_spinner=False, max_entries=32)
 def grid_trends(variable_key: str, bbox: tuple[float, float, float, float], start: int | None,
                 end: int | None) -> tuple[pd.DataFrame, int, tuple[float, float]]:
     """The trend test for every grid cell, the number of cells without snow, and the cell size."""
@@ -406,7 +407,6 @@ def open_world_case(region_key: str, variable_key: str) -> None:
     """From the World board: open this prepared region and measurement in the investigation view."""
     st.session_state["area_mode"] = "prepared"
     st.session_state["region"] = region_key
-    st.session_state["custom_bbox"] = REGIONS[region_key].bbox
     st.session_state["case"] = variable_key
     reset_periods()  # a new place: full records
     st.session_state["view"] = "case"
@@ -485,6 +485,10 @@ if "_url_loaded" not in st.session_state:
     if params.get("case") in VARIABLES:
         st.session_state["case"] = params.get("case")
         st.session_state["_url_period"] = (params.get("case"), params.get("start"), params.get("end"))
+        try:  # the crime scene map (Step 1) runs before Step 2 restores the period
+            st.session_state["periods"] = {params.get("case"): (int(params.get("start")), int(params.get("end")))}
+        except (TypeError, ValueError):
+            pass
     if params.get("view") in ("exam", "world"):
         st.session_state["view"] = params.get("view")
     if params.get("map") == "scene":
@@ -603,8 +607,11 @@ st.segmented_control(
 # the clue picked below (air temperature when that clue has no NASA POWER grid).
 scene = scene_summary = scene_reasons = scene_trends = None
 scene_variable = scene_years = None
+no_snow_cells = 0
 if st.session_state["map_layer"] == "scene":
     picked = st.session_state.get("case")
+    if not custom_mode and picked not in available_variable_keys(region_key):
+        picked = None  # a clue left over from another place is not on screen here
     scene_variable = picked if picked in POWER_VARIABLES else "air_temperature"
     if picked and picked not in POWER_VARIABLES and picked in VARIABLES:
         st.info(mtext["fallback"].format(picked=variable_text(lang, VARIABLES[picked])["name"]))
@@ -613,28 +620,38 @@ if st.session_state["map_layer"] == "scene":
     else:
         chosen = st.session_state.get(f"period_{scene_variable}") or st.session_state.get("periods", {}).get(scene_variable)
         start_pick, end_pick = (int(chosen[0]), int(chosen[1])) if chosen else (None, None)
-        try:
-            with st.spinner(mtext["loading"]):
-                scene_trends, no_snow_cells, scene_size = grid_trends(scene_variable, active_bbox, start_pick, end_pick)
-        except (DataSourceError, requests.RequestException, ValueError, KeyError, TypeError, IndexError) as error:
-            LOG.warning("Crime scene map failed for %s %s: %r", scene_variable, active_bbox, error)
-            st.warning(mtext["fetch_failed"])
+        scene_failures = st.session_state.setdefault("_live_fail", {})
+        scene_fail_key = ("scene", scene_variable, active_bbox)
+        scene_remembered = scene_failures.get(scene_fail_key)
+        if scene_remembered and time.time() - scene_remembered[1] < LIVE_RETRY_SECONDS:
+            st.warning(mtext["fetch_failed"])  # not asked again on every rerun (Retry clears it)
         else:
-            scene_trends = scene_trends.copy()
-            scene_trends.attrs["no_snow_cells"] = no_snow_cells
-            scene_summary = summarize(scene_trends, lang, scene_variable, active_bbox)
-            scene_reasons = map_reasons(lang, scene_variable, scene_summary,
-                                        None if custom_mode else region_key)
-            if len(scene_trends):
-                scene = (scene_trends, scene_size, lang, scene_variable)
-                scene_years = (int(scene_trends["start_year"].min()), int(scene_trends["end_year"].max()))
+            try:
+                with st.spinner(mtext["loading"]):
+                    scene_trends, no_snow_cells, scene_size = grid_trends(scene_variable, active_bbox, start_pick,
+                                                                          end_pick)
+            except (DataSourceError, requests.RequestException, ValueError, KeyError, TypeError, IndexError,
+                    AttributeError) as error:
+                LOG.warning("Crime scene map failed for %s %s: %r", scene_variable, active_bbox, error)
+                scene_failures[scene_fail_key] = ("open", time.time())
+                st.warning(mtext["fetch_failed"])
+            else:
+                scene_failures.pop(scene_fail_key, None)
+                scene_trends = scene_trends.copy()
+                scene_trends.attrs["no_snow_cells"] = no_snow_cells
+                scene_summary = summarize(scene_trends, lang, scene_variable, active_bbox)
+                scene_reasons = map_reasons(lang, scene_variable, scene_summary,
+                                            None if custom_mode else region_key)
+                if len(scene_trends):
+                    scene = (scene_trends, scene_size, lang, scene_variable)
+                    scene_years = (int(scene_trends["start_year"].min()), int(scene_trends["end_year"].max()))
 st.caption(t(lang, "map_help"))
 map_state = st_folium(
     area_map(active_bbox, scene), height=460 if scene else 420, use_container_width=True,
     returned_objects=["last_active_drawing", "all_drawings"],
     key=f"area_map_{region_key}_{active_bbox}_{st.session_state['map_layer']}_{scene_variable}_{scene_years}",
 )
-if scene_summary is not None:
+if scene_summary is not None and (scene_years or no_snow_cells):
     # The place's results under the map: what the cells show, where, and possible reasons.
     if scene_years:
         st.caption(mtext["showing"].format(
@@ -684,10 +701,16 @@ if custom_mode:
     # Failed requests are not cached by st.cache_data. Remember them, so a slider move or a language
     # switch does not ask NASA POWER again: "no data" for the session, network errors for a minute.
     failures = st.session_state.setdefault("_live_fail", {})
+    network_down = False
     with st.spinner(t(lang, "fetching")):
         for key in VARIABLES:
             if key not in POWER_VARIABLES:
                 unavailable_status[key] = "prepared_only"
+                continue
+            if network_down:  # the server did not answer a moment ago: do not wait again
+                unavailable_status[key] = "open"
+                fetch_failed = True
+                failures[(key, active_bbox)] = ("open", time.time())
                 continue
             remembered = failures.get((key, active_bbox))
             if remembered and (remembered[0] == "no_data" or time.time() - remembered[1] < LIVE_RETRY_SECONDS):
@@ -711,16 +734,20 @@ if custom_mode:
                 else:
                     LOG.warning("Live fetch failed for %s %s: %r", key, active_bbox, error)
                     fetch_failed = True
+                    status_code = getattr(error, "status", None)
+                    network_down = status_code is None or status_code in TRANSIENT_STATUS
                 failures[(key, active_bbox)] = (unavailable_status[key], time.time())
             except requests.RequestException as error:
                 LOG.warning("Live fetch failed for %s %s: %r", key, active_bbox, error)
                 unavailable_status[key] = "open"
                 fetch_failed = True
+                network_down = True
                 failures[(key, active_bbox)] = ("open", time.time())
     for message in no_data_messages:
         st.warning(message)
     if fetch_failed and monthly_by_key:
         st.error(t(lang, "err_fetch"))
+        st.button(t(lang, "retry"), key="retry_fetch_partial", on_click=forget_live_failures)
 else:
     cached = set(available_variable_keys(region_key))
     for key in VARIABLES:
@@ -1005,7 +1032,9 @@ if len(timeline) >= 3:
     )
     since = solid_since(timeline)
     earlier = earlier_significant_years(timeline)
-    if since is not None:
+    if since is not None and since == int(timeline["end_year"].iloc[-1]):
+        st.markdown(timeline_text(lang, "solid_last", year=since))  # nothing has confirmed it since
+    elif since is not None:
         direction = timeline_text(lang, "up" if result.slope_per_year > 0 else "down")
         st.markdown(timeline_text(lang, "solid_since", year=since, direction=direction))
     elif earlier:
@@ -1128,8 +1157,10 @@ with st.expander(season_text(lang, "title")):
             ),
             width="stretch", theme=None, config={"displaylogo": False}, key="anomaly_chart",
         )
+        # A unit that can follow a number ("mm su", not "ayda mm su"; "AOD", not "AOD (birimsiz)")
+        season_unit = texts["annual_unit"] if variable.aggregation == "sum" else texts["unit"].split(" (")[0]
         sentence = season_sentence(
-            lang, swing, monthly_rate_per_decade(result.slope_per_decade, variable), texts["unit"], decimals,
+            lang, swing, monthly_rate_per_decade(result.slope_per_decade, variable), season_unit, decimals,
         )
         if sentence:
             st.markdown(sentence)

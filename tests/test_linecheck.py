@@ -17,10 +17,11 @@ def check_series(years, values):
 
 
 def test_exponential_decay_is_curved_and_gets_the_note():
-    # Shaped like NO2 in Los Angeles: a fast fall that slows down.
+    # Shaped like NO2 in Los Angeles: a fast fall that slows down (its curve's lowest point lies
+    # outside the middle of the period, so it does not "turn around").
     years = np.arange(2005, 2025)
     rng = np.random.default_rng(0)
-    values = 3 + 4 * np.exp(-(years - 2005) / 5) + rng.normal(scale=0.1, size=years.size)
+    values = 3 + 4 * np.exp(-(years - 2005) / 8) + rng.normal(scale=0.1, size=years.size)
     result = analyze_trend(years, values)
     check = line_check(years, values, result)
     assert check.curved and check.plain_mk_p < 0.001
@@ -92,7 +93,20 @@ def test_constant_and_short_series_do_not_raise():
 def test_note_texts():
     assert set(LINE_TEXT["tr"]) == set(LINE_TEXT["en"])
     english = line_text("en", "p < 0.001", "2")
-    assert "(plain Mann-Kendall, p < 0.001)" in english and "about 2 independent years" in english
+    assert "(Mann-Kendall without the persistence correction, p < 0.001)" in english
+    assert "about 2 independent years" in english
     turkish = line_text("tr", "p < 0,001", "2")
-    assert "(düz Mann-Kendall, p < 0,001)" in turkish and "yaklaşık 2 bağımsız yıl" in turkish
+    assert "(süreklilik düzeltmesi yapılmamış Mann-Kendall, p < 0,001)" in turkish
+    assert "yaklaşık 2 bağımsız yıl" in turkish
     assert line_text("de", "p = 0.002", "4") == line_text("en", "p = 0.002", "4")
+
+
+def test_a_series_that_turns_around_is_left_to_the_why_box():
+    # Colorado NO2 shape: falls to 2020, then climbs back. The "why is it not verified?" box explains a
+    # turn, so the note (which says the values mostly move one way) steps aside.
+    years = np.arange(2005, 2026)
+    values = np.array([1.09, 1.10, 1.01, 0.99, 0.92, 0.93, 0.94, 1.02, 0.98, 0.89, 0.84, 0.87, 0.90,
+                       0.87, 0.82, 0.73, 0.81, 0.87, 0.89, 0.95, 1.01])
+    result = analyze_trend(years, values)
+    assert not result.significant
+    assert not line_check(years, values, result).show

@@ -63,7 +63,7 @@ EXAMPLES: tuple[Example, ...] = (
         "cairo_nile", "aod", None, None,
         {
             "en": "🌊 River delta: is the air over Cairo clearing?",
-            "tr": "🌊 Nehir deltası: Kahire'nin havası açılıyor mu?",
+            "tr": "🌊 Nehir deltası: Kahire'nin havası temizleniyor mu?",
         },
         "down",
     ),

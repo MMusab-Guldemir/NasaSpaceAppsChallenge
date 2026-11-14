@@ -1088,8 +1088,8 @@ METHODS = {
   (Santer ve ark., 2000); kısa kayıtlar bu sürekliliği olduğundan az gösterdiği için küçük örneklem
   düzeltmesi de uygulanır (Nychka ve ark., 2000).
 - **Dedektif ne sıklıkla yanılabilir?** Hiç trend olmayan verilerle yapılan simülasyonlarda yanlış
-  bir *Doğrulandı*, yıllar bağımsızken vakaların yaklaşık %3'ünde, orta kalıcılıkta 15 yıl ve
-  üzerinde %5–7'sinde (yalnızca 10 yılda yaklaşık %10), is gibi çok kalıcı serilerde %9–18'inde
+  bir *Doğrulandı*, yıllar bağımsızken vakaların yaklaşık %3'ünde, orta süreklilikte 15 yıl ve
+  üzerinde %5–7'sinde (yalnızca 10 yılda yaklaşık %10), is gibi çok sürekli serilerde %9–18'inde
   çıkıyor. Bu yüzden kısa kayıtlar uyarı alır.
 - **Gerçek bir trendi ne sıklıkla bulur?** On yılda bir tipik yıllık dalgalanma kadar büyük gerçek
   bir trend, yıllar bağımsızken 10 yıllık kayıtta vakaların yaklaşık %7'sinde, 20 yılda %51'inde,

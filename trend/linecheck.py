@@ -30,7 +30,8 @@ EXACT_FIT = 1e-12  # leftovers this small (relative to the spread of the values)
 LINE_TEXT = {
     "en": {
         "note": (
-            "Over the period the values mostly move one way (plain Mann-Kendall, {p}), but not "
+            "Over the period the values mostly move one way (Mann-Kendall without the persistence "
+            "correction, {p}), but not "
             "along a straight line. A straight line fits poorly, the leftover pattern looks like "
             "persistence, and our cautious rule then counts only about {n_eff} independent years. Try a "
             "shorter period where the change is closer to a line."
@@ -38,8 +39,9 @@ LINE_TEXT = {
     },
     "tr": {
         "note": (
-            "Dönem boyunca değerler çoğunlukla tek yöne gidiyor (düz Mann-Kendall, {p}), ama düz bir çizgi "
-            "boyunca değil. Düz çizgi iyi oturmuyor, geriye kalan desen kalıcılık gibi görünüyor ve "
+            "Dönem boyunca değerler çoğunlukla tek yöne gidiyor (süreklilik düzeltmesi yapılmamış "
+            "Mann-Kendall, {p}), ama düz bir çizgi boyunca değil. Düz çizgi iyi oturmuyor, geriye kalan "
+            "desen süreklilik gibi görünüyor ve "
             "temkinli kuralımız yalnızca yaklaşık {n_eff} bağımsız yıl sayıyor. Değişimin çizgiye daha "
             "yakın olduğu daha kısa bir dönem dene."
         ),
@@ -115,5 +117,11 @@ def line_check(years, values, result: TrendResult, alpha: float = DEFAULT_ALPHA)
     plain_mk_p = float(mk.original_test(y).p) if y.size >= 3 else 1.0
     curved = curvature_p_value(x, y) < alpha
     one_way = plain_mk_p < STRONG_MK_P or (curved and plain_mk_p < alpha)
-    show = (not result.significant) and result.n_effective < NEFF_LIMIT and one_way
+    # A series that turns around inside the period (falls, then rises) is explained by the "why is it
+    # not verified?" box in trend/verify.py, so the two never disagree about the shape.
+    from trend.verify import CURVE_P, curvature  # imported here: trend.verify imports this module
+
+    turn_p, turns_inside = curvature(x, y)
+    turns = turn_p < CURVE_P and turns_inside
+    show = (not result.significant) and result.n_effective < NEFF_LIMIT and one_way and not turns
     return LineCheck(curved=bool(curved), plain_mk_p=plain_mk_p, show=bool(show))

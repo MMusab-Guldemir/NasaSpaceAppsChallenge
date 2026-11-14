@@ -24,8 +24,9 @@ from trend.variables import VARIABLES
 
 NO_SNOW_MM = 1.0  # a snowfall record whose yearly totals all stay below this means "it never snows here"
 # Share of trendless cases that still get a "Confirmed" stamp (scripts/accuracy_report.py): about 3%
-# with independent years, up to about 7% with persistent years over 15 years or more.
-FALSE_ALARM_LOW, FALSE_ALARM_HIGH = 0.03, 0.07
+# with independent years; with persistent years about 5-7% over 15 years or more and about 10% for the
+# short records (7-10 years) and strongly persistent ones on this board.
+FALSE_ALARM_LOW, FALSE_ALARM_HIGH = 0.03, 0.10
 
 SHORT_NAMES = {
     "en": {
@@ -101,7 +102,7 @@ WORLD_TEXT = {
         ),
         "open_case": "Aç: {region} – {variable}",
         "counts": (
-            "{tested} vaka incelendi: {confirmed} doğrulandı, {disputed} tartışmalı, {weak} zayıf ipucu, "
+            "{tested} dosya incelendi: {confirmed} doğrulandı, {disputed} tartışmalı, {weak} zayıf ipucu, "
             "{none} delilsiz."
         ),
         "chance_note": (

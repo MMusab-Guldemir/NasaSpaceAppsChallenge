@@ -28,6 +28,7 @@ TIMELINE_TEXT = {
             "5% line were unlikely to be chance."
         ),
         "solid_since": "**Solid since {year}:** every record ending in {year} or later is Confirmed, with the same {direction}.",
+        "solid_last": "**Confirmed only with the latest year, {year}:** one more year could still change the verdict.",
         "not_solid": "**Not solid yet:** the chosen period does not get the Confirmed stamp. A longer record may change that.",
         "not_solid_curved": "**Not solid yet:** the chosen period does not get the Confirmed stamp; see the note about the straight line above.",
         "flipped": (
@@ -49,18 +50,20 @@ TIMELINE_TEXT = {
             "noktalar şansa zor bağlanır."
         ),
         "solid_since": "**{year} yılından beri sağlam:** {year} veya sonrasında biten her kayıt aynı yönde ({direction}) Doğrulandı.",
+        "solid_last": "**Ancak son yılla, {year} yılında doğrulandı:** bir yıl daha kararı değiştirebilir.",
         "not_solid": "**Henüz sağlam değil:** Seçilen dönem Doğrulandı damgası almıyor. Daha uzun bir kayıt bunu değiştirebilir.",
         "not_solid_curved": "**Henüz sağlam değil:** Seçilen dönem Doğrulandı damgası almıyor; yukarıdaki düz çizgi notuna bak.",
         "flipped": (
-            "**Delil gidip geldi:** {years} yıllarında biten kayıtlar doğrulanmıştı, seçilen dönem ise "
-            "doğrulanmıyor."
+            "**Delil gidip geldi:** son yılı {years} olan kayıtlar Doğrulandı damgası almıştı; seçilen "
+            "dönem ise almıyor."
         ),
         "robust": (
-            "**Başlangıç yılı kontrolü:** {first}–{last} arasındaki {n} olası başlangıç yılının (her biri en "
-            "az {min} yıl tutarak) {k} tanesi seçilen dönemle aynı kararı veriyor ({status})."
+            "**Başlangıç yılı kontrolü:** {first}–{last} arasındaki {n} olası başlangıç yılının (her "
+            "birinde en az {min} yıl kalacak şekilde) {k} tanesi seçilen dönemle aynı kararı veriyor "
+            "({status})."
         ),
         "up": "artış", "down": "azalış",
-        "x_title": "Kaydın son yılı", "y_title": "Şans (p değeri, log ölçek)",
+        "x_title": "Kaydın son yılı", "y_title": "Tesadüf ihtimali (p değeri, log ölçek)",
         "line": "%5 çizgisi", "hover": "Kayıt {start}–%{{x}}: p = %{{customdata}}",
     },
 }
@@ -149,6 +152,8 @@ def timeline_figure(timeline: pd.DataFrame, lang: str, start_year: int, separato
         np.where(timeline["significant"], "#a8501b", "#898781"),
     )
     shown = [f"{value:.4f}" if value >= 0.0001 else "< 0.0001" for value in timeline["p_value"]]
+    if separators.startswith(","):  # hover texts are strings, so plotly's separators do not touch them
+        shown = [text.replace(".", ",") for text in shown]
     figure = go.Figure()
     figure.add_trace(go.Scatter(
         x=timeline["end_year"], y=p, mode="lines+markers", customdata=shown,
