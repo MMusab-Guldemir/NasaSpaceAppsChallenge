@@ -1035,12 +1035,12 @@ METHODS = {
   sample size (Santer et al., 2000) with a small-sample adjustment (Nychka et al., 2000), because
   short records underestimate this persistence.
 - **How often can the detective be wrong?** In simulations of data with no trend at all, a false
-  *Confirmed* appears in about 2-3% of cases when years are independent, in about 4-6% with moderate
-  persistence over 15 years or more (about 11% with only 10 years), and in about 9-19% for very
+  *Confirmed* appears in about 3% of cases when years are independent, in about 5-7% with moderate
+  persistence over 15 years or more (about 10% with only 10 years), and in about 9-18% for very
   persistent series such as soot. Short records therefore get a warning.
 - **How often does it find a real trend?** A real trend as large as one typical year-to-year swing
   per decade is confirmed in about 7% of cases with 10 years, 51% with 20, 81% with 25 and over 99%
-  with 35 years or more (independent years); persistent years need longer records (42% with 25 years,
+  with 35 years or more (independent years); persistent years need longer records (41% with 25 years,
   95% with 45). So "no significant trend" often means "the record is too short", not "no change".
   The numbers can be reproduced with scripts/accuracy_report.py.
 - **Second witness:** the Mann-Kendall test checks for a steady rise or fall without assuming a
@@ -1082,13 +1082,13 @@ METHODS = {
   (Santer ve ark., 2000); kısa kayıtlar bu sürekliliği olduğundan az gösterdiği için küçük örneklem
   düzeltmesi de uygulanır (Nychka ve ark., 2000).
 - **Dedektif ne sıklıkla yanılabilir?** Hiç trend olmayan verilerle yapılan simülasyonlarda yanlış
-  bir *Doğrulandı*, yıllar bağımsızken vakaların yaklaşık %2–3'ünde, orta kalıcılıkta 15 yıl ve
-  üzerinde %4–6'sında (yalnızca 10 yılda yaklaşık %11), is gibi çok kalıcı serilerde %9–19'unda
+  bir *Doğrulandı*, yıllar bağımsızken vakaların yaklaşık %3'ünde, orta kalıcılıkta 15 yıl ve
+  üzerinde %5–7'sinde (yalnızca 10 yılda yaklaşık %10), is gibi çok kalıcı serilerde %9–18'inde
   çıkıyor. Bu yüzden kısa kayıtlar uyarı alır.
 - **Gerçek bir trendi ne sıklıkla bulur?** On yılda bir tipik yıllık dalgalanma kadar büyük gerçek
   bir trend, yıllar bağımsızken 10 yıllık kayıtta vakaların yaklaşık %7'sinde, 20 yılda %51'inde,
   25 yılda %81'inde, 35 yıl ve üzerinde %99'undan fazlasında doğrulanır; yıllar birbirine benziyorsa
-  daha uzun kayıt gerekir (25 yılda %42, 45 yılda %95). Bu yüzden "anlamlı trend yok" çoğu zaman
+  daha uzun kayıt gerekir (25 yılda %41, 45 yılda %95). Bu yüzden "anlamlı trend yok" çoğu zaman
   "kayıt kısa" demektir, "değişim yok" değil. Sayılar scripts/accuracy_report.py ile yeniden
   üretilebilir.
 - **İkinci tanık:** Mann-Kendall testi, düz bir çizgi varsaymadan istikrarlı bir artış ya da azalış

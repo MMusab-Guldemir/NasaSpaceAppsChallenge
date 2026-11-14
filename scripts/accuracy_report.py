@@ -11,7 +11,8 @@ answer is known:
 * Detection rate: series WITH a real trend of one standard deviation of the year-to-year noise per
   decade. The share stamped "Confirmed" in the right direction.
 
-Usage:  python scripts/accuracy_report.py [--runs 1000]
+Usage:  python scripts/accuracy_report.py [--runs 4000]   (about 6 minutes; the docs and the pitch deck
+        quote the default run)
 """
 from __future__ import annotations
 
@@ -51,7 +52,7 @@ def confirmed_share(n: int, phi: float, slope_per_year: float, runs: int, seed: 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--runs", type=int, default=1000, help="simulated series per table cell")
+    parser.add_argument("--runs", type=int, default=4000, help="simulated series per table cell")
     args = parser.parse_args(argv)
 
     lengths = (10, 15, 25, 45)

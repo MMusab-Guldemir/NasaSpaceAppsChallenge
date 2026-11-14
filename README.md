@@ -33,8 +33,8 @@ Pick a place and a measurement from NASA Earth data, and find out **what** is ch
    - the **rate of change per decade** with its 95% confidence interval,
    - whether the trend is **significant** (two-sided t-test, adjusted for year-to-year persistence
      with an effective sample size and a small-sample correction; in simulations a false
-     "Confirmed" appears in about 2-3% of trendless cases with independent years, about 4-6% with
-     moderate persistence over 15+ years, and about 9-19% for very persistent series such as soot;
+     "Confirmed" appears in about 3% of trendless cases with independent years, about 5-7% with
+     moderate persistence over 15+ years, and about 9-18% for very persistent series such as soot;
      a real trend of one typical year-to-year swing per decade is confirmed about 7 times in 100
      with 10 years, 51 with 20, 81 with 25 and over 99 with 35 years; reproduce with
      `scripts/accuracy_report.py`),

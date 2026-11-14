@@ -90,8 +90,8 @@ NASA data.
    consecutive years are positively correlated, the uncertainty is widened with an effective sample
    size (Santer et al., 2000) with the small-sample adjustment of Nychka et al. (2000), because short
    records underestimate persistence. In simulations of trendless data, a false "Confirmed" appears
-   in about 2-3% of cases for independent years, about 4-6% with moderate persistence over 15 years
-   or more (about a third fewer than before the adjustment), and about 9-19% for very persistent
+   in about 3% of cases for independent years, about 5-7% with moderate persistence over 15 years
+   or more (about a third fewer than before the adjustment), and about 9-18% for very persistent
    series such as soot; short records therefore get a warning. A real trend of one typical
    year-to-year swing per decade is confirmed in about 7% of cases with 10 years, 51% with 20, 81%
    with 25 and over 99% with 35 years, so "no significant trend" often means "record too short".

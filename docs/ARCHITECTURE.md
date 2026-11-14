@@ -91,18 +91,18 @@ Tests on the annual series:
   trendless AR(1) noise during the hackathon showed false "Confirmed" rates of up to 9-13% without
   the adjustment and about 3-8% with it for 25 years or more (persistence up to about 0.7); 10-15-year
   periods and very persistent series (soot) stay higher. Measured with `scripts/accuracy_report.py`
-  (1000 simulated series per cell):
+  (4000 simulated series per cell, the numbers on the pitch deck):
 
   | False "Confirmed", trendless data | 10 years | 15 years | 25 years | 45 years |
   |---|---|---|---|---|
-  | independent years | 2.2% | 2.1% | 2.7% | 3.0% |
-  | persistence 0.5 | 10.6% | 6.4% | 5.8% | 4.2% |
-  | persistence 0.9 | 18.6% | 18.0% | 11.6% | 8.7% |
+  | independent years | 3.0% | 2.5% | 2.5% | 2.7% |
+  | persistence 0.5 | 9.9% | 7.4% | 5.4% | 4.8% |
+  | persistence 0.9 | 18.1% | 15.4% | 11.6% | 9.1% |
 
   | "Confirmed", real trend of 1 SD per decade | 10 y | 15 y | 20 y | 25 y | 35 y | 45 y |
   |---|---|---|---|---|---|---|
-  | independent years | 6.8% | 20.9% | 50.7% | 80.9% | 99.5% | 100% |
-  | persistence 0.5 | 13.8% | 16.8% | 26.9% | 41.9% | 77.4% | 95.0% |
+  | independent years | 6.9% | 21.0% | 51.3% | 80.9% | 99.6% | 100% |
+  | persistence 0.5 | 12.4% | 17.4% | 26.7% | 41.3% | 77.6% | 95.3% |
 - **Second witness:** Mann-Kendall with Sen's slope, shown as "agrees" or "disagrees" with the
   headline. It uses the same persistence rule: when r1 > 0 its z-score is scaled by sqrt(n_eff / n)
   (an effective-sample-size correction in the spirit of Yue and Wang, 2004).
