@@ -37,6 +37,16 @@ def test_marmara_region_renders():
     assert any("Istanbul" in h.value for h in at.header)
 
 
+@pytest.mark.parametrize("variable_key", available_variable_keys("marmara"))
+def test_each_marmara_case_file_opens(variable_key):
+    at = AppTest.from_file(APP, default_timeout=60)
+    at.session_state["region"] = "marmara"
+    at.run()
+    at.button(key=f"open_{variable_key}").click().run()
+    assert not at.exception
+    assert at.session_state["case"] == variable_key
+
+
 def test_example_case_opens_case_and_period():
     at = run_app("en")
     at.button(key="example_no2").click().run()
