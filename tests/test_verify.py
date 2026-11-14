@@ -124,16 +124,19 @@ def test_reasons_that_assume_a_straight_line_step_aside_for_the_line_note():
                   0.99, 0.93, 0.99, 1.09, 1.19, 1.20, 1.31]  # rises, dips 2016-2020, rises again
     colorado_no2 = [1.09, 1.10, 1.01, 0.99, 0.92, 0.93, 0.94, 1.02, 0.98, 0.89, 0.84, 0.87, 0.90, 0.87,
                     0.82, 0.73, 0.81, 0.87, 0.89, 0.95, 1.01]  # falls to 2020, then climbs back
-    for values, keeps_curve in ((medina_no2, False), (colorado_no2, True)):
+    for values, note_shown in ((medina_no2, True), (colorado_no2, False)):
         annual = pd.DataFrame({"year": years, "value": values})
         result = analyze_trend(annual["year"], annual["value"], min_years=VARIABLES["no2"].min_years)
-        assert line_check(annual["year"], annual["value"], result).show
+        # The line note covers the steady change; a series that turns around is left to the box.
+        assert line_check(annual["year"], annual["value"], result).show == note_shown
+        assert result.n_effective < 6  # too few independent years to promise a date
         for lang in ("en", "tr"):
             text = vf.VERIFY_TEXT[lang]
             lines = vf.why_not_confirmed(annual, result, status_of(result), lang, "no2")
-            for key in ("noise", "need_years", "no_change"):
+            dropped = ("need_years",) + (("noise", "no_change") if note_shown else ())
+            for key in dropped:
                 assert not any(line.startswith(text[key].split("{")[0]) for line in lines), (key, lines)
-            assert (text["curve"] in lines) == keeps_curve
+            assert (text["curve"] in lines) == (not note_shown)
 
 
 def test_short_records_and_disputes_are_named():
@@ -150,7 +153,7 @@ def test_witness_verdicts_on_synthetic_records():
     result = analyze_trend(main["year"], main["value"])
     same = vf.compare_witness(result, monthly_from_annual(annual_series(0.035, 0.3, seed=7)), "en",
                               "air_temperature", 1981, 2025, main_annual=main)
-    assert same["verdict"] == "confirmed" and "second witness" in same["lines"][0]
+    assert same["verdict"] == "confirmed" and "third witness" in same["lines"][0]
     slower = vf.compare_witness(result, monthly_from_annual(annual_series(0.012, 0.05, seed=8)), "en",
                                 "air_temperature", 1981, 2025, main_annual=main)
     assert slower["verdict"] == "confirmed_direction"

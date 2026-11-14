@@ -300,3 +300,33 @@ def test_a_broken_cache_file_is_fetched_again(tmp_path, monkeypatch):
         cached.write_text("{not json", encoding="utf-8")
     cells, _ = tm.fetch_cells("air_temperature", BOX, cache_dir=tmp_path)
     assert len(calls) == 2 and len(cells) > 0
+
+
+def test_odd_answers_are_refused_and_never_cached(tmp_path, monkeypatch):
+    answers = iter([["not", "a", "dict"], {"features": []}])
+    monkeypatch.setattr(tm, "_request_retrying", lambda *args: next(answers))
+    with pytest.raises(tm.DataSourceError):
+        tm.fetch_cells("air_temperature", BOX, cache_dir=tmp_path)
+    cells, _ = tm.fetch_cells("air_temperature", BOX, cache_dir=tmp_path)
+    assert cells.empty and not list(tmp_path.glob("*.json"))  # an answer without cells is not kept
+
+
+def test_app_remembers_a_failed_grid_fetch(monkeypatch):
+    import requests
+    import streamlit as st
+
+    calls = []
+
+    def failing_fetch(*args, **kwargs):
+        calls.append(args)
+        raise requests.ConnectionError("no answer")
+
+    monkeypatch.setattr(tm, "fetch_cells", failing_fetch)
+    st.cache_data.clear()
+    at = AppTest.from_file(APP, default_timeout=90)
+    at.session_state["map_layer"] = "scene"
+    at.run()
+    at.run()  # a rerun within a minute does not ask NASA POWER again
+    assert not at.exception
+    assert len(calls) == 1
+    assert any(tm.MAP_TEXT["en"]["fetch_failed"] in w.value for w in at.warning)

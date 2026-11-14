@@ -26,7 +26,9 @@ from trend.area import power_request_boxes
 from trend.fetch import (
     POWER_VARIABLES,
     RETRY_PAUSES,
+    UNEXPECTED_RESPONSE,
     ZERO_MEANS_MISSING,
+    DataSourceError,
     _request_retrying,
     power_sources,
 )
@@ -41,7 +43,7 @@ NO_SNOW_MAX_MM = 1.0  # same rule as the app: a cell where snowfall never reache
 FIRST_YEAR = {"aod": 2001}  # CERES SYN1deg aerosols start in 2001; the MERRA-2 values in 1981
 DEFAULT_FIRST_YEAR = 1981
 LAST_YEAR = 2026  # like the board; POWER's "end date out of range" answer is retried one year earlier
-MAX_MAP_SPAN = 12.0  # degrees; a larger rectangle has too many cells for a readable map
+MAX_MAP_SPAN = 10.0  # degrees; a larger rectangle has too many cells for a readable map
 EDGE = 1e-6
 
 # Decrease (blue) -> no change (pale) -> increase (orange): the app's two series colours.
@@ -60,11 +62,11 @@ MAP_TEXT = {
                    "rectangle to see the dots.",
         "fetch_failed": "NASA POWER did not answer for the grid cells. Try again in a moment.",
         "intro": "Every square is one NASA grid cell (about 50 km) with its own trend test.",
-        "both": "Two opposite directions in the same area! {up} cells show a significant increase "
-                "and {down} cells a significant decrease.",
-        "up_only": "{up} of {n} cells show a significant increase.",
-        "down_only": "{down} of {n} cells show a significant decrease.",
-        "none": "None of the {n} cells keeps a significant trend after the correction for testing "
+        "both": "Two opposite directions in the same area! Significant increase in {up} grid cell(s), "
+                "significant decrease in {down}.",
+        "up_only": "Significant increase in {up} of {n} grid cells.",
+        "down_only": "Significant decrease in {down} of {n} grid cells.",
+        "none": "None of the {n} grid cell(s) keeps a significant trend after the correction for testing "
                 "many cells.",
         "fastest_up": "Fastest increase among the cells with a dot {where}: {rate}.",
         "fastest_down": "Fastest decrease among the cells with a dot {where}: {rate}.",
@@ -164,15 +166,15 @@ TREND_COLUMNS = ["lat", "lon", "slope_per_decade", "p_value", "significant", "ag
 WHY_TEXT = {
     "en": {
         "why_head": "Why do some cells have no dot?",
-        "why_noise": "{n} cells: the change is small next to the year-to-year swings (a typical one would "
+        "why_noise": "{n} cell(s): the change is small next to the year-to-year swings (a typical one would "
                      "need roughly {need} years of records)",
-        "why_noise_centuries": "{n} cells: the change is too small to tell apart from the year-to-year "
+        "why_noise_centuries": "{n} cell(s): the change is too small to tell apart from the year-to-year "
                                "swings",
-        "why_fdr": "{n} cells: significant on their own, but with {total} cells tested at once a result "
+        "why_fdr": "{n} cell(s): significant on their own, but with {total} cells tested at once a result "
                    "this strong can also be chance",
-        "why_disputed": "{n} cells: significant, but the second (rank-based) test disagrees",
-        "why_short": "{n} cells: the record is short (under {rec} years)",
-        "why_flat": "{n} cells: no change at all",
+        "why_disputed": "{n} cell(s): significant, but the second (rank-based) test disagrees",
+        "why_short": "{n} cell(s): the record is short (under {rec} years)",
+        "why_flat": "{n} cell(s): no change at all",
         "tip_noise": "No dot: the change is small next to the swings; roughly {need} years needed",
         "tip_noise_centuries": "No dot: the change is too small to tell apart from the swings",
         "tip_fdr": "No dot: significant alone, but could be chance among {total} cells",
@@ -245,6 +247,11 @@ def cells_from_payloads(payloads: list[dict], parameter: str,
     return cells.loc[:, ["lat", "lon", "date", "value"]].sort_values(["lat", "lon", "date"]).reset_index(drop=True)
 
 
+def _usable(payload) -> bool:
+    """A NASA POWER regional answer that has a list of grid cells (features)."""
+    return isinstance(payload, dict) and isinstance(payload.get("features"), list)
+
+
 def fetch_cells(variable_key: str, bbox: tuple[float, float, float, float], end_year: int = LAST_YEAR,
                 cache_dir: Path | None = None, timeout=300) -> tuple[pd.DataFrame, str]:
     """Monthly values per grid cell from NASA POWER for any rectangle.
@@ -264,13 +271,22 @@ def fetch_cells(variable_key: str, bbox: tuple[float, float, float, float], end_
             path = Path(cache_dir) / name
         if path is not None and path.exists():
             try:
-                payloads.append(json.loads(path.read_text(encoding="utf-8")))
-                continue
+                cached = json.loads(path.read_text(encoding="utf-8"))
             except (OSError, ValueError):
+                cached = None
+            if _usable(cached):
+                payloads.append(cached)
+                continue
+            try:
                 path.unlink(missing_ok=True)  # a broken cache file is fetched again
+            except OSError:
+                pass
         payload = _request_retrying(parameter, Region("custom", "custom", *box), start_year, end_year,
                                     timeout, RETRY_PAUSES)
-        if path is not None:
+        if not _usable(payload):
+            raise DataSourceError(UNEXPECTED_RESPONSE)
+        # Only a response that really has cells for this box is kept on disk.
+        if path is not None and not cells_from_payloads([payload], parameter, box).empty:
             try:
                 path.parent.mkdir(parents=True, exist_ok=True)
                 path.write_text(json.dumps(payload), encoding="utf-8")

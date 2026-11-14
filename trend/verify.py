@@ -24,7 +24,7 @@ from scipy import stats as sps
 
 from trend.fetch import PROJECT_ROOT
 from trend.i18n import chance_phrase, num, p_phrase, variable_text
-from trend.linecheck import line_check
+from trend.linecheck import NEFF_LIMIT, line_check
 from trend.stats import RECOMMENDED_YEARS, analyze_trend, to_annual
 from trend.variables import VARIABLES
 
@@ -117,8 +117,8 @@ VERIFY_TEXT = {
                    "main data show {rate} per decade ({sig}).",
         "flip_sig": " Unlike the full period, the main trend is significant over these years.",
         "flip_nosig": " Unlike the full period, the main trend is not significant over these years.",
-        "confirmed": "✅ Two different NASA datasets agree on the direction and roughly on the speed: the case "
-                     "is backed by a second witness.",
+        "confirmed": "✅ Two different NASA datasets agree on the direction and roughly on the speed: a "
+                     "third witness backs the case.",
         "confirmed_direction": "✅ Both datasets see a significant change in the same direction, but at "
                                "different speeds ({a} and {b} per decade). The direction is backed; the "
                                "speed is not settled.",
@@ -130,7 +130,7 @@ VERIFY_TEXT = {
         "witness_sees": "🔍 Over the compared years the second dataset sees a significant change ({rate} per "
                         "decade), but the main data do not reach the evidence line there. The change may be "
                         "real; see below why the main data could not prove it.",
-        "neither": "Neither dataset shows a clear trend, so \"no evidence\" holds up.",
+        "neither": "Over the compared years neither dataset shows a clear trend.",
         "too_little": "There is too little snow here (a few millimetres a year in both records) to judge "
                       "a trend.",
         "corr": "With each record's own trend removed, their year-to-year ups and downs match closely "
@@ -181,8 +181,8 @@ VERIFY_TEXT = {
         "accel": "The change speeds up or slows down over the period; a straight line describes it only "
                  "roughly.",
         "need_years": "If it continued at this speed, roughly {need} years of records would give a 90% "
-                      "chance of detecting it; the record spans {span} years now (roughly {more} more, "
-                      "around {year}). This is a rough estimate (Weatherhead et al., 1998).",
+                      "chance of detecting it; the chosen period spans {span} years (roughly {more} more, "
+                      "to around {year}). This is a rough estimate (Weatherhead et al., 1998).",
         "no_change": "If there is a change, it is too small to tell apart from the year-to-year swings in "
                      "this record.",
     },
@@ -195,8 +195,8 @@ VERIFY_TEXT = {
                    "yılda {rate} ({sig}).",
         "flip_sig": " Tüm dönemden farklı olarak, ana trend bu yıllarda anlamlı.",
         "flip_nosig": " Tüm dönemden farklı olarak, ana trend bu yıllarda anlamlı değil.",
-        "confirmed": "✅ İki farklı NASA verisi yön ve yaklaşık hız konusunda aynı fikirde: dava ikinci bir "
-                     "tanıkla da destekleniyor.",
+        "confirmed": "✅ İki farklı NASA verisi yön ve yaklaşık hız konusunda aynı fikirde: dosyayı üçüncü "
+                     "bir tanık da destekliyor.",
         "confirmed_direction": "✅ İki veri de aynı yönde anlamlı değişim görüyor, ama hızları farklı "
                                "(on yılda {a} ve {b}). Yön destekleniyor; hız konusunda veriler ayrışıyor.",
         "confirmed_weak": "İki veri de aynı yönü gösteriyor ve ikisi de anlamlı, ama taraflardan birinde ikinci "
@@ -207,7 +207,7 @@ VERIFY_TEXT = {
         "witness_sees": "🔍 Karşılaştırılan yıllarda ikinci veri anlamlı bir değişim görüyor (on yılda {rate}), "
                         "ama ana veri bu yıllarda kanıt eşiğine ulaşmıyor. Değişim gerçek olabilir; ana "
                         "verinin neden kanıtlayamadığı aşağıda.",
-        "neither": "İki veri de belirgin bir trend görmüyor; \"kanıt yok\" sonucu tutarlı.",
+        "neither": "Karşılaştırılan yıllarda iki veri de belirgin bir trend görmüyor.",
         "too_little": "Burada bir trendi yargılamak için kar çok az (iki kayıtta da yılda birkaç milimetre).",
         "corr": "Her kaydın kendi trendi çıkarıldığında, yıldan yıla iniş çıkışları büyük ölçüde örtüşüyor "
                 "(korelasyon r = {r}).",
@@ -247,15 +247,15 @@ VERIFY_TEXT = {
         "weak": "İkinci test bir değişim görüyor ama ana test kanıt eşiğine ulaşmıyor: iz var ama delil "
                 "zayıf.",
         "short": "Kayıt kısa ({n} yıl); bir trend için en az {rec} yıl öneriliyor.",
-        "close": "Kanıt eşiğinin hemen altında: bu kadar güçlü bir trend tesadüfen {phrase} ihtimalle "
-                 "çıkıyor (eşik %5).",
+        "close": "%5 sınırını kıl payı geçemiyor: bu kadar güçlü bir trend tesadüfen {phrase} ihtimalle "
+                 "çıkıyor (sınır %5).",
         "noise": "Dönem boyunca toplam değişim ({change} {unit}), tipik yıllık oynamanın (±{swing} {unit}) iki "
                  "katından az; bu yüzden gürültüden ayırmak zor.",
         "curve": "Seri önce bir yöne sonra öbür yöne gidiyor; düz bir çizgi bu şekli iyi anlatamıyor. "
                  "Dönemi kısaltıp her parçaya ayrı bakmayı dene.",
         "accel": "Değişim dönem içinde hızlanıyor ya da yavaşlıyor; düz bir çizgi bunu ancak kabaca anlatıyor.",
         "need_years": "Bu hızla sürerse, onu %90 ihtimalle yakalamak için kabaca {need} yıllık kayıt gerekir; "
-                      "kayıt şu an {span} yıla yayılıyor (kabaca {more} yıl daha, {year} civarı). Bu kaba bir "
+                      "seçilen dönem {span} yıla yayılıyor (kabaca {more} yıl daha, {year} civarına kadar). Bu kaba bir "
                       "tahmin (Weatherhead ve ark., 1998).",
         "no_change": "Bir değişim varsa bile, bu kayıttaki yıllık oynamalardan ayırt edilemeyecek kadar küçük.",
     },
@@ -391,7 +391,8 @@ def why_not_confirmed(annual: pd.DataFrame, result, status: str, lang: str, vari
         elif not math.isfinite(need) or need > MAX_YEARS:
             if witness_verdict != "witness_sees":
                 lines.append(text["no_change"])
-        elif need > span:
+        elif need > span and result.n_effective >= NEFF_LIMIT:
+            # With only a few independent years the estimate is too unsure to promise a date.
             more = math.ceil(need) - span
             lines.append(text["need_years"].format(need=math.ceil(need), span=span, more=more,
                                                    year=result.end_year + more))
