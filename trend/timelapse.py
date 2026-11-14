@@ -125,6 +125,11 @@ TIME_TEXT = {
         "aod_cut": ("Years after 2021 are left out: from April 2022 the app's aerosol data follow another "
                     "satellite (VIIRS)"),
         "tick_hint": "Tick “Squares” to see the data squares",
+        "compare": "⇆ Compare two years",
+        "before": "Before:",
+        "compare_means": "Average of the squares: {a} (left) · {b} (right)",
+        "compare_hint": "Drag the white line: left {a}, right {b}",
+        "imagery_left": "Left ({year}): {name} is available {first}–{last}",
         "image_colours": "Colours of the satellite layer (NASA GIBS):",
         "words": {
             "air_temperature": {"high1": "Warmest", "low1": "Coldest", "high": "warmest", "low": "coldest"},
@@ -197,6 +202,11 @@ TIME_TEXT = {
         "aod_cut": ("2021 sonrası yıllar dışarıda bırakıldı: Nisan 2022'den itibaren uygulamanın aerosol verisi "
                     "başka bir uyduyu (VIIRS) izliyor"),
         "tick_hint": "Veri karelerini görmek için “Kareler” kutusunu işaretle",
+        "compare": "⇆ İki yılı karşılaştır",
+        "before": "Öncesi:",
+        "compare_means": "Karelerin ortalaması: {a} (solda) · {b} (sağda)",
+        "compare_hint": "Beyaz çizgiyi sürükle: solda {a}, sağda {b}",
+        "imagery_left": "Solda ({year}): {name} {first}–{last} arası var",
         "image_colours": "Uydu katmanının renkleri (NASA GIBS):",
         "words": {
             "air_temperature": {"high1": "en sıcağı", "low1": "en soğuğu", "high": "en sıcak", "low": "en soğuk"},
@@ -512,10 +522,29 @@ TEMPLATE = r"""<!doctype html>
   .tl-imglegend { padding:0 10px 6px; font-size:12px; color:var(--muted); }
   .tl-imglegend img { display:block; max-width:100%; height:auto; max-height:56px; margin-top:2px; }
   .tl-fail { padding:30px; text-align:center; color:var(--muted); }
+  .tl-bar button { font-size:13px; padding:4px 10px; border:1px solid var(--line); border-radius:7px; background:#fff;
+    color:var(--ink); cursor:pointer; }
+  .tl-bar button.on { background:#1d2433; color:#fff; border-color:#1d2433; }
+  #tl-before-wrap { display:none; }
+  #tl.compare #tl-before-wrap { display:flex; }
+  .tl-year-b { position:absolute; right:54px; top:10px; z-index:800; pointer-events:none; display:none;
+    font-size:44px; font-weight:800; line-height:1; color:#fff; letter-spacing:1px;
+    text-shadow:0 2px 6px rgba(0,0,0,.55), 0 0 2px rgba(0,0,0,.8); }
+  #tl.compare .tl-year-b { display:block; }
+  #tl-divider { position:absolute; top:0; bottom:0; width:30px; margin-left:-15px; z-index:850; cursor:ew-resize;
+    display:none; touch-action:none; outline:none; }
+  #tl-divider::before { content:""; position:absolute; left:13px; top:0; bottom:0; width:4px; background:#fff;
+    box-shadow:0 0 5px rgba(0,0,0,.6); }
+  #tl-divider .knob { position:absolute; top:50%; left:50%; width:34px; height:34px; margin:-17px 0 0 -17px;
+    border-radius:50%; background:#fff; color:#1d2433; font-weight:700; font-size:16px; display:flex;
+    align-items:center; justify-content:center; box-shadow:0 1px 6px rgba(0,0,0,.5); }
+  #tl-divider:focus .knob { box-shadow:0 0 0 3px #2c5aa0; }
+  #tl.compare #tl-divider { display:block; }
+  .tl-stripes span.before { outline:2px dashed #1d2433; outline-offset:-2px; }
   .leaflet-tooltip { font-size:12px; line-height:1.35; }
   @media (max-width: 560px) {
-    #tl-map { height:360px; }
-    .tl-year { font-size:34px; }
+    #tl-map { height:340px; }
+    .tl-year, .tl-year-b { font-size:34px; }
     .tl-info { top:48px; max-width:85%; }
     .tl-bar select { max-width:170px; }
     .tl-bottom button { min-width:70px; padding:6px 8px; min-height:34px; }
@@ -533,8 +562,12 @@ TEMPLATE = r"""<!doctype html>
       <select id="tl-layer" aria-label="layer"></select></label>
     <label><span id="tl-img-label"></span> <select id="tl-img" aria-label="imagery"></select></label>
     <label><span id="tl-op-label"></span> <input type="range" id="tl-op" min="0.15" max="0.9" step="0.05" value="0.55"></label>
+    <button type="button" id="tl-compare" aria-pressed="false"></button>
+    <label id="tl-before-wrap"><span id="tl-before-label"></span> <select id="tl-before" aria-label="before"></select></label>
   </div>
-  <div id="tl-map"><div class="tl-year" id="tl-year"></div><div class="tl-info" id="tl-info"></div></div>
+  <div id="tl-map"><div class="tl-year" id="tl-year"></div><div class="tl-year-b" id="tl-year-b"></div>
+    <div class="tl-info" id="tl-info"></div>
+    <div id="tl-divider" tabindex="0" role="slider" aria-valuemin="0" aria-valuemax="100"><div class="knob">⇆</div></div></div>
   <div class="tl-bottom">
     <button type="button" id="tl-play"></button>
     <div class="tl-track">
@@ -602,25 +635,34 @@ TEMPLATE = r"""<!doctype html>
   L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",
     {maxZoom: 19, attribution: "&copy; OpenStreetMap"}).addTo(map);
   map.createPane("imagery").style.zIndex = 250;
-  L.rectangle(bounds, {color: "#1d2433", weight: 1.5, fill: false, dashArray: "5 5", interactive: false}).addTo(map);
+  map.createPane("imageryBefore").style.zIndex = 251;
+  map.createPane("cellsBefore").style.zIndex = 401;
+  map.createPane("outline").style.zIndex = 420;
+  map.getPane("outline").style.pointerEvents = "none";
+  L.rectangle(bounds, {pane: "outline", color: "#1d2433", weight: 1.5, fill: false, dashArray: "5 5",
+    interactive: false}).addTo(map);
 
   var BLANK = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
   var cellsGroup = L.layerGroup().addTo(map);
   var layer = null, rects = [], year = D.startYear, opacity = 0.55;
   var imgKey = D.imageryStart, imgShown = null, imgPending = null, timer = null;
   var first = D.years[0], last = D.years[1];
+  var compare = false, beforeYear = null, splitX = null, imgBefore = null, beforeRects = [];
+  var beforeGroup = L.layerGroup(), beforeRenderer = L.svg({pane: "cellsBefore"});
 
-  function yearIndex() { return layer ? layer.years.indexOf(year) : -1; }
-  function tip(c) {
-    var i = yearIndex(), d = i >= 0 ? c.d[i] : null;
-    if (d === null || d === undefined) { return "<b>" + year + "</b><br>" + esc(T.no_data); }
+  function indexFor(y) { return layer ? layer.years.indexOf(y) : -1; }
+  function yearIndex() { return indexFor(year); }
+  function tip(c) { return tipFor(c, year); }
+  function tipFor(c, y) {
+    var i = indexFor(y), d = i >= 0 ? c.d[i] : null;
+    if (d === null || d === undefined) { return "<b>" + y + "</b><br>" + esc(T.no_data); }
     if (layer.mode === "percent") {
       var value = c.n * (1 + d / 100), words = fill(layer.pct[d >= 0 ? 0 : 1], {p: fmt(Math.abs(d), 0)});
-      return "<b>" + year + "</b><br>" + fmt(value, layer.decimals) + " " + esc(layer.unit) + "<br>" +
+      return "<b>" + y + "</b><br>" + fmt(value, layer.decimals) + " " + esc(layer.unit) + "<br>" +
         esc(fill(T.tip_pct, {words: words, mm: fmt(value - c.n, layer.decimals, true), unit: layer.unit,
           normal_word: layer.normalWord, n: fmt(c.n, layer.decimals)}));
     }
-    return "<b>" + year + "</b><br>" + fmt(c.n + d, layer.decimals) + " " + esc(layer.unit) + "<br>" +
+    return "<b>" + y + "</b><br>" + fmt(c.n + d, layer.decimals) + " " + esc(layer.unit) + "<br>" +
       esc(fill(T.tip_diff, {d: fmt(d, layer.decimals, true), unit: layer.unit, ref_short: layer.refShort,
         normal_word: layer.normalWord, n: fmt(c.n, layer.decimals)}));
   }
@@ -635,14 +677,81 @@ TEMPLATE = r"""<!doctype html>
       r.addTo(cellsGroup); rects.push(r);
     });
   }
-  function paint() {
-    if (!layer) { return; }
-    var i = yearIndex();
-    rects.forEach(function (r, k) {
+  function paintSet(list, y) {
+    var i = indexFor(y);
+    list.forEach(function (r, k) {
       var d = i >= 0 ? layer.cells[k].d[i] : null, col = colour(d, layer);
       if (col === null) { r.setStyle({fillOpacity: 0, opacity: 0.2}); }
       else { r.setStyle({fillColor: col, fillOpacity: opacity, opacity: 0.5}); }
     });
+  }
+  function paint() {
+    if (!layer) { return; }
+    paintSet(rects, year);
+    if (compare) { paintSet(beforeRects, beforeYear); }
+  }
+  function buildBefore() {
+    beforeGroup.clearLayers(); beforeRects = [];
+    if (!layer || !compare) { return; }
+    var size = layer.cell || D.cell, h = size[0] / 2, w = size[1] / 2;
+    layer.cells.forEach(function (c) {
+      var r = L.rectangle([[c.lat - h, c.lon - w], [c.lat + h, c.lon + w]], {pane: "cellsBefore",
+        renderer: beforeRenderer, weight: 0.4, color: "#ffffff", opacity: 0.5, fillOpacity: opacity});
+      r.bindTooltip(function () { return tipFor(c, beforeYear); }, {sticky: true});
+      r.addTo(beforeGroup); beforeRects.push(r);
+    });
+  }
+  function clipPanes() {
+    var after = [map.getPane("overlayPane"), map.getPane("imagery")];
+    var before = [map.getPane("cellsBefore"), map.getPane("imageryBefore")];
+    if (!compare) { after.concat(before).forEach(function (p) { p.style.clip = ""; }); return; }
+    var size = map.getSize();
+    if (splitX === null) { splitX = size.x / 2; }
+    splitX = Math.max(0, Math.min(size.x, splitX));
+    var nw = map.containerPointToLayerPoint([0, 0]), se = map.containerPointToLayerPoint(size), cx = nw.x + splitX;
+    before.forEach(function (p) { p.style.clip = "rect(" + [nw.y, cx, se.y, nw.x].join("px,") + "px)"; });
+    after.forEach(function (p) { p.style.clip = "rect(" + [nw.y, se.x, se.y, cx].join("px,") + "px)"; });
+    var divider = $("tl-divider");
+    divider.style.left = splitX + "px";
+    divider.setAttribute("aria-valuenow", String(Math.round(100 * splitX / Math.max(1, size.x))));
+  }
+  function setImageryBefore() {
+    var m = imagery(imgKey);
+    if (!compare || !m || beforeYear < m.first || beforeYear > m.last) {
+      if (imgBefore) { map.removeLayer(imgBefore); imgBefore = null; }
+      return;
+    }
+    var url = m.url.replace("{time}", beforeYear + "-" + m.date);
+    if (imgBefore && imgBefore._tlUrl === url) { return; }
+    if (imgBefore) { map.removeLayer(imgBefore); }
+    imgBefore = L.tileLayer(url, {pane: "imageryBefore", maxNativeZoom: m.maxNative, maxZoom: 11, opacity: m.opacity,
+      errorTileUrl: BLANK, bounds: bounds.pad(0.6), attribution: esc(T.credit)});
+    imgBefore._tlUrl = url; imgBefore.addTo(map);
+  }
+  function fillBefore() {
+    var select = $("tl-before"); select.innerHTML = "";
+    for (var y = first; y <= last; y++) { var o = document.createElement("option"); o.value = y; o.textContent = y; select.appendChild(o); }
+    beforeYear = Math.max(first, Math.min(last, beforeYear === null ? first : beforeYear));
+    select.value = beforeYear;
+  }
+  function showSquares() { return $("tl-cells").checked; }
+  function setCompare(on) {
+    compare = on;
+    $("tl").classList.toggle("compare", on);
+    $("tl-compare").classList.toggle("on", on);
+    $("tl-compare").setAttribute("aria-pressed", on ? "true" : "false");
+    if (on) {
+      fillBefore();
+      if (year === beforeYear) {
+        if (beforeYear === last && first < last) { beforeYear = first; $("tl-before").value = beforeYear; }
+        else { year = last; }
+      }
+      if (showSquares()) { beforeGroup.addTo(map); }
+    } else {
+      map.removeLayer(beforeGroup);
+      if (imgBefore) { map.removeLayer(imgBefore); imgBefore = null; }
+    }
+    buildBefore(); clipPanes(); update();
   }
   function cellsOn() { return !!layer && $("tl-cells").checked; }
   function range() {
@@ -655,6 +764,7 @@ TEMPLATE = r"""<!doctype html>
     var slider = $("tl-slider"); slider.min = first; slider.max = last;
     year = Math.max(first, Math.min(last, year));
     $("tl-first").textContent = first; $("tl-last").textContent = last;
+    if (compare) { fillBefore(); }
     stripes();
   }
   function stripes() {
@@ -671,7 +781,10 @@ TEMPLATE = r"""<!doctype html>
   }
   function markStripe() {
     var spans = $("tl-stripes").children;
-    for (var k = 0; k < spans.length; k++) { spans[k].className = (+spans[k].getAttribute("data-year") === year) ? "now" : ""; }
+    for (var k = 0; k < spans.length; k++) {
+      var y = +spans[k].getAttribute("data-year");
+      spans[k].className = y === year ? "now" : (compare && y === beforeYear ? "before" : "");
+    }
   }
   function legend() {
     if (!layer || !$("tl-cells").checked) { $("tl-legend").innerHTML = ""; return; }
@@ -684,7 +797,10 @@ TEMPLATE = r"""<!doctype html>
   }
   function info() {
     var lines = [];
-    if (layer && $("tl-cells").checked) {
+    if (compare && layer && $("tl-cells").checked) {
+      var meanText = function (y) { var j = indexFor(y); return y + ": " + (j < 0 || layer.mean[j] === null ? T.no_data : show(layer.mean[j], layer)); };
+      lines.push(esc(fill(T.compare_means, {a: meanText(beforeYear), b: meanText(year)})));
+    } else if (layer && $("tl-cells").checked) {
       var i = yearIndex();
       if (i < 0 || layer.mean[i] === null || layer.mean[i] === undefined) { lines.push(esc(T.no_data)); }
       else {
@@ -715,6 +831,12 @@ TEMPLATE = r"""<!doctype html>
       if (layer.cut) { parts.push(T.aod_cut); }
       else if (year === layer.years[layer.years.length - 1]) { parts.push(T.provisional); }
     } else if (D.layers.length) { parts.push(T.tick_hint); }
+    if (compare) {
+      parts.unshift(fill(T.compare_hint, {a: beforeYear, b: year}));
+      if (m && (beforeYear < m.first || beforeYear > m.last)) {
+        parts.splice(1, 0, fill(T.imagery_left, {year: beforeYear, name: m.name, first: m.first, last: m.last}));
+      }
+    }
     $("tl-note").textContent = parts.join(" · ");
   }
   function imagery(key) { for (var k = 0; k < D.imagery.length; k++) { if (D.imagery[k].key === key) { return D.imagery[k]; } } return null; }
@@ -750,17 +872,19 @@ TEMPLATE = r"""<!doctype html>
     next.addTo(map);
   }
   function update() {
-    $("tl-year").textContent = year; $("tl-slider").value = year;
-    paint(); markStripe(); info(); note(); setImagery();
+    $("tl-year").textContent = compare ? beforeYear : year;
+    $("tl-year-b").textContent = compare ? year : "";
+    $("tl-slider").value = year;
+    paint(); markStripe(); info(); note(); setImagery(); setImageryBefore();
   }
   function chooseLayer(key) {
     layer = null;
     for (var k = 0; k < D.layers.length; k++) { if (D.layers[k].key === key) { layer = D.layers[k]; } }
-    buildCells(); applyRange(); paint(); legend(); update();
+    buildCells(); applyRange(); buildBefore(); paint(); legend(); update();
   }
   function stop() { if (timer) { clearInterval(timer); timer = null; } $("tl-play").textContent = "▶ " + T.play; }
   function play() {
-    if (year >= last) { year = first; update(); }
+    if (year >= last) { year = compare ? Math.min(last, beforeYear + 1) : first; update(); }
     var ms = {slow: 1500, normal: 900, fast: 450}[$("tl-speed").value] || 900;
     timer = setInterval(function () { if (year >= last) { stop(); return; } year += 1; update(); }, ms);
     $("tl-play").textContent = "⏸ " + T.pause;
@@ -770,6 +894,8 @@ TEMPLATE = r"""<!doctype html>
   $("tl-img-label").textContent = T.imagery;
   $("tl-op-label").textContent = T.opacity;
   $("tl-stripes-label").textContent = T.stripes;
+  $("tl-compare").textContent = T.compare;
+  $("tl-before-label").textContent = T.before;
   var layerSelect = $("tl-layer");
   D.layers.forEach(function (l) { var o = document.createElement("option"); o.value = l.key; o.textContent = l.name; layerSelect.appendChild(o); });
   if (!D.layers.length) { $("tl-cells").checked = false; $("tl-cells").disabled = true; layerSelect.disabled = true; }
@@ -782,11 +908,14 @@ TEMPLATE = r"""<!doctype html>
   var slider = $("tl-slider"); slider.min = first; slider.max = last; slider.setAttribute("aria-label", T.year);
 
   layerSelect.addEventListener("change", function () {
-    if (!$("tl-cells").checked) { $("tl-cells").checked = true; cellsGroup.addTo(map); }  // a chosen measurement shows at once
+    if (!$("tl-cells").checked) {  // a chosen measurement shows at once
+      $("tl-cells").checked = true; cellsGroup.addTo(map); if (compare) { beforeGroup.addTo(map); }
+    }
     chooseLayer(layerSelect.value);
   });
   $("tl-cells").addEventListener("change", function () {
-    if ($("tl-cells").checked) { cellsGroup.addTo(map); } else { map.removeLayer(cellsGroup); }
+    if ($("tl-cells").checked) { cellsGroup.addTo(map); if (compare) { beforeGroup.addTo(map); } }
+    else { map.removeLayer(cellsGroup); map.removeLayer(beforeGroup); }
     applyRange(); legend(); update();
   });
   imgSelect.addEventListener("change", function () {
@@ -794,10 +923,50 @@ TEMPLATE = r"""<!doctype html>
     if (imgShown && (!imagery(imgKey) || imgShown._tlKey !== imgKey)) { map.removeLayer(imgShown); imgShown = null; }
     applyRange(); update(); imageLegend();
   });
-  $("tl-op").addEventListener("input", function () { opacity = +$("tl-op").value; paint(); });
+  $("tl-op").addEventListener("input", function () { opacity = +$("tl-op").value; paint(); });  // paints both sides
   slider.addEventListener("input", function () { year = +slider.value; update(); });
   $("tl-play").addEventListener("click", function () { if (timer) { stop(); } else { play(); } });
   speed.addEventListener("change", function () { if (timer) { stop(); play(); } });
+  $("tl-compare").addEventListener("click", function () { setCompare(!compare); });
+  $("tl-before").addEventListener("change", function () { beforeYear = +$("tl-before").value; update(); });
+  map.on("move zoom resize viewreset", clipPanes);
+  var divider = $("tl-divider");
+  L.DomEvent.disableClickPropagation(divider);
+  L.DomEvent.disableScrollPropagation(divider);
+  var dragging = null;
+  divider.addEventListener("pointerdown", function (start) {
+    start.preventDefault(); start.stopPropagation();
+    if (dragging !== null) { return; }  // one finger at a time
+    dragging = start.pointerId;
+    try { divider.setPointerCapture(start.pointerId); } catch (e) { /* synthetic events */ }
+    map.dragging.disable();
+    function move(event) {
+      if (event.pointerId !== dragging) { return; }
+      splitX = event.clientX - $("tl-map").getBoundingClientRect().left; clipPanes();
+    }
+    function end(event) {
+      if (event && event.pointerId !== undefined && event.pointerId !== dragging) { return; }
+      dragging = null;
+      divider.removeEventListener("lostpointercapture", end);
+      divider.removeEventListener("pointermove", move);
+      window.removeEventListener("pointermove", move);
+      window.removeEventListener("pointerup", end);
+      window.removeEventListener("pointercancel", end);
+      map.dragging.enable();
+    }
+    divider.addEventListener("pointermove", move);
+    window.addEventListener("pointermove", move);  // keeps following if the pointer leaves the line
+    window.addEventListener("pointerup", end);  // always ends the drag and gives map dragging back
+    window.addEventListener("pointercancel", end);
+    divider.addEventListener("lostpointercapture", end);
+  });
+  divider.addEventListener("keydown", function (event) {
+    var step = event.shiftKey ? 60 : 20;
+    if (event.key === "ArrowLeft") { splitX = (splitX === null ? map.getSize().x / 2 : splitX) - step; }
+    else if (event.key === "ArrowRight") { splitX = (splitX === null ? map.getSize().x / 2 : splitX) + step; }
+    else { return; }
+    event.preventDefault(); clipPanes();
+  });
 
   if (D.start) { layerSelect.value = D.start; }
   if (D.cellsStart === false) { $("tl-cells").checked = false; map.removeLayer(cellsGroup); }

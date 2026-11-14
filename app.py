@@ -811,7 +811,7 @@ if st.session_state["map_layer"] == "time":
         st.caption(ttext["nothing"])
     time_payload = build_payload(time_layers, active_bbox, None if custom_mode else region_key, lang, picked,
                                  cell=(0.5, 0.625))
-    components.html(render_timelapse_html(time_payload), height=670, scrolling=False)
+    components.html(render_timelapse_html(time_payload), height=720, scrolling=False)
     st.caption(ttext["honesty"])
     st.caption(ttext["gibs_ack"])
     map_state = None

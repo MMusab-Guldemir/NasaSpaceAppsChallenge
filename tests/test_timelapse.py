@@ -211,3 +211,13 @@ def test_app_shows_the_time_travel_layer(lang):
     captions = " ".join(caption.value for caption in at.caption)
     assert tl.TIME_TEXT[lang]["honesty"] in captions
     assert at.query_params.get("map") in ("time", ["time"])
+
+
+def test_the_page_offers_a_before_and_after_swipe():
+    annual = tl.load_annual_cells("sahel", "precipitation")
+    layer = tl.layer_from_annual(annual, "precipitation", "tr")
+    page = tl.render_timelapse_html(tl.build_payload([layer], (-2, 12, 8, 16), "sahel", "tr", "precipitation", (0.5, 0.625)))
+    for element in ('id="tl-compare"', 'id="tl-before"', 'id="tl-divider"', 'id="tl-year-b"', 'createPane("cellsBefore")'):
+        assert element in page, element
+    for lang in ("en", "tr"):
+        assert "{a}" in tl.TIME_TEXT[lang]["compare_hint"] and "{b}" in tl.TIME_TEXT[lang]["compare_means"]
