@@ -1,6 +1,6 @@
 # Runtime dependencies for Streamlit Community Cloud (pinned). Editing this file makes the
 # Cloud rebuild the app from scratch, which also reloads every module in trend/.
-# Rebuild marker: chance lab, nearest-region offer, comparison stamps, deck (2026-11-15 00:51)
+# Rebuild marker: copy pass on the texts, exam and maps (2026-11-15 00:58)
 streamlit==1.67.0
 plotly==7.1.0
 pandas==3.1.1
