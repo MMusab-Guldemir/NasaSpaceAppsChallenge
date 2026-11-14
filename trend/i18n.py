@@ -111,6 +111,12 @@ TEXT: dict[str, dict[str, str]] = {
         "band_name": "95% confidence band of the trend line",
         "trend_name": "Linear trend ({rate})",
         "month_axis": "Month",
+        "map_caption": "The shaded box is the area averaged for {region}.",
+        "share_title": "Share this case",
+        "share_caption": (
+            "This link opens exactly this case, period and language. Copy it with the button on the "
+            "right of the box."
+        ),
     },
     "tr": {
         "eyebrow": "NASA Dünya verisi · İstatistiksel soruşturma",
@@ -210,6 +216,12 @@ TEXT: dict[str, dict[str, str]] = {
         "band_name": "Trend çizgisinin %95 güven bandı",
         "trend_name": "Doğrusal trend ({rate})",
         "month_axis": "Ay",
+        "map_caption": "Gölgeli kutu, {region} için ortalaması alınan alan.",
+        "share_title": "Bu dosyayı paylaş",
+        "share_caption": (
+            "Bu link tam olarak bu dosyayı, dönemi ve dili açar. Kutunun sağındaki düğmeyle "
+            "kopyalayabilirsin."
+        ),
     },
 }
 

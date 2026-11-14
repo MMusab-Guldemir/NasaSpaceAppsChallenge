@@ -12,6 +12,8 @@ from __future__ import annotations
 import pandas as pd
 import plotly.graph_objects as go
 
+from trend.regions import Region
+
 SURFACE = "#fcfcfb"
 TEXT_PRIMARY = "#0b0b0b"
 TEXT_SECONDARY = "#52514e"
@@ -103,6 +105,46 @@ def monthly_figure(
         )
     )
     return _style(fig, x_title, y_title, False, separators)
+
+
+def region_map_figure(region: Region) -> go.Figure:
+    """A small map with the region's box shaded, for orientation."""
+    west, south, east, north = region.bbox
+    fig = go.Figure()
+    if region.us_state:
+        # Shade the state itself; the bounding box outline is drawn on top.
+        fig.add_trace(
+            go.Choropleth(
+                locations=[region.us_state], z=[1], locationmode="USA-states",
+                colorscale=[[0, "#b7d3f6"], [1, "#b7d3f6"]], showscale=False,
+                marker={"line": {"color": SURFACE, "width": 0.5}}, hoverinfo="skip",
+            )
+        )
+    fig.add_trace(
+        go.Scattergeo(
+            lon=[west, east, east, west, west], lat=[south, south, north, north, south],
+            mode="lines", line={"color": SERIES_1, "width": 2}, hoverinfo="skip",
+        )
+    )
+    geo = {
+        "showland": True, "landcolor": "#f0efec", "showlakes": False, "showcountries": True,
+        "countrycolor": AXIS, "showsubunits": True, "subunitcolor": AXIS, "bgcolor": SURFACE,
+        "showframe": False, "framecolor": AXIS, "framewidth": 1,
+        "showcoastlines": True, "coastlinecolor": AXIS,
+    }
+    if region.map_scope == "usa":
+        geo["scope"] = "usa"
+    else:
+        pad = 8
+        geo.update(
+            lonaxis={"range": [west - pad, east + pad]}, lataxis={"range": [south - pad, north + pad]}
+        )
+    fig.update_geos(**geo)
+    fig.update_layout(
+        height=220, margin={"l": 0, "r": 0, "t": 0, "b": 0}, showlegend=False,
+        paper_bgcolor=SURFACE,
+    )
+    return fig
 
 
 def sparkline_figure(annual: pd.DataFrame, band: pd.DataFrame | None = None) -> go.Figure:

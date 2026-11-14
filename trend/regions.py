@@ -17,6 +17,8 @@ class Region:
     east: float
     north: float
     description: str = ""
+    map_scope: str = "world"  # Plotly geo scope for the region map, e.g. "usa" or "world"
+    us_state: str | None = None  # two-letter code to shade a US state on the map
 
     @property
     def bbox(self) -> tuple[float, float, float, float]:
@@ -41,6 +43,8 @@ REGIONS: dict[str, Region] = {
             "The state of Colorado. Its borders are almost a rectangle, "
             "so this box closely matches the state."
         ),
+        map_scope="usa",
+        us_state="CO",
     ),
 }
 

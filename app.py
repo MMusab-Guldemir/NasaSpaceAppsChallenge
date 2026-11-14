@@ -15,7 +15,7 @@ import math
 import pandas as pd
 import streamlit as st
 
-from trend.charts import annual_trend_figure, monthly_figure, sparkline_figure
+from trend.charts import annual_trend_figure, monthly_figure, region_map_figure, sparkline_figure
 from trend.fetch import available_variable_keys, load_processed
 from trend.i18n import (
     LANGUAGES,
@@ -30,6 +30,7 @@ from trend.i18n import (
     variable_text,
 )
 from trend.regions import REGIONS
+from trend.share import build_share_link, parse_period
 from trend.stats import MIN_YEARS, RECOMMENDED_YEARS, TrendResult, analyze_trend, to_annual, trend_line_band
 from trend.variables import VARIABLES
 
@@ -129,9 +130,17 @@ def open_case(variable_key: str) -> None:
 
 # --- Language (top right) and header -------------------------------------------------------------
 
-if "lang" not in st.session_state:
-    requested = st.query_params.get("lang")
-    st.session_state["lang"] = requested if requested in LANGUAGES else "en"
+if "_url_loaded" not in st.session_state:
+    # Restore a shared link once per session: language, region, case and period.
+    params = st.query_params
+    requested = params.get("lang")
+    st.session_state.setdefault("lang", requested if requested in LANGUAGES else "en")
+    if params.get("region") in REGIONS:
+        st.session_state["region"] = params.get("region")
+    if params.get("case") in VARIABLES:
+        st.session_state["case"] = params.get("case")
+        st.session_state["_url_period"] = (params.get("case"), params.get("start"), params.get("end"))
+    st.session_state["_url_loaded"] = True
 
 st.markdown(STYLE, unsafe_allow_html=True)
 head_left, head_right = st.columns([6, 1], vertical_alignment="center")
@@ -231,19 +240,39 @@ annual_all = annual_by_key[case_key]
 monthly = load_monthly(region_key, case_key)
 
 st.divider()
-st.markdown(
-    f"<div class='eyebrow'>{html.escape(t(lang, 'case_label', region=region_label, variable=texts['name']))}</div>",
-    unsafe_allow_html=True,
-)
-st.header(t(lang, "question", subject=subject, region=region_label))
-st.write(t(lang, "question_body", name=texts["name"], definition=texts["definition"], subject=subject))
+head_question, head_map = st.columns([3, 2], vertical_alignment="top")
+with head_question:
+    st.markdown(
+        f"<div class='eyebrow'>{html.escape(t(lang, 'case_label', region=region_label, variable=texts['name']))}</div>",
+        unsafe_allow_html=True,
+    )
+    st.header(t(lang, "question", subject=subject, region=region_label))
+    st.write(t(lang, "question_body", name=texts["name"], definition=texts["definition"], subject=subject))
+with head_map:
+    st.plotly_chart(
+        region_map_figure(region), width="stretch", theme=None, key="region_map",
+        config={"staticPlot": True, "displayModeBar": False},
+    )
+    st.caption(t(lang, "map_caption", region=region_label))
 
 # Step 2: choose the period
 st.markdown(f"<div class='step'>{html.escape(t(lang, 'step2'))}</div>", unsafe_allow_html=True)
 first_year, last_year = int(annual_all["year"].min()), int(annual_all["year"].max())
+period_key = f"period_{case_key}"
+url_period = st.session_state.pop("_url_period", None)
+if url_period is not None and url_period[0] == case_key:
+    restored = parse_period(url_period[1], url_period[2], first_year, last_year)
+    if restored is not None:
+        st.session_state[period_key] = restored
+saved = st.session_state.get(period_key)
+st.session_state[period_key] = (
+    parse_period(saved[0], saved[1], first_year, last_year) if saved else None
+) or (first_year, last_year)
 start_year, end_year = st.slider(
-    t(lang, "period_label"), min_value=first_year, max_value=last_year,
-    value=(first_year, last_year), key=f"period_{case_key}",
+    t(lang, "period_label"), min_value=first_year, max_value=last_year, key=period_key,
+)
+st.query_params.update(
+    {"lang": lang, "region": region_key, "case": case_key, "start": str(start_year), "end": str(end_year)}
 )
 annual = annual_all[annual_all["year"].between(start_year, end_year)].reset_index(drop=True)
 if len(annual) < MIN_YEARS:
@@ -309,6 +338,9 @@ else:
     )
 if result.n_years < RECOMMENDED_YEARS:
     st.warning(t(lang, "warn_short", n=result.n_years, rec=RECOMMENDED_YEARS))
+with st.expander(t(lang, "share_title")):
+    st.caption(t(lang, "share_caption"))
+    st.code(build_share_link(lang, region_key, case_key, start_year, end_year), language=None)
 
 # Step 4: the evidence
 st.markdown(f"<div class='step'>{html.escape(t(lang, 'step4'))}</div>", unsafe_allow_html=True)
