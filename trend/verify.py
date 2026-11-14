@@ -109,6 +109,9 @@ NO_WITNESS = {
         "tree_cover": "No independent witness: MOD44B is NASA's only yearly tree-cover product.",
         "hot_days": "No independent witness: daily maximum temperatures come only from NASA POWER here; NASA "
                     "GISTEMP has monthly means, not daily values, so there is no independent daily witness.",
+        "groundwater": "No independent witness: groundwater comes only from NASA's GLDAS model with GRACE "
+                       "satellite gravity assimilated; no second NASA record of underground water exists for "
+                       "these areas.",
         "custom": "The third witness works for the prepared regions for now.",
         "incomplete": "The second NASA dataset has too few years in common with this record here (for "
                       "example, it cannot measure in the polar winter), so there is nothing to compare.",
@@ -124,6 +127,8 @@ NO_WITNESS = {
         "tree_cover": "Bağımsız tanık yok: MOD44B, NASA'nın tek yıllık ağaç örtüsü ürünü.",
         "hot_days": "Bağımsız tanık yok: günlük en yüksek sıcaklık burada yalnızca NASA POWER'dan geliyor; NASA "
                     "GISTEMP günlük değil aylık ortalama veriyor, bu yüzden bağımsız bir günlük tanık yok.",
+        "groundwater": "Bağımsız tanık yok: yeraltı suyu yalnızca NASA'nın GRACE uydu kütle-çekim verisiyle "
+                       "beslenen GLDAS modelinden geliyor; bu bölgeler için ikinci bir NASA yeraltı suyu kaydı yok.",
         "custom": "Üçüncü tanık şimdilik hazır bölgelerde çalışıyor.",
         "incomplete": "İkinci NASA verisinin bu kayıtla burada yeterince ortak yılı yok (örneğin kutup kışında "
                       "ölçüm yapamıyor), bu yüzden karşılaştıracak bir şey kalmıyor.",
