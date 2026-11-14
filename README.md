@@ -20,7 +20,9 @@ Pick a place and a measurement from NASA Earth data, and find out **what** is ch
    investigate **anywhere on Earth**: draw a rectangle on the world map,
    move or resize it with the edit tool (then click Save), or type its corners in the left panel.
    **Quick pick: a city** sets a 2° × 2° box around one of 60 cities (20 of them in Türkiye) in one
-   click, and the case file is then titled after the city ("Ankara area, Türkiye").
+   click, and the case file is then titled after the city ("Ankara area, Türkiye"). If NASA POWER
+   does not answer, the app offers the nearest prepared region (within 1500 km), which works from
+   the files in the repository without the network.
    Any size from 0.01° to 40° per side works: a rectangle smaller than NASA's grid uses the nearest
    grid cell, and a large one is fetched in pieces. Temperature, precipitation, snowfall and dust and
    smoke come live from NASA POWER for any rectangle; NO₂, carbon monoxide, soot (black carbon),

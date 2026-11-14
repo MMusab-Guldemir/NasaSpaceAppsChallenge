@@ -51,7 +51,8 @@ harder than the other topics, and it interested me more than any of the others."
 
 **Any place on Earth.** Besides eleven prepared regions, users can draw, move and resize a rectangle
 on a world map, or type its corners, to investigate any area from 0.01° to 40° on each side; a
-quick pick of 60 cities (20 in Türkiye) sets a 2° × 2° box around a city in one click. A
+quick pick of 60 cities (20 in Türkiye) sets a 2° × 2° box around a city in one click, and if NASA
+POWER does not answer, the app offers the nearest prepared region, which needs no network. A
 rectangle smaller than NASA's grid uses the nearest grid cell; a large one is fetched in pieces of
 at most 10° × 10°. Temperature, precipitation, snowfall and dust and smoke (aerosol optical depth)
 for that rectangle are fetched live from the NASA POWER API within seconds; NO₂, carbon monoxide,

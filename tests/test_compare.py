@@ -453,3 +453,11 @@ def test_a_very_wide_interval_does_not_squeeze_the_bars():
     table.loc[table["region"] == "medina", ["ci_low", "ci_high"]] = (-20.0, 20.8)
     axis = ranking_figure(table, "en", "amazon", EN, "°C").layout.xaxis.range
     assert axis[1] - axis[0] < 2.0  # set by the rates (0 to 0.40), not by the -20 to +20.8 interval
+
+
+
+def test_highest_and_lowest_name_their_stamp_when_not_confirmed():
+    table = table_of(("cairo_nile", 0.31, "noevidence"), ("marmara", 0.03), ("beijing", -1.97, "noevidence"))
+    sentence = ranking_sentence("en", table, "marmara", EN, "x", 2)
+    assert "Highest: Cairo (+0.31, No evidence); lowest: Beijing (-1.97, No evidence)." in sentence
+    assert "Kahire (+0,31, Delil yok)" in ranking_sentence("tr", table, "marmara", TR, "x", 2)

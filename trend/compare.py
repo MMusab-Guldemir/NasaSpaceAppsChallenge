@@ -357,6 +357,14 @@ def ranking_sentence(
     def rate(i: int) -> str:
         return num(slopes[i], lang, decimals, signed=True)
 
+    statuses = [str(status) for status in table["status"]]
+
+    def rate_stamp(i: int) -> str:
+        """'+0.31, No evidence' for a highest or lowest region whose own trend is not Confirmed."""
+        if statuses[i] == "confirmed":
+            return rate(i)
+        return f"{rate(i)}, {status_text(lang, statuses[i])[0]}"
+
     top, bottom = _place(lang, regions[0], names), _place(lang, regions[-1], names)
     starts, ends = list(table["start_year"]), list(table["end_year"])
     if len(set(starts)) == 1 and len(set(ends)) == 1:
@@ -374,18 +382,18 @@ def ranking_sentence(
         if shared:
             first = compare_text(lang, "rank_shared", ordinal=ordinal(lang, higher + 1), **values)
             second = compare_text(
-                lang, "extremes", top=top, top_rate=rate(0), bottom=bottom, bottom_rate=rate(n - 1)
+                lang, "extremes", top=top, top_rate=rate_stamp(0), bottom=bottom, bottom_rate=rate_stamp(n - 1)
             )
         elif higher == 0:
             first = compare_text(lang, "rank_top", **values)
-            second = compare_text(lang, "lowest_only", bottom=bottom, bottom_rate=rate(n - 1))
+            second = compare_text(lang, "lowest_only", bottom=bottom, bottom_rate=rate_stamp(n - 1))
         elif lower == 0:
             first = compare_text(lang, "rank_bottom", **values)
-            second = compare_text(lang, "highest_only", top=top, top_rate=rate(0))
+            second = compare_text(lang, "highest_only", top=top, top_rate=rate_stamp(0))
         else:
             first = compare_text(lang, "rank_middle", ordinal=ordinal(lang, higher + 1), **values)
             second = compare_text(
-                lang, "extremes", top=top, top_rate=rate(0), bottom=bottom, bottom_rate=rate(n - 1)
+                lang, "extremes", top=top, top_rate=rate_stamp(0), bottom=bottom, bottom_rate=rate_stamp(n - 1)
             )
         status = str(table["status"].iloc[i])
         caution = "" if status == "confirmed" else " " + compare_text(

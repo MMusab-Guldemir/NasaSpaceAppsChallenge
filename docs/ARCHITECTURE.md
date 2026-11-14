@@ -174,7 +174,8 @@ Tests on the annual series:
   open-data ZIP on the World board; and a "Compare two years" swipe on the time travel map.
 - Then: "How does this place compare?" (the same measurement in every prepared region, full records,
   ranked with 95% intervals) and one stripe per year with a record-year sentence under the evidence
-  chart; a quick pick of 60 cities for the any-place rectangle (a 2° × 2° box around the city).
+  chart; a quick pick of 60 cities for the any-place rectangle (a 2° × 2° box around the city); and
+  when NASA POWER does not answer for a custom area, a button to the nearest prepared region.
 
 ## Project structure
 
