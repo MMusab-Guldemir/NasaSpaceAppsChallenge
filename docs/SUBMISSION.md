@@ -27,8 +27,13 @@ second witness.
 
 ## Link to Project Demo
 
-**[TODO]** 30-second video (or at most 7 slides), publicly accessible, English subtitles if spoken
-in Turkish.
+7-slide pitch deck (PDF, public, no login):
+https://github.com/MMusab-Guldemir/NasaSpaceAppsChallenge/blob/main/docs/pitch/TrendDetective_TeamAvni_Pitch.pdf
+
+The detective concept comes from Team Avni, who also chose the deck's story and style from
+AI-proposed options. The slides' visual design is AI-assisted (Claude Fable 5.2, coordinated by
+Claude Opus 5.5), and every slide carries a visible "AI-assisted design" line. All charts are drawn
+from the app's own NASA data and statistics code.
 
 ## Link to Final Project
 
