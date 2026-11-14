@@ -15,6 +15,7 @@ import math
 
 import pandas as pd
 import streamlit as st
+import streamlit.components.v1 as components
 
 import folium
 import requests
@@ -37,6 +38,7 @@ from trend.fetch import (
     fetch_power_area,
     load_processed,
 )
+from trend.game import VIEW_LABELS, render_game_html
 from trend.i18n import (
     LANGUAGES,
     METHODS,
@@ -113,6 +115,12 @@ STYLE = """
 @st.cache_data(show_spinner=False)
 def load_monthly(region_key: str, variable_key: str) -> pd.DataFrame | None:
     return load_processed(region_key, variable_key)
+
+
+@st.cache_data(show_spinner=False)
+def game_page(lang: str) -> str:
+    """The Detective exam page: every case and its answer, built from the cached data files."""
+    return render_game_html(lang)
 
 
 @st.cache_data(show_spinner=False, ttl=24 * 3600, max_entries=64)
@@ -299,6 +307,8 @@ if "_url_loaded" not in st.session_state:
     if params.get("case") in VARIABLES:
         st.session_state["case"] = params.get("case")
         st.session_state["_url_period"] = (params.get("case"), params.get("start"), params.get("end"))
+    if params.get("view") == "exam":
+        st.session_state["view"] = "exam"
     st.session_state["_url_loaded"] = True
 
 default_region = next(iter(REGIONS))
@@ -327,6 +337,19 @@ st.title(t(lang, "title"))
 st.caption(t(lang, "subtitle"))
 with st.expander(t(lang, "why_title")):
     st.markdown(t(lang, "why_body"))
+
+# --- View: the investigation or the Detective exam game (approved by Team Avni) -----------------
+
+st.session_state.setdefault("view", "case")
+st.segmented_control(
+    "View", options=list(VIEW_LABELS["en"]), format_func=lambda key: VIEW_LABELS[lang][key],
+    key="view", label_visibility="collapsed", required=True,
+)
+if st.session_state["view"] == "exam":
+    st.query_params.from_dict({"lang": lang, "view": "exam"})
+    components.html(game_page(lang), height=900, scrolling=True)
+    st.caption(t(lang, "footer"))
+    st.stop()
 
 # --- Left sidebar: choose the area -------------------------------------------------------------
 

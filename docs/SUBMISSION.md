@@ -67,6 +67,15 @@ case notes with caveats, monthly data, a data table, CSV downloads, the methods 
 share link that reopens exactly that case. An EN / TR switch in the top right shows the whole app
 in English (default) or Turkish.
 
+**Detective exam.** A switch at the top turns the app into a game for students: a secret, unlabeled
+chart from a prepared region draws itself year by year, and the player decides as early as they
+dare whether it shows a real increase, a real decrease or chance. Earlier answers earn more points;
+streaks multiply them and wrong answers cost a badge. After each answer the stamp, the place and a
+possible explanation appear. A full exam has 20 cases (a quick one has 5), ending with a tricky
+case such as a rise-then-fall or a record too short to prove a trend. The answer key comes from the
+same statistics as the investigation board, so the game teaches what "significant" means with real
+NASA data.
+
 **How it works.**
 1. *Data:* monthly area averages over the region, from NASA POWER (MERRA-2 based temperature and
    snowfall; aerosol optical depth from CERES SYN1deg), OMI tropospheric NO₂ (Giovanni
@@ -111,8 +120,8 @@ NASA AppEEARS delivers it), and the same pipeline can be repeated for more regio
 
 **Tools.** Python, Streamlit, Plotly, pandas, NumPy, SciPy, pymannkendall, requests, folium and
 streamlit-folium (Leaflet, Leaflet.draw, OpenStreetMap map tiles); NASA POWER API, Giovanni and
-AppEEARS; GitHub; Streamlit Community Cloud. 118 automated tests check the statistics, the data
-loaders and the app.
+AppEEARS; GitHub; Streamlit Community Cloud. 149 automated tests check the statistics, the data
+loaders, the game and the app.
 
 ## Use of Super Intelligence (SI)
 
@@ -121,7 +130,9 @@ Istanbul–Marmara and eight world regions picked from a list of options), the m
 (including dust and smoke for any rectangle), the "secret expert detective" theme, the pick a clue →
 choose the period → "real or chance?" flow, the Turkish option, the any-place-on-Earth rectangle of
 any size and the "possible reasons" step. Where the team asked for options (for example page layouts and candidate regions), the
-AI offered some and the team chose. Claude Opus 5.5 (Anthropic) wrote the code, the tests, the
+AI offered some and the team chose. The Detective exam game was one of several feature ideas the
+AI offered when the team asked for creative additions; the team picked it, tested a preview and
+directed its changes. Claude Opus 5.5 (Anthropic) wrote the code, the tests, the
 interface texts (English and Turkish) and the documentation drafts, translated the team's own
 Turkish answers for this page into English, and suggested the NASA data products and statistical
 methods that implement the team's choices. Claude Fable 5.2 (Anthropic)

@@ -38,6 +38,12 @@ Pick a place and a measurement from NASA Earth data, and find out **what** is ch
    something changed, not *why*.
 7. Charts, a data table, CSV downloads, share links and a "How the detective works" section make
    every result checkable.
+8. **Detective exam (game):** switch from "Investigation" to "Detective exam" at the top. A secret,
+   unlabeled chart draws itself year by year; the earlier the player decides "real increase",
+   "real decrease" or "chance", the more points they get. Then the stamp, the place and a possible
+   explanation appear. A full exam has 20 cases from all prepared regions (a quick exam has 5),
+   with badges, streaks and a tricky double-points case at the end. The answers come from the same
+   statistics as the investigation board. Link: `?view=exam`.
 
 ## First results (full records)
 
@@ -153,9 +159,10 @@ trend/area.py          custom rectangles: validation and shapes drawn on the map
 trend/charts.py        Plotly charts
 trend/i18n.py          English and Turkish texts, number formatting
 trend/share.py         share links
+trend/game.py          Detective exam game: cases, answers, explanations and the game page
 scripts/prefetch.py    fetches and caches data for a region
 data/processed/        small cached monthly CSVs used by the app
-tests/                 unit and app tests (118)
+tests/                 unit and app tests (149)
 docs/ARCHITECTURE.md   design and methods
 docs/SUBMISSION.md     draft of the Space Apps project page
 ```
@@ -166,7 +173,11 @@ Team Avni chose the challenge, the regions (Colorado, Istanbul–Marmara and eig
 picked from a list of options), the measurements (including dust and smoke for any rectangle), the
 "secret expert detective" theme, the pick a clue → choose the period → "real or chance?" flow, the
 Turkish option, the any-place-on-Earth rectangle of any size and the "possible reasons" step. Where the team asked for options (for
-example page layouts and candidate regions), the AI offered some and the team chose.
+example page layouts and candidate regions), the AI offered some and the team chose. The
+Detective exam game was one of several feature ideas the AI offered when the team asked for
+creative additions; the team picked it, tested a preview and asked for the self-drawing chart,
+faster play, a "why?" explanation after each answer instead of a guessing question, and a 20-case
+exam.
 
 The code, tests, interface texts (English and Turkish) and documentation drafts were written with
 AI assistance: **Claude Opus 5.5** (Anthropic) wrote them, translated the team's own Turkish answers
