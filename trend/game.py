@@ -84,22 +84,22 @@ WHY = {
                        "a clear rise.",
         "temp_too_short": "Warming had already started, but the weather swings a lot from year to year. "
                           "Twenty years of evidence can't separate the warming from those swings; the "
-                          "same place's full record proves the case. Sometimes all a trend needs is a "
+                          "same place's full record gets the Confirmed stamp. Sometimes all a trend needs is a "
                           "longer record.",
         "no2_rules": "US emission rules for cars and power plants cut NO₂: cleaner engines, filters and "
-                     "a shift from coal to gas. NASA's OMI satellite saw this decline across much of the "
+                     "a shift from coal to gas. The OMI instrument on NASA's Aura satellite saw this decline across much of the "
                      "US.",
         "no2_vshape": "NO₂ drifted down until 2019 (cleaner cars are a likely reason), COVID lockdowns made 2020 the lowest "
                       "point, and it rose again afterwards, probably as traffic and industry came back. "
-                      "A straight line can't fit something that falls and then rises. The OMI satellite "
+                      "A straight line can't fit something that falls and then rises. The OMI instrument "
                       "is also aging, so recent years need extra caution.",
         "beijing_no2_plan": "China started a national clean-air plan in 2013: less coal, and stricter "
                             "rules for power plants, factories and vehicles. Satellites saw NO₂ fall "
                             "after it.",
         "beijing_no2_humped": "NO₂ over Beijing rose until about 2011 and fell after China's 2013 "
                               "clean-air plan. A straight line can't fit a rise followed by a fall, so the "
-                              "whole period looks like chance. Look at 2013 to 2025 alone and the case is "
-                              "proven.",
+                              "whole period looks like chance. Look at 2013 to 2025 alone and the fall is "
+                              "Confirmed.",
         "beijing_aod_plan": "China's 2013 clean-air plan also targeted soot and dust (PM2.5): less coal "
                             "burning and cleaner factories. The satellite sees less haze since then.",
         "ndvi_greening": "Plants are getting greener in many parts of the world. The main reasons: "
@@ -108,7 +108,7 @@ WHY = {
                          "one dominates in Marmara.",
     },
     "tr": {
-        "temp_marmara": "Ana sebep, kömür, petrol ve doğalgaz yakınca açığa çıkan CO₂ gibi sera gazları: "
+        "temp_marmara": "Ana sebep, kömür, petrol ve doğal gaz yakılınca açığa çıkan CO₂ gibi sera gazları: "
                         "ısıyı bir battaniye gibi tutuyorlar. Üstelik Akdeniz havzası dünya "
                         "ortalamasından daha hızlı ısınıyor; Marmara'nın Colorado'dan hızlı ısınması "
                         "buna uyuyor.",
@@ -117,22 +117,22 @@ WHY = {
                        "artış belirgin.",
         "temp_too_short": "Isınma o yıllarda da başlamıştı, ama hava her yıl kendi başına çok oynar. 20 "
                           "yıllık delil ısınmayı bu oynamaların arasından ayırmaya yetmiyor; aynı yerin "
-                          "tüm kaydında dava kanıtlanıyor. Bazen bir trendin tek eksiği daha uzun bir "
+                          "tüm kaydında trend doğrulanıyor. Bazen bir trendin tek eksiği daha uzun bir "
                           "kayıttır.",
         "no2_rules": "ABD'de araçlar ve elektrik santralleri için konan emisyon kuralları NO₂'yi "
-                     "azalttı: daha temiz motorlar, filtreler ve kömürden doğalgaza geçiş. NASA'nın OMI "
-                     "uydusu bu düşüşü ABD'nin birçok yerinde gördü.",
+                     "azalttı: daha temiz motorlar, filtreler ve kömürden doğal gaza geçiş. NASA'nın Aura "
+                     "uydusundaki OMI aleti bu düşüşü ABD'nin birçok yerinde gördü.",
         "no2_vshape": "NO₂ 2019'a kadar yavaşça düştü (temiz araçlar olası bir neden), 2020'de COVID kapanmalarıyla "
                       "en dibe indi, sonra muhtemelen trafik ve sanayi geri dönünce tekrar yükseldi. "
-                      "Önce düşüp sonra yükselen bir şeye düz çizgi uymaz. Ayrıca OMI uydusu yaşlandığı "
+                      "Önce düşüp sonra yükselen bir şeye düz çizgi uymaz. Ayrıca OMI aleti yaşlandığı "
                       "için son yıllara temkinli bakmak gerekiyor.",
         "beijing_no2_plan": "Çin 2013'te ulusal bir temiz hava planı başlattı: daha az kömür, santraller, "
                             "fabrikalar ve araçlar için daha sıkı kurallar. Uydular bundan sonra NO₂'nin "
                             "düştüğünü gördü.",
         "beijing_no2_humped": "Pekin üzerindeki NO₂ 2011 civarına kadar arttı, Çin'in 2013 temiz hava "
                               "planından sonra düştü. Önce artıp sonra düşen bir şeye düz çizgi uymaz; bu "
-                              "yüzden tüm dönem tesadüf gibi görünüyor. 2013–2025'e ayrı bakınca dava "
-                              "kanıtlanıyor.",
+                              "yüzden tüm dönem tesadüf gibi görünüyor. 2013–2025'e ayrı bakınca düşüş "
+                              "doğrulanıyor.",
         "beijing_aod_plan": "Çin'in 2013 temiz hava planı is ve tozu da (PM2,5) hedefledi: daha az kömür "
                             "yakımı ve daha temiz fabrikalar. Uydu o zamandan beri daha az pus görüyor.",
         "ndvi_greening": "Dünyanın birçok yerinde bitkiler yeşilleniyor. Başlıca sebepler: havadaki "
@@ -194,7 +194,7 @@ GAME_TEXT = {
         "over": "Sınav bitti", "rank": "Rütben", "final": "{s} puan · {c} dava çözüldü · {b}",
         "badges_ok": "rozetin kaldı", "badges_lost": "rozetin kalmadı",
         "mute": "Sesi kapat", "unmute": "Sesi aç", "chart": "Kendi kendine çizilen gizli grafik",
-        "ranks": ["Çaylak", "Stajyer", "Dedektif", "Komiser", "Baş müfettiş"],
+        "ranks": ["Çaylak", "Stajyer", "Dedektif", "Komiser", "Başmüfettiş"],
     },
 }
 

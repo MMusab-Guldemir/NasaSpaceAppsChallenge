@@ -62,7 +62,8 @@ MAP_TEXT = {
         "too_big": "The crime scene map works for areas up to {max}° per side. Draw a smaller "
                    "rectangle to see the dots.",
         "fetch_failed": "NASA POWER did not answer for the grid cells. Try again in a moment.",
-        "intro": "Every square is one NASA grid cell (about 50 km) with its own trend test.",
+        "intro": "Every square is one NASA grid cell (about 50 km; about 100 km for dust and smoke) with its "
+                 "own trend test.",
         "both": "Two opposite directions in the same area! Significant increase in {up} grid cell(s), "
                 "significant decrease in {down}.",
         "up_only": "Significant increase in {up} of {n} grid cells.",
@@ -113,8 +114,8 @@ MAP_TEXT = {
         "too_big": "Olay yeri haritası her kenarı en fazla {max}° olan alanlarda çalışıyor. Noktaları "
                    "görmek için daha küçük bir dikdörtgen çiz.",
         "fetch_failed": "NASA POWER ızgara kareleri için cevap vermedi. Biraz sonra tekrar dene.",
-        "intro": "Her kare NASA'nın bir ızgara karesi (yaklaşık 50 km); her birinin trendi ayrı test "
-                 "edildi.",
+        "intro": "Her kare NASA'nın bir ızgara karesi (yaklaşık 50 km; toz ve dumanda yaklaşık 100 km); her "
+                 "birinin trendi ayrı test edildi.",
         "both": "Aynı bölgede iki zıt yön! {up} karede anlamlı artış, {down} karede anlamlı azalış "
                 "var.",
         "up_only": "{n} karenin {up} tanesinde anlamlı artış var.",

@@ -143,7 +143,7 @@ def test_short_records_and_disputes_are_named():
     annual = annual_series(0.08, 0.3, years=range(2010, 2024), seed=5)
     result = analyze_trend(annual["year"], annual["value"])
     lines = vf.why_not_confirmed(annual, result, "disputed", "en", "air_temperature")
-    assert "second test" in lines[0] and any("short (14 years)" in line for line in lines)
+    assert "second witness" in lines[0] and any("short (14 years)" in line for line in lines)
 
 
 # --- Witness verdicts ---------------------------------------------------------------------------

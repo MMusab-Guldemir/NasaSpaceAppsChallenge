@@ -213,10 +213,10 @@ VERIFY_TEXT = {
                        "instrument ageing and orbit drift affect the two satellites differently.",
         "differ": "Why can they differ? Different instruments, grid sizes and methods can show different "
                   "speeds for the same place.",
-        "why_title": "Why is it not verified?",
-        "disputed": "The main test finds a significant trend, but the second test (based on rankings, "
+        "why_title": "Why is it not Confirmed?",
+        "disputed": "The headline test finds a significant trend, but the second witness (based on rankings, "
                     "not on a straight line) disagrees: a few unusual years may be driving the result.",
-        "weak": "The second test sees a change, but the main test does not reach the evidence line: "
+        "weak": "The second witness sees a change, but the headline test does not reach the evidence line: "
                 "there is a trace, but the evidence is weak.",
         "short": "The record is short ({n} years); at least {rec} years are recommended for a trend.",
         "close": "It is just short of the evidence line: chance alone gives a trend this strong {phrase} "
@@ -309,7 +309,7 @@ VERIFY_TEXT = {
                   "hızlar gösterebilir.",
         "why_title": "Neden doğrulanamadı?",
         "disputed": "Ana test anlamlı bir trend buluyor ama ikinci test (düz çizgiye değil sıralamaya "
-                    "dayanan) aynı fikirde değil: birkaç olağandışı yıl sonucu sürüklüyor olabilir.",
+                    "dayanan) aynı fikirde değil: birkaç olağan dışı yıl sonucu sürüklüyor olabilir.",
         "weak": "İkinci test bir değişim görüyor ama ana test kanıt eşiğine ulaşmıyor: iz var ama delil "
                 "zayıf.",
         "short": "Kayıt kısa ({n} yıl); bir trend için en az {rec} yıl öneriliyor.",
