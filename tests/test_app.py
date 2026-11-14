@@ -199,10 +199,9 @@ def test_offline_custom_area_shows_one_message_and_a_retry_button(monkeypatch):
     assert [error.value for error in at.error] == [TEXT["en"]["fetch_failed_all"]]
     assert at.button(key="retry_fetch") is not None
     assert not at.warning
-    # Three quick attempts for each live measurement (temperature, snowfall, dust and smoke).
-    assert {p: calls.count(p) for p in set(calls)} == {
-        "T2M": 3, "PRECTOTCORR": 3, "PRECSNOLAND": 3, "AOD_55": 3
-    }
+    # Three quick attempts for the first live measurement; once NASA POWER does not answer, the
+    # other measurements are not requested one by one (each could wait for a long timeout).
+    assert {p: calls.count(p) for p in set(calls)} == {"T2M": 3}
 
 
 @pytest.mark.parametrize("region_key", list(REGIONS))

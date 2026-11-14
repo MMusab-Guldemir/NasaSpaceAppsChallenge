@@ -186,7 +186,7 @@ NasaSpaceAppsChallenge/
 
 ## Testing
 
-323 automated tests (`python -m pytest -q`), all offline:
+327 automated tests (`python -m pytest -q`), all offline:
 - statistics: known-slope series, white and autocorrelated noise (false-positive rates of both
   tests), completeness rules, water-year labelling, total change, constant series;
 - loaders: POWER payload parsing, fill values, land-only cells, Giovanni CSVs, retry rules;

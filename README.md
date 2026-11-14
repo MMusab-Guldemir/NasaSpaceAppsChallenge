@@ -261,7 +261,7 @@ scripts/prefetch.py    fetches and caches data for a region
 scripts/build_gistemp_witness.py  NASA GISTEMP area means for the temperature witness
 data/processed/        small cached monthly CSVs used by the app
 data/witness/          second-dataset series for the third witness (GISTEMP, GPCP, IMERG, MODIS, GLDAS)
-tests/                 unit and app tests (323)
+tests/                 unit and app tests (327)
 docs/ARCHITECTURE.md   design and methods
 docs/SUBMISSION.md     draft of the Space Apps project page
 ```
