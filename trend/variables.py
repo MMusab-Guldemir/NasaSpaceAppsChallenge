@@ -378,8 +378,10 @@ VARIABLES: dict[str, Variable] = {
         caveats=(
             "GRACE sees water over areas of a few hundred kilometres, so the trend is regional, not the "
             "level of a single well.",
-            "It is a model guided by satellite gravity, starting in 2003; the gap between the GRACE and "
-            "GRACE-FO missions (late 2017 to mid 2018) is filled by the model.",
+            "It is a model guided by satellite gravity, starting in 2003. The model has no wells and only "
+            "shallow groundwater, so pumping from deep aquifers enters only through the GRACE correction "
+            "and can be understated; the gap between the GRACE and GRACE-FO missions (late 2017 to mid "
+            "2018) is filled by the model.",
             "The value is the stored depth in the model; the change over time matters more than the "
             "number itself.",
         ),

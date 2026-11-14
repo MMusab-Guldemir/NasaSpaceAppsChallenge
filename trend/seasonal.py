@@ -62,8 +62,8 @@ SEASONAL_TEXT = {
     "en": {
         "title": "Which season is changing?",
         "intro": (
-            "The same test for each three-month season. A warming that happens mostly in summer, or rain "
-            "that falls mostly in winter, shows up here."
+            "The same test for each three-month season. A warming that happens mostly in summer, or a "
+            "change in rain and snow that happens mostly in winter, shows up here."
         ),
         "months_dec_feb": "Dec–Feb",
         "months_mar_may": "Mar–May",
@@ -84,7 +84,9 @@ SEASONAL_TEXT = {
         "note_sum": (
             "Blue: Confirmed · orange: Disputed or Weak clue · grey: No evidence. Thin lines: 95% confidence "
             "interval. Each bar is a three-month total, so the dashed line is the whole year's change "
-            "divided by four: if all seasons changed alike, every bar would end there."
+            "divided by four: if all seasons changed alike, every bar would end there. Dec–Feb takes its "
+            "December from the year before, so the four bars can add up to a different change than the "
+            "whole year."
         ),
         "x_title": "{unit} per decade",
         "hover": (
@@ -116,7 +118,7 @@ SEASONAL_TEXT = {
         "title": "Hangi mevsim değişiyor?",
         "intro": (
             "Aynı test, üç aylık her mevsim için ayrı ayrı yapılır. Isınma daha çok yazın oluyorsa ya da "
-            "yağmur daha çok kışın yağıyorsa, burada görünür."
+            "yağıştaki değişim daha çok kışın oluyorsa, burada görünür."
         ),
         "months_dec_feb": "Ara–Şub",
         "months_mar_may": "Mar–May",
@@ -137,7 +139,9 @@ SEASONAL_TEXT = {
         "note_sum": (
             "Mavi: Doğrulandı · turuncu: Tartışmalı ya da Zayıf ipucu · gri: Delil yok. İnce çizgiler: %95 "
             "güven aralığı. Her çubuk üç aylık bir toplamdır; bu yüzden kesikli çizgi tüm yılın değişiminin "
-            "dörtte biridir: bütün mevsimler aynı ölçüde değişseydi, her çubuk orada biterdi."
+            "dörtte biridir: bütün mevsimler aynı ölçüde değişseydi, her çubuk orada biterdi. Ara–Şub aralık "
+            "ayını bir önceki yıldan alır; bu yüzden dört çubuğun toplamı tüm yılın değişiminden farklı "
+            "olabilir."
         ),
         "x_title": "{unit} / 10 yıl",
         "hover": (
@@ -302,8 +306,9 @@ def whole_year_reference(table: pd.DataFrame) -> float | None:
     """Where the dashed whole-year line of ``season_figure`` goes, or None without a whole-year trend.
 
     For a mean (temperature) it is the whole year's trend per decade. For a total (precipitation, hot
-    days) the seasons add up to the year, so it is the whole year's trend divided by the four seasons:
-    the bar every season would reach if all of them changed alike.
+    days) it is the whole year's trend divided by the four seasons: roughly the bar every season would
+    reach if all of them changed alike. The season totals need not add up to the year's trend exactly,
+    because Dec–Feb takes its December from the year before (and so covers slightly different years).
     """
     slope = (table.attrs.get("whole_year") or {}).get("slope_per_decade")
     if slope is None or not math.isfinite(float(slope)):
@@ -379,7 +384,8 @@ def season_sentence(
     if len(tested) == 1:
         return section_text(lang, "only", season=name(fastest), change=change, verdict=verdict)
     first = section_text(lang, "fastest", season=name(fastest), change=change, verdict=verdict)
-    if bool(slowest.get("ceiling", False)):
+    if bool(slowest.get("ceiling", False)) and round(float(slowest["slope_per_decade"]), decimals) >= 0:
+        # "little room to rise" explains a flat or slow rise, never a fall
         second = section_text(lang, "slowest_ceiling", season=name(slowest))
     elif is_flat(slowest):
         second = section_text(lang, "slowest_flat", season=name(slowest))

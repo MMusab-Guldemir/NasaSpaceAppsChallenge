@@ -23,7 +23,7 @@ from typing import Iterable, Sequence
 from urllib.parse import quote
 
 from trend.charts import AXIS, GRIDLINE, SERIES_1, SERIES_2, SURFACE
-from trend.i18n import method_name, num, p_phrase, status_text
+from trend.i18n import ci_bounds, method_name, num, p_phrase, status_text
 from trend.stats import RECOMMENDED_YEARS, TrendResult
 
 REPORT_TEXT = {
@@ -571,7 +571,7 @@ def case_report_html(
 
     title = say("title", variable=variable_name, region=region_label)
     level = num((1 - result.alpha) * 100, lang, 0)
-    low, high = result.ci_per_decade
+    low, high = ci_bounds(*result.ci_per_decade, lang, decimals)  # never a bare 0.00 at the edge
     rate = signed(result.slope_per_decade)
     rising = result.slope_per_year > 0
     stamp_class = status if status in STAMP_CLASSES else "other"
@@ -585,7 +585,7 @@ def case_report_html(
     common = {
         "subject": _lower_first(annual_label), "label": annual_label, "unit": unit,
         "start": result.start_year, "end": result.end_year, "level": level,
-        "low": signed(low), "high": signed(high), "p": _nowrap(p_text),
+        "low": low, "high": high, "p": _nowrap(p_text),
     }
     if result.significant:
         verdict = say(
@@ -598,7 +598,7 @@ def case_report_html(
 
     tiles = (
         _tile(say("tile_rate"), say("per_decade", rate=rate, unit=unit),
-              say("ci", level=level, low=signed(low), high=signed(high)))
+              say("ci", level=level, low=low, high=high))
         + _tile(say("tile_total"), f"{signed(result.total_change)} {unit}", say("along_trend"))
         + _tile(say("tile_years"), say("years_count", n=result.n_years), f"{result.start_year}–{result.end_year}")
     )

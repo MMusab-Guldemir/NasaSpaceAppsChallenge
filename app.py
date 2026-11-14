@@ -48,12 +48,14 @@ from trend.fetch import (
     available_variable_keys,
     fetch_power_area,
     load_processed,
+    processed_path,
 )
 from trend.game import VIEW_LABELS, render_game_html
 from trend.i18n import (
     LANGUAGES,
     METHODS,
     chance_phrase,
+    ci_bounds,
     lower_first,
     method_name,
     num,
@@ -215,21 +217,35 @@ STYLE = """
 """
 
 
+def file_stamp(path) -> tuple[int, int] | None:
+    """When a data file last changed, and its size (None when it is missing): part of the cache keys."""
+    try:
+        stat = path.stat()
+    except OSError:
+        return None
+    return stat.st_mtime_ns, stat.st_size
+
+
 @st.cache_data(show_spinner=False)
-def load_monthly(region_key: str, variable_key: str) -> pd.DataFrame | None:
+def _load_monthly(region_key: str, variable_key: str, stamp: tuple | None) -> pd.DataFrame | None:
     return load_processed(region_key, variable_key)
 
 
-@st.cache_data(show_spinner=False)
-def game_page(lang: str) -> str:
-    """The Detective exam page: every case and its answer, built from the cached data files."""
-    return render_game_html(lang)
+def load_monthly(region_key: str, variable_key: str) -> pd.DataFrame | None:
+    """A prepared monthly file, cached until the file on disk changes."""
+    return _load_monthly(region_key, variable_key, file_stamp(processed_path(region_key, variable_key)))
 
 
 def data_files() -> tuple:
-    """Names of the cached data files. The two caches below are keyed on it, so a NASA file that
-    arrives while the app is running shows up at once instead of after the next restart."""
-    return tuple(sorted(path.name for path in PROCESSED_DIR.glob("*.csv")))
+    """Every cached data file with its change stamp. The caches below are keyed on it, so a NASA file
+    that arrives or is refreshed while the app is running shows up at once, not after a restart."""
+    return tuple(sorted((path.name, file_stamp(path)) for path in PROCESSED_DIR.glob("*.csv")))
+
+
+@st.cache_data(show_spinner=False)
+def game_page(lang: str, files: tuple) -> str:
+    """The Detective exam page: every case and its answer, built from the cached data files."""
+    return render_game_html(lang)
 
 
 @st.cache_data(show_spinner=False)
@@ -641,7 +657,7 @@ if st.session_state["view"] == "world":
     st.stop()
 if st.session_state["view"] == "exam":
     st.query_params.from_dict({"lang": lang, "view": "exam"})
-    components.html(game_page(lang), height=900, scrolling=True)
+    components.html(game_page(lang, data_files()), height=900, scrolling=True)
     st.caption(t(lang, "footer"))
     st.stop()
 
@@ -1121,10 +1137,8 @@ tile_how, tile_total, tile_used = st.columns(3)
 with tile_how.container(border=True):
     st.caption(t(lang, "how_much"))
     st.markdown(f"**{rate} {unit} {t(lang, 'per_decade')}**")
-    low, high = result.ci_per_decade
-    st.caption(
-        t(lang, "ci", low=num(low, lang, decimals, signed=True), high=num(high, lang, decimals, signed=True))
-    )
+    low, high = ci_bounds(*result.ci_per_decade, lang, decimals)  # never a bare 0.00 at the edge
+    st.caption(t(lang, "ci", low=low, high=high))
 with tile_total.container(border=True):
     st.caption(t(lang, "total_change"))
     st.markdown(f"**{num(result.total_change, lang, decimals, signed=True)} {unit}**")

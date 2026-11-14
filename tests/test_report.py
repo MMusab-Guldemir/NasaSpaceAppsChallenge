@@ -326,3 +326,14 @@ def test_report_from_the_istanbul_hot_days_file(lang):
     assert html.escape(texts["caveats"][0]) in page and html.escape(texts["definition"]) in page
     assert num(result.slope_per_decade, lang, variable.decimals, signed=True) in page
     assert len(page) < 60_000
+
+
+def test_interval_never_shows_a_bare_zero_next_to_a_significant_trend():
+    """Alps carbon monoxide: the 95% interval ends at -0.0026, which must not print as 0.00."""
+    from trend.i18n import ci_bounds
+
+    assert ci_bounds(-0.1213, -0.0026, "en", 2) == ("-0.121", "-0.003")
+    assert ci_bounds(-0.1213, -0.0026, "tr", 2) == ("-0,121", "-0,003")
+    assert ci_bounds(0.004, 0.635, "en", 2) == ("+0.004", "+0.635")
+    assert ci_bounds(0.12, 0.55, "en", 2) == ("+0.12", "+0.55")  # nothing near zero: unchanged
+    assert ci_bounds(0.0, 0.0, "en", 2) == ("0.00", "0.00")

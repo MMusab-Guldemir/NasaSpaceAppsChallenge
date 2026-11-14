@@ -584,9 +584,9 @@ REASONS: dict[str, dict[str, dict[str, list[str]]]] = {
                 "Dams and irrigation canals can raise groundwater nearby.",
             ],
             "down": [
+                "Droughts reduce the water that soaks down to the groundwater.",
                 "Pumping for irrigation, cities and industry can take water out faster than rain and snow "
                 "refill it.",
-                "Droughts reduce the water that soaks down to the groundwater.",
             ],
             "none": [
                 "Groundwater changes slowly and the record (since 2003) is short; wet and dry years can hide "
@@ -754,9 +754,9 @@ REASONS: dict[str, dict[str, dict[str, list[str]]]] = {
                 "Barajlar ve sulama kanalları yakınlardaki yeraltı suyunu yükseltebilir.",
             ],
             "down": [
+                "Kuraklık yıllarında yeraltına süzülen su azalır.",
                 "Sulama, şehirler ve sanayi için kuyulardan çekilen su, yağmur ve karın yeniden "
                 "doldurabileceğinden daha hızlı olabilir.",
-                "Kuraklık yıllarında yeraltına süzülen su azalır.",
             ],
             "none": [
                 "Yeraltı suyu yavaş değişir ve kayıt (2003'ten bu yana) kısadır; yağışlı ve kurak yılların "
@@ -815,8 +815,8 @@ REGION_CONTEXT: dict[str, dict[str, dict[str, str]]] = {
                    "and trucks since the 1990s.",
             "snowfall": "Snow in the Alps depends strongly on altitude: lower slopes are the most "
                         "sensitive to warming.",
-            "groundwater": "The lowest year in this series is 2022, the year of Europe's severe "
-                           "drought. Less snow also means less meltwater soaking into the ground.",
+            "groundwater": "Europe's severe drought year 2022 is the lowest year of the full record "
+                           "(since 2004). Less snow also means less meltwater soaking into the ground.",
         },
         "sahel": {
             "ndvi": "After severe droughts in the 1970s and 1980s, rains partly returned and "
@@ -840,8 +840,9 @@ REGION_CONTEXT: dict[str, dict[str, dict[str, str]]] = {
                     "northern mid-latitudes, but the dry season here, so this card measures "
                     "dry-season greenness.",
             "aod": "Smoke from dry-season fires used to clear forest makes some years very hazy.",
-            "groundwater": "The record ends with the severe Amazon droughts of 2023 and 2024; 2024 is "
-                           "the lowest year in this series.",
+            "groundwater": "The severe Amazon droughts of 2023 and 2024 come at the end of the record: "
+                           "2024 is the lowest year of the full record (since 2004), and 2025 recovered "
+                           "only partly.",
         },
         "siberia": {
             "air_temperature": "High northern latitudes are, on average, warming faster than the "
@@ -858,10 +859,11 @@ REGION_CONTEXT: dict[str, dict[str, dict[str, str]]] = {
             "aod": "Desert dust storms dominate the haze over the Arabian Peninsula.",
         },
         "konya": {
-            "groundwater": "Most fields on the Konya plain are watered from wells, and sinkholes "
-                           "('obruk') have become more common. GRACE weighs water over areas a few "
-                           "hundred kilometres wide, so a fall in the wells can look smaller and slower "
-                           "here than it is on the ground.",
+            "groundwater": "About a third of the farmland on the Konya plain is irrigated, mostly "
+                           "with water from wells, and sinkholes ('obruk') have become more common. The "
+                           "model has no wells, and GRACE weighs water over areas a few hundred "
+                           "kilometres wide, so a fall in the wells can look smaller and slower here "
+                           "than it is on the ground.",
         },
     },
     "tr": {
@@ -886,8 +888,8 @@ REGION_CONTEXT: dict[str, dict[str, dict[str, str]]] = {
                    "kamyon emisyonlarını düşürdü.",
             "snowfall": "Alplerde kar büyük ölçüde yüksekliğe bağlı: ısınmaya en duyarlı yerler "
                         "alçak yamaçlar.",
-            "groundwater": "Bu serinin en düşük yılı, Avrupa'nın şiddetli kuraklık yaşadığı 2022. Daha "
-                           "az kar, yeraltına süzülen erime suyunun da azalması demek.",
+            "groundwater": "Avrupa'nın şiddetli kuraklık yaşadığı 2022, tüm kaydın (2004'ten beri) en "
+                           "düşük yılı. Daha az kar, yeraltına süzülen erime suyunun da azalması demek.",
         },
         "sahel": {
             "ndvi": "1970'ler ve 1980'lerdeki büyük kuraklıklardan sonra yağışlar kısmen geri döndü "
@@ -912,8 +914,9 @@ REGION_CONTEXT: dict[str, dict[str, dict[str, str]]] = {
                     "kurak mevsimdir; yani bu kart kurak mevsimdeki yeşilliği ölçüyor.",
             "aod": "Orman açmak için kurak mevsimde çıkarılan yangınların dumanı bazı yılları çok "
                    "puslu yapıyor.",
-            "groundwater": "Kayıt, Amazon'un 2023 ve 2024'teki şiddetli kuraklıklarıyla bitiyor; 2024 bu "
-                           "serinin en düşük yılı.",
+            "groundwater": "Amazon'un 2023 ve 2024'teki şiddetli kuraklıkları kaydın sonuna denk "
+                           "geliyor: 2024 tüm kaydın (2004'ten beri) en düşük yılı, 2025'te ise yalnızca "
+                           "kısmen toparlandı.",
         },
         "siberia": {
             "air_temperature": "Yüksek kuzey enlemleri ortalamada dünyanın geri kalanından daha "
@@ -930,9 +933,11 @@ REGION_CONTEXT: dict[str, dict[str, dict[str, str]]] = {
             "aod": "Arap Yarımadası'ndaki pusu çoğunlukla çöl tozu fırtınaları oluşturuyor.",
         },
         "konya": {
-            "groundwater": "Konya ovasındaki tarlaların çoğu kuyulardan sulanıyor ve obruklar giderek "
-                           "sıklaşıyor. GRACE suyu birkaç yüz kilometre genişliğindeki alanlarda tarttığı "
-                           "için kuyulardaki düşüş burada sahadakinden daha küçük ve yavaş görünebilir.",
+            "groundwater": "Konya ovasında tarım arazisinin yaklaşık üçte biri sulanıyor ve sulama "
+                           "suyunun çoğu kuyulardan çekiliyor; obruklar da giderek sıklaşıyor. Modelde "
+                           "kuyu yok ve GRACE suyu birkaç yüz kilometre genişliğindeki alanlarda tartıyor; "
+                           "bu yüzden kuyulardaki düşüş burada sahadakinden daha küçük ve yavaş "
+                           "görünebilir.",
         },
     },
 }
@@ -1122,8 +1127,10 @@ VARIABLE_TEXT: dict[str, dict[str, dict]] = {
             "caveats": [
                 "GRACE suyu birkaç yüz kilometrelik alanlarda görür; bu yüzden trend bölgeseldir, tek bir "
                 "kuyunun seviyesi değildir.",
-                "Uydu çekim ölçümleriyle yönlendirilen bir modeldir ve 2003'te başlar; GRACE ile GRACE-FO "
-                "görevleri arasındaki boşluğu (2017 sonu–2018 ortası) model doldurur.",
+                "Uydu çekim ölçümleriyle yönlendirilen bir modeldir ve 2003'te başlar. Modelde kuyu yoktur ve "
+                "yalnızca sığ yeraltı suyu bulunur; derin akiferlerden pompalanan su yalnızca GRACE "
+                "düzeltmesiyle girer ve olduğundan az görünebilir. GRACE ile GRACE-FO görevleri arasındaki "
+                "boşluğu (2017 sonu–2018 ortası) model doldurur.",
                 "Değer, modeldeki depolanmış su yüksekliğidir; sayının kendisinden çok zaman içindeki "
                 "değişimi önemlidir.",
             ],
@@ -1319,6 +1326,15 @@ def _digits_near(value: float, threshold: float, decimals: int) -> int:
     while decimals < 6 and value != threshold and round(value, decimals) == threshold:
         decimals += 1
     return decimals
+
+
+def ci_bounds(low: float, high: float, lang: str, decimals: int) -> tuple[str, str]:
+    """Both ends of a confidence interval, signed, with extra decimals while a non-zero end would round
+    to 0 ("-0.121 to -0.003", not "-0.12 to 0.00", which would look as if the interval included zero)."""
+    digits = int(decimals)
+    while digits < 6 and any(bound != 0 and round(bound, digits) == 0 for bound in (low, high)):
+        digits += 1
+    return num(low, lang, digits, signed=True), num(high, lang, digits, signed=True)
 
 
 def p_phrase(p: float, lang: str) -> str:

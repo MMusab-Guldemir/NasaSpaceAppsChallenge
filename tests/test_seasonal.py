@@ -227,8 +227,8 @@ def test_texts_exist_in_both_languages_with_the_same_fields():
     assert section_text("en", "title") == "Which season is changing?"
     assert section_text("tr", "title") == "Hangi mevsim değişiyor?"
     assert section_text("en", "intro") == (
-        "The same test for each three-month season. A warming that happens mostly in summer, or rain that "
-        "falls mostly in winter, shows up here."
+        "The same test for each three-month season. A warming that happens mostly in summer, or a change "
+        "in rain and snow that happens mostly in winter, shows up here."
     )
     assert section_text("tr", "intro").startswith("Aynı test, üç aylık her mevsim için")
     assert section_text("de", "title") == "Which season is changing?"  # unknown language: English
@@ -415,3 +415,13 @@ def test_figure_for_totals_divides_the_whole_year_by_four_in_turkish():
     assert figure.layout.separators == ",."
     assert figure.layout.xaxis.title.text == "mm su / 10 yıl"
     assert "%95 güven aralığı" in figure.data[0].hovertext[0]
+
+
+def test_ceiling_sentence_never_explains_a_fall():
+    """A full hot-day season that falls gets its number, not "little room to rise" (Sahel 1985-2000)."""
+    monthly = load_processed("sahel", "hot_days")
+    table = season_trends(monthly, "hot_days", 1985, 2000)
+    spring = table.set_index("season").loc["mar_may"]
+    assert bool(spring["ceiling"]) and round(float(spring["slope_per_decade"]), 1) < 0
+    sentence = season_sentence("en", table, "hot_days", 14.0, "days")
+    assert "little room to rise" not in sentence and "a fall of 0.2 days per decade" in sentence
