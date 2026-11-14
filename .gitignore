@@ -218,3 +218,12 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Project data: large or manual downloads stay local
+data/raw/
+
+# Local Claude Code settings
+.claude/
+
+# Earthdata/OPeNDAP client config written by earthaccess (local paths only)
+.dodsrc
