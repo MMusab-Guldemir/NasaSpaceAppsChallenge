@@ -28,6 +28,10 @@ MOD13A3_REFERENCE = (
     "Didan, K. (2021). MODIS/Terra Vegetation Indices Monthly L3 Global 1km SIN Grid V061. "
     "NASA EOSDIS Land Processes Distributed Active Archive Center."
 )
+CERES_SYN1DEG_REFERENCE = (
+    "Doelling, D. R., et al. (2013). Geostationary enhanced temporal interpolation for CERES flux "
+    "products. Journal of Atmospheric and Oceanic Technology, 30, 1072-1090."
+)
 APPEEARS_ACKNOWLEDGMENT = (
     "Area statistics were produced with AppEEARS (Application for Extracting and Exploring "
     "Analysis Ready Samples), NASA EOSDIS LP DAAC and USGS EROS Center."
@@ -133,6 +137,35 @@ VARIABLES: dict[str, Variable] = {
             "years, so treat changes after about 2022 with extra caution.",
         ),
         min_valid_days=10,
+    ),
+    "aod": Variable(
+        key="aod",
+        name="Dust and smoke (aerosols)",
+        definition=(
+            "How much sunlight is blocked by tiny particles in the air, such as dust, smoke and "
+            "pollution haze. Higher values mean hazier air."
+        ),
+        unit="AOD (no unit)",
+        annual_label="Annual mean aerosol optical depth",
+        annual_unit="AOD",
+        year_axis_label="Year",
+        aggregation="mean",
+        season_months=ALL_MONTHS,
+        year_starts_month=1,
+        product="NASA POWER monthly AOD_55 (CERES SYN1deg)",
+        provider="NASA Langley Research Center POWER Project",
+        doi="10.1175/JTECH-D-12-00136.1",
+        citation=f"{POWER_ACKNOWLEDGMENT} {CERES_SYN1DEG_REFERENCE}",
+        caveats=(
+            "Aerosol optical depth counts the particles in the whole column of air, not only the "
+            "air we breathe at the ground, so it is not the same as PM2.5.",
+            "It comes from satellite-based estimates on a grid of about 100 km (1 degree), "
+            "starting in 2001.",
+            "Desert dust storms and big wildfires can make single years stand out.",
+            "The newest months in NASA POWER can come from a near-real-time product and may be "
+            "revised later.",
+        ),
+        decimals=3,
     ),
     "ndvi": Variable(
         key="ndvi",

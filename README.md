@@ -11,11 +11,14 @@ Pick a place and a measurement from NASA Earth data, and find out **what** is ch
 
 ## What it does
 
-1. **Where?** Pick a prepared region (Colorado, USA, or Istanbul–Marmara, Türkiye, each with all
-   four measurements) or investigate **anywhere on Earth**: draw a rectangle on the world map, move
-   or resize it with the edit tool (then click Save), or type its corners in the left panel.
-   Temperature and snowfall for custom rectangles (2° to 10° on each side) are fetched live from
-   NASA POWER; air pollution and vegetation are prepared in advance for the prepared regions.
+1. **Where?** Pick one of ten prepared regions, each with all five measurements (Colorado,
+   Istanbul–Marmara, Medina, Beijing, Los Angeles, Cairo and the Nile Delta, the Amazon, the Sahel,
+   the Alps and Siberia), or investigate **anywhere on Earth**: draw a rectangle on the world map,
+   move or resize it with the edit tool (then click Save), or type its corners in the left panel.
+   Any size from 0.01° to 40° per side works: a rectangle smaller than NASA's grid uses the nearest
+   grid cell, and a large one is fetched in pieces. Temperature, snowfall and dust and smoke come
+   live from NASA POWER for any rectangle; air pollution (NO₂) and vegetation are prepared in
+   advance for the prepared regions.
 2. An **investigation board** shows every clue for the area: one card per measurement with its
    rate of change and a verdict stamp (Confirmed, Disputed, No evidence, Weak clue, Open case).
 3. The user picks a clue, chooses the **period**, and immediately gets a large
@@ -29,7 +32,10 @@ Pick a place and a measurement from NASA Earth data, and find out **what** is ch
    - a **second opinion** from the Mann-Kendall test with Sen's slope, adjusted for persistence in
      the same way,
    - a plain-language summary for students and the public.
-6. Charts, a data table, CSV downloads, share links and a "How the detective works" section make
+6. **Possible reasons:** common explanations from research for a rise, a fall or no clear trend,
+   plus local context for the prepared regions, with a clear note that the test shows *that*
+   something changed, not *why*.
+7. Charts, a data table, CSV downloads, share links and a "How the detective works" section make
    every result checkable.
 
 ## First results (full records)
@@ -46,6 +52,14 @@ Pick a place and a measurement from NASA Earth data, and find out **what** is ch
 The same measurement can behave differently in two places: both regions are warming, Istanbul–
 Marmara faster; Colorado's NO₂ fell until 2019 while Istanbul–Marmara's shows no clear change.
 
+Highlights from the world regions (full records unless stated):
+- Beijing NO₂ fell by about 3.7 × 10¹⁵ molecules/cm² per decade from 2013 to 2025 (p < 0.001, both
+  tests agree), after China's 2013 clean-air plan; over 2005-2025 the rise-then-fall shape is not a
+  significant straight-line trend (p = 0.07).
+- NO₂ over the Alps fell by about 0.42 × 10¹⁵ molecules/cm² per decade (2005-2025, p < 0.001).
+- Air temperature rose significantly in every prepared region, from +0.12 °C per decade in the Sahel
+  to +0.55 °C per decade in Istanbul–Marmara (1981-2025).
+
 ## Data
 
 | Measurement | NASA product | Access |
@@ -54,6 +68,7 @@ Marmara faster; Colorado's NO₂ fell until 2019 while Istanbul–Marmara's show
 | Snowfall | NASA POWER monthly `PRECSNOLAND` (MERRA-2 based) | POWER API |
 | Air pollution (NO₂) | OMI `OMNO2d` v004 tropospheric column (daily, averaged per month) | Giovanni area-averaged time series |
 | Vegetation greenness (NDVI) | MODIS Terra `MOD13A3` v061 (monthly, 1 km) | AppEEARS area statistics |
+| Dust and smoke (aerosols) | NASA POWER monthly `AOD_55` (CERES SYN1deg, about 1°) | POWER API |
 
 - These data were obtained from the NASA Langley Research Center (LaRC) POWER Project funded
   through the NASA Earth Science/Applied Science Program.
@@ -70,6 +85,11 @@ Marmara faster; Colorado's NO₂ fell until 2019 while Istanbul–Marmara's show
 - NDVI area statistics were produced with AppEEARS (Application for Extracting and Exploring
   Analysis Ready Samples), NASA EOSDIS LP DAAC and USGS EROS Center,
   https://appeears.earthdatacloud.nasa.gov (accessed 14 November 2026).
+
+- Doelling, D. R., Loeb, N. G., Keyes, D. F., et al. (2013). Geostationary enhanced temporal
+  interpolation for CERES flux products. *Journal of Atmospheric and Oceanic Technology*, 30,
+  1072-1090. https://doi.org/10.1175/JTECH-D-12-00136.1 (CERES SYN1deg, the source of NASA POWER's
+  aerosol optical depth)
 
 Methods references:
 - Santer, B. D., et al. (2000). Statistical significance of trends and trend differences in
@@ -107,7 +127,7 @@ python -m pytest -q
 
 ```
 app.py                 Streamlit app
-trend/regions.py       region catalog (Colorado, Istanbul–Marmara)
+trend/regions.py       region catalog (ten prepared regions)
 trend/variables.py     measurement catalog: definitions, units, products, citations, caveats
 trend/fetch.py         NASA POWER client, Giovanni loader, cached CSV storage
 trend/appeears.py      AppEEARS API client (area requests and statistics downloads)
@@ -118,16 +138,17 @@ trend/i18n.py          English and Turkish texts, number formatting
 trend/share.py         share links
 scripts/prefetch.py    fetches and caches data for a region
 data/processed/        small cached monthly CSVs used by the app
-tests/                 unit and app tests (91)
+tests/                 unit and app tests (118)
 docs/ARCHITECTURE.md   design and methods
 docs/SUBMISSION.md     draft of the Space Apps project page
 ```
 
 ## Use of AI
 
-Team Avni chose the challenge, the regions (Colorado and Istanbul–Marmara), the four measurements,
-the "secret expert detective" theme, the pick a clue → choose the period → "real or chance?" flow,
-the Turkish option and the any-place-on-Earth rectangle. Where the team asked for options (for
+Team Avni chose the challenge, the regions (Colorado, Istanbul–Marmara and eight world regions
+picked from a list of options), the measurements (including dust and smoke for any rectangle), the
+"secret expert detective" theme, the pick a clue → choose the period → "real or chance?" flow, the
+Turkish option, the any-place-on-Earth rectangle of any size and the "possible reasons" step. Where the team asked for options (for
 example page layouts and candidate regions), the AI offered some and the team chose.
 
 The code, tests, interface texts (English and Turkish) and documentation drafts were written with

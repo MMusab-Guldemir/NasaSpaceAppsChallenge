@@ -12,9 +12,13 @@ and **is the change statistically significant?** Visualization plus analysis is 
 ## Decisions made by the team
 
 - End users explore the data themselves; the audience is the team, the judges and later the public.
-- Variables: **air temperature**, **air pollution (NO2)**, **snowfall**, **vegetation greenness (NDVI)**.
-- Regions: **Colorado** first, then **Istanbul–Marmara**; later regions reuse the same pipeline.
-- Any place on Earth: a rectangle the user draws, moves and resizes on a map or types in.
+- Variables: **air temperature**, **air pollution (NO2)**, **snowfall**, **vegetation greenness (NDVI)**,
+  and **dust and smoke (aerosols)** so that air pollution is available for any rectangle.
+- Regions: **Colorado**, **Istanbul–Marmara**, then eight world regions picked from options:
+  Medina, Beijing, Los Angeles, Cairo and the Nile Delta, the Amazon, the Sahel, the Alps, Siberia.
+- Any place on Earth: a rectangle of any size (0.01° to 40°) the user draws, moves and resizes on a
+  map or types in.
+- A "possible reasons" step after the verdict.
 - Theme and flow: a "secret expert detective"; investigation board plus case files; pick a clue,
   choose the period, then a "real or chance?" verdict; English by default with a Turkish switch.
 
@@ -26,6 +30,7 @@ and **is the change statistically significant?** Visualization plus analysis is 
 | Snowfall | NASA POWER monthly `PRECSNOLAND` (MERRA-2 based, mm/day) | POWER regional API | none | 1981 to present |
 | Tropospheric NO2 | OMI `OMNO2d` v004 `ColumnAmountNO2TropCloudScreened` (molecules/cm2), daily, 0.25 deg; doi:10.5067/AURA/OMI/DATA3407 | Giovanni area-averaged time series CSV, requested in 5-year chunks | Earthdata Login | Oct 2004 to Nov 2026 |
 | NDVI | MODIS Terra `MOD13A3` v061, monthly, 1 km (AppEEARS does not offer MOD13C2) | AppEEARS area request (statistics CSV) | Earthdata Login | Feb 2000 to present |
+| Dust and smoke | NASA POWER monthly `AOD_55` (CERES SYN1deg, 1 deg) | POWER regional API | none | 2001 to present |
 
 Verification notes:
 - POWER returns 99 grid cells over the Colorado box and 25 over the Marmara box; requesting two
@@ -37,7 +42,10 @@ Verification notes:
   excluded.
 - Giovanni has **no NDVI** product, so NDVI goes through AppEEARS; open-sea pixels have no NDVI.
 
-Regions (W, S, E, N): Colorado -109.05, 37.0, -102.04, 41.0; Istanbul–Marmara 27.0, 40.0, 30.0, 42.0.
+Regions (W, S, E, N): Colorado -109.05, 37.0, -102.04, 41.0; Istanbul–Marmara 27.0, 40.0, 30.0, 42.0;
+Medina 38.5, 23.5, 40.5, 25.5; Beijing 115.5, 39.0, 118.0, 41.0; Los Angeles -119.0, 33.5, -117.0, 35.5;
+Cairo and the Nile Delta 29.5, 29.5, 32.5, 31.75; Amazon (Rondônia) -66.0, -13.0, -60.0, -8.0;
+Sahel -2.0, 12.0, 8.0, 16.0; Alps 6.0, 45.5, 14.0, 48.0; Siberia (Yakutia) 125.0, 60.0, 135.0, 65.0.
 Area averages: cosine-latitude-weighted mean of POWER grid cells. Giovanni and AppEEARS compute their
 own area statistics over the same boxes; we do not claim cosine weighting for those paths.
 
@@ -49,8 +57,11 @@ own area statistics over the same boxes; we do not claim cosine weighting for th
 2. Giovanni and AppEEARS downloads go to `data/raw/` (git-ignored) as
    `giovanni_no2_<region>_*.csv` and `appeears_ndvi_<region>_*.csv`, and are converted by loaders
    that handle metadata header rows, fill values and scale factors.
-3. Custom rectangles: the app fetches temperature and snowfall live from the POWER API with a short
-   timeout, retries quick failures (a dropped connection, a garbled answer or a busy server) up to two more times, and caches each rectangle for 24 hours. NO2 and NDVI
+3. Custom rectangles: the app fetches temperature, snowfall and dust and smoke live from the POWER
+   API with a short timeout. POWER serves 2 to 10 degrees per request, so a small rectangle is
+   requested inside a 2-degree box and a large one in overlapping pieces fetched in parallel; the
+   average then uses the grid cells whose centres lie in the rectangle, or the nearest cell with
+   data when the rectangle is smaller than one cell. The app retries quick failures (a dropped connection, a garbled answer or a busy server) up to two more times, and caches each rectangle for 24 hours. NO2 and NDVI
    are marked "Prepared regions only" there.
 
 ## Statistics (the core of the Validity score)
@@ -98,7 +109,7 @@ Tests on the annual series:
 - Case file: question and plain-language definition, period slider, "Real or chance?" hero with a
   chance meter (p-value on a log scale with the 5% line), rate / total change / years tiles,
   verdict sentence, share link, evidence chart with the confidence band, second witness,
-  cross-examination without the newest year, case notes (caveats, monthly data, data table, CSV
+  cross-examination without the newest year, possible reasons with local context, case notes (caveats, monthly data, data table, CSV
   downloads, methods), data source with DOI.
 - English by default, Turkish switch (decimal comma in Turkish); share links restore language,
   region or rectangle, case and period.
@@ -129,7 +140,7 @@ NasaSpaceAppsChallenge/
 
 ## Testing
 
-91 automated tests (`python -m pytest -q`), all offline:
+118 automated tests (`python -m pytest -q`), all offline:
 - statistics: known-slope series, white and autocorrelated noise (false-positive rates of both
   tests), completeness rules, water-year labelling, total change, constant series;
 - loaders: POWER payload parsing, fill values, land-only cells, Giovanni CSVs, retry rules;
@@ -145,7 +156,8 @@ browser are limited to the error type.
 
 ## Scope
 
-Cut: seasonal Mann-Kendall, NO2 and NDVI for custom rectangles, the earthaccess download path.
+Cut: seasonal Mann-Kendall, NO2 and NDVI for custom rectangles (their NASA services need a login
+and take minutes per request), the earthaccess download path.
 Feature freeze: Sunday 12:00.
 
 ## Rules compliance

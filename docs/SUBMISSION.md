@@ -13,9 +13,10 @@ Earth System Trend Detective **[TEAM: confirm the final name]**
 
 Earth System Trend Detective is a free web tool that turns NASA Earth observations into clear,
 checkable answers to four questions: **what** is changing, **where**, **by how much**, and **is the
-change statistically significant?** A user picks a region (two prepared regions, Colorado and
-Istanbul–Marmara, or any rectangle on Earth drawn on a world map), a measurement (air temperature,
-snowfall, tropospheric NO₂ or vegetation greenness) and a period. The tool builds a long time series
+change statistically significant?** A user picks a region (ten prepared regions from Colorado and
+Istanbul–Marmara to Beijing, the Amazon and Siberia, or any rectangle on Earth drawn on a world
+map), a measurement (air temperature, snowfall, tropospheric NO₂, dust and smoke, or vegetation
+greenness) and a period. The tool builds a long time series
 from NASA data, removes the seasonal cycle by using one value per year, fits a linear trend, and
 reports the rate of change per decade with its 95% confidence interval and a significance test. A
 second test of a different kind (Mann-Kendall with Sen's slope) acts as a "second witness". Results
@@ -42,11 +43,13 @@ from the app's own NASA data and statistics code.
 
 ## Detailed Project Description
 
-**Any place on Earth.** Besides prepared regions, users can draw, move and resize a rectangle on a
-world map, or type its corners, to investigate any area of 2° to 10° on each side. Temperature and
-snowfall for that rectangle are fetched live from the NASA POWER API within seconds; air pollution
-and vegetation, which come from slower NASA services, are prepared in advance for the prepared
-regions.
+**Any place on Earth.** Besides ten prepared regions, users can draw, move and resize a rectangle
+on a world map, or type its corners, to investigate any area from 0.01° to 40° on each side. A
+rectangle smaller than NASA's grid uses the nearest grid cell; a large one is fetched in pieces of
+at most 10° × 10°. Temperature, snowfall and dust and smoke (aerosol optical depth) for that
+rectangle are fetched live from the NASA POWER API within seconds; air pollution (NO₂) and
+vegetation, which come from slower NASA services that need a login, are prepared in advance for
+the prepared regions.
 
 **What it does.** The user opens an **investigation board** for a region: one clue card per
 measurement, each with its rate of change and a verdict stamp (Confirmed, Disputed, No evidence,
@@ -55,7 +58,9 @@ period, (2) immediately sees a large **"Real or chance?"** verdict with a chance
 the p-value against the 5% line, plus how much changed per decade and in total, (3) inspects the
 evidence: annual values with the fitted trend line and its 95% confidence band, (4) hears the
 second witness: a second test of a different kind (rank-based, with no straight-line assumption),
-and (5) reads case notes with caveats, monthly data, a data table, CSV downloads, the methods and a
+(5) reads possible reasons for the result (common explanations from research, plus local
+context, with a clear note that the test shows that something changed, not why), and (6) reads
+case notes with caveats, monthly data, a data table, CSV downloads, the methods and a
 share link that reopens exactly that case. An EN / TR switch in the top right shows the whole app
 in English (default) or Turkish.
 
@@ -87,6 +92,10 @@ in English (default) or Turkish.
 
 The same measurement can behave differently in two places: both regions are warming, Istanbul–
 Marmara faster, and Colorado's NO₂ fell until 2019 while Istanbul–Marmara's shows no clear change.
+Among the world regions, Beijing's NO₂ fell by about 3.7 × 10¹⁵ molecules/cm² per decade from 2013
+to 2025 (p < 0.001, both tests agree), after China's 2013 clean-air plan, and air temperature rose
+significantly in every prepared region (from +0.12 °C per decade in the Sahel to +0.55 °C per
+decade in Istanbul–Marmara, 1981-2025).
 
 **Benefits.** Students and the public can explore real NASA data, see how scientists decide whether a
 change is real, and download everything to check the result themselves. Every number comes with its
@@ -100,15 +109,16 @@ repeated for more regions. **[TEAM: confirm or reword.]**
 
 **Tools.** Python, Streamlit, Plotly, pandas, NumPy, SciPy, pymannkendall, requests, folium and
 streamlit-folium (Leaflet, Leaflet.draw, OpenStreetMap map tiles); NASA POWER API, Giovanni and
-AppEEARS; GitHub; Streamlit Community Cloud. 91 automated tests check the statistics, the data
+AppEEARS; GitHub; Streamlit Community Cloud. 118 automated tests check the statistics, the data
 loaders and the app.
 
 ## Use of Super Intelligence (SI)
 
-**[TEAM: confirm this text.]** Team Avni chose the challenge, the regions (Colorado and
-Istanbul–Marmara), the four measurements, the "secret expert detective" theme, the pick a clue →
-choose the period → "real or chance?" flow, the Turkish option and the any-place-on-Earth
-rectangle. Where the team asked for options (for example page layouts and candidate regions), the
+**[TEAM: confirm this text.]** Team Avni chose the challenge, the regions (Colorado,
+Istanbul–Marmara and eight world regions picked from a list of options), the measurements
+(including dust and smoke for any rectangle), the "secret expert detective" theme, the pick a clue →
+choose the period → "real or chance?" flow, the Turkish option, the any-place-on-Earth rectangle of
+any size and the "possible reasons" step. Where the team asked for options (for example page layouts and candidate regions), the
 AI offered some and the team chose. Claude Opus 5.5 (Anthropic) wrote the code, the tests, the
 interface texts (English and Turkish) and the documentation drafts, and suggested the NASA data
 products and statistical methods that implement the team's choices. Claude Fable 5.2 (Anthropic)
@@ -124,6 +134,7 @@ trailer, and the README has a "Use of AI" section. No AI-generated images, video
 | Snowfall | NASA POWER monthly `PRECSNOLAND` (MERRA-2 based) | POWER API | Gelaro et al. (2017), doi:10.1175/JCLI-D-16-0758.1 |
 | Tropospheric NO₂ | OMI `OMNO2d` v004, 30% cloud screened | Giovanni (NASA GES DISC) | Krotkov et al. (2024), doi:10.5067/AURA/OMI/DATA3407 |
 | Vegetation greenness | MODIS Terra `MOD13A3` v061, monthly 1 km NDVI | AppEEARS (NASA LP DAAC) | Didan (2021), doi:10.5067/MODIS/MOD13A3.061 |
+| Dust and smoke | NASA POWER monthly `AOD_55` (CERES SYN1deg, about 1°) | POWER API | Doelling et al. (2013), doi:10.1175/JTECH-D-12-00136.1 |
 
 These data were obtained from the NASA Langley Research Center (LaRC) POWER Project funded through the
 NASA Earth Science/Applied Science Program. Area averages of NO₂ were produced with the Giovanni
@@ -144,6 +155,9 @@ produced with AppEEARS (NASA EOSDIS LP DAAC and USGS EROS Center).
 - AppEEARS Team. Application for Extracting and Exploring Analysis Ready Samples (AppEEARS). NASA
   EOSDIS LP DAAC and USGS EROS Center. https://appeears.earthdatacloud.nasa.gov (accessed
   14 November 2026).
+- Doelling, D. R., Loeb, N. G., Keyes, D. F., et al. (2013). Geostationary enhanced temporal
+  interpolation for CERES flux products. *Journal of Atmospheric and Oceanic Technology*, 30,
+  1072-1090. doi:10.1175/JTECH-D-12-00136.1
 - Santer, B. D., et al. (2000). Statistical significance of trends and trend differences in
   layer-average atmospheric temperature time series. *J. Geophys. Res.*, 105, 7337-7356.
 - Mann, H. B. (1945). Nonparametric tests against trend. *Econometrica*, 13, 245-259.

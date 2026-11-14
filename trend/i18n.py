@@ -90,6 +90,13 @@ TEXT: dict[str, dict[str, str]] = {
             "information as {n_eff} independent years."
         ),
         "step_witness": "Step 6 · The second witness",
+        "step_reasons": "Step 7 · Possible reasons",
+        "reasons_intro_change": (
+            "**The test shows that the {subject} changed, not why.** Reasons scientists often "
+            "point to (checking them needs more evidence):"
+        ),
+        "reasons_intro_none": "**No clear trend.** Common reasons why a change may not show up:",
+        "local_context": "Local context",
         "witness_agrees": (
             "✅ **The second witness agrees:** the {method} test, which does not assume a straight "
             "line, finds {found} ({p}; Sen's slope {sen} {unit} per decade)."
@@ -145,9 +152,9 @@ TEXT: dict[str, dict[str, str]] = {
         "north": "North latitude",
         "apply_coords": "Investigate these coordinates",
         "custom_help": (
-            "Temperature and snowfall come live from NASA POWER for any rectangle up to 10° × 10°. "
-            "Air pollution and vegetation are available for prepared regions only, because NASA "
-            "delivers them through slower services."
+            "Temperature, snowfall and dust and smoke come live from NASA POWER for any rectangle "
+            "up to 40° × 40°. Air pollution (NO₂) and vegetation are available for prepared regions "
+            "only, because NASA delivers them through slower services that need a login."
         ),
         "map_help": (
             "Draw a rectangle with the square tool on the left of the map, or move and resize the "
@@ -157,16 +164,20 @@ TEXT: dict[str, dict[str, str]] = {
         ),
         "use_drawn": "Investigate the drawn rectangle ({bbox})",
         "custom_name": "Custom area ({bbox})",
-        "fetching": "Fetching NASA data for this area… (usually a few seconds, at most about a minute)",
+        "fetching": "Fetching NASA data for this area… (usually a few seconds; large rectangles up to a minute)",
         "err_range": "Latitudes must be between -90 and 90, longitudes between -180 and 180.",
         "err_order": "West must be smaller than east, and south smaller than north.",
         "err_too_big": (
-            "The rectangle is too large: NASA POWER allows at most 10° of latitude and 10° of "
-            "longitude. Make it smaller."
+            "The rectangle is too large: at most 40° of latitude and 40° of longitude. Make it "
+            "smaller."
         ),
-        "note_widened": (
-            "The rectangle was widened to at least 2° in each direction, the smallest area NASA "
-            "POWER serves."
+        "note_small": (
+            "This rectangle is smaller than NASA's data grid (cells of about 50 to 100 km), so its "
+            "values come from the data cell inside it or the nearest one."
+        ),
+        "note_large": (
+            "Large rectangle: NASA POWER sends at most 10° × 10° at a time, so the data comes in "
+            "{n} pieces and can take up to a minute."
         ),
         "err_fetch": "NASA POWER did not answer for this area right now. Try again in a minute.",
         "fetch_failed_all": (
@@ -255,6 +266,13 @@ TEXT: dict[str, dict[str, str]] = {
             "bilgi taşıyor."
         ),
         "step_witness": "6. adım · İkinci tanık",
+        "step_reasons": "7. adım · Olası nedenler",
+        "reasons_intro_change": (
+            "**Test, {subject} değerinin değiştiğini gösterir; nedenini göstermez.** Bilim "
+            "insanlarının sık gösterdiği nedenler (doğrulamak için başka delil gerekir):"
+        ),
+        "reasons_intro_none": "**Belirgin bir trend yok.** Bir değişimin görünmemesinin yaygın nedenleri:",
+        "local_context": "Yerel bilgi",
         "witness_agrees": (
             "✅ **İkinci tanık doğruluyor:** düz bir çizgi varsaymayan {method} testinin sonucu: "
             "{found} ({p}; Sen eğimi on yılda {sen} {unit})."
@@ -308,9 +326,9 @@ TEXT: dict[str, dict[str, str]] = {
         "north": "Kuzey enlemi",
         "apply_coords": "Bu koordinatları incele",
         "custom_help": (
-            "Sıcaklık ve kar yağışı, 10° × 10°'ye kadar her dikdörtgen için NASA POWER'dan canlı "
-            "gelir. Hava kirliliği ve bitki yeşilliği ise NASA'nın daha yavaş servislerinden geldiği "
-            "için sadece hazır bölgelerde var."
+            "Sıcaklık, kar yağışı ve toz-duman, 40° × 40°'ye kadar her dikdörtgen için NASA "
+            "POWER'dan canlı gelir. Hava kirliliği (NO₂) ve bitki yeşilliği ise NASA'nın giriş "
+            "gerektiren daha yavaş servislerinden geldiği için sadece hazır bölgelerde var."
         ),
         "map_help": (
             "Haritanın solundaki kare aracıyla bir dikdörtgen çiz ya da mevcut dikdörtgeni "
@@ -320,15 +338,17 @@ TEXT: dict[str, dict[str, str]] = {
         ),
         "use_drawn": "Çizilen dikdörtgeni incele ({bbox})",
         "custom_name": "Özel alan ({bbox})",
-        "fetching": "Bu alan için NASA verisi getiriliyor… (genellikle birkaç saniye, en fazla yaklaşık bir dakika)",
+        "fetching": "Bu alan için NASA verisi getiriliyor… (genellikle birkaç saniye; büyük dikdörtgenlerde bir dakikayı bulabilir)",
         "err_range": "Enlemler -90 ile 90, boylamlar -180 ile 180 arasında olmalı.",
         "err_order": "Batı doğudan, güney de kuzeyden küçük olmalı.",
-        "err_too_big": (
-            "Dikdörtgen çok büyük: NASA POWER en fazla 10° enlem ve 10° boylama izin veriyor. "
-            "Küçült."
+        "err_too_big": "Dikdörtgen çok büyük: en fazla 40° enlem ve 40° boylam olabilir. Küçült.",
+        "note_small": (
+            "Bu dikdörtgen NASA'nın veri ızgarasından küçük (hücreler yaklaşık 50–100 km), bu "
+            "yüzden değerler içindeki ya da en yakındaki veri hücresinden geliyor."
         ),
-        "note_widened": (
-            "Dikdörtgen, NASA POWER'ın verdiği en küçük alan olan her yönde en az 2°'ye genişletildi."
+        "note_large": (
+            "Büyük dikdörtgen: NASA POWER bir seferde en fazla 10° × 10° gönderiyor, bu yüzden veri "
+            "{n} parça halinde geliyor ve bir dakikayı bulabilir."
         ),
         "err_fetch": "NASA POWER şu an bu alan için cevap vermedi. Bir dakika sonra tekrar dene.",
         "fetch_failed_all": (
@@ -347,6 +367,12 @@ STATUS: dict[str, dict[str, tuple[str, str]]] = {
         "noevidence": ("No evidence", "No significant trend detected."),
         "weak": ("Weak clue", "Only the second witness sees a trend."),
         "open": ("Open case", "Evidence still being collected."),
+        "insufficient": (
+            "Not enough data",
+            "Too few complete years here, for example because the satellite cannot measure in the "
+            "polar winter.",
+        ),
+        "no_snow": ("No snow", "It practically never snows here."),
         "prepared_only": (
             "Prepared regions only",
             "Needs slower NASA services, so it is prepared in advance for selected regions.",
@@ -358,6 +384,11 @@ STATUS: dict[str, dict[str, tuple[str, str]]] = {
         "noevidence": ("Delil yok", "Anlamlı bir trend tespit edilmedi."),
         "weak": ("Zayıf ipucu", "Trendi sadece ikinci tanık görüyor."),
         "open": ("Açık dosya", "Deliller hâlâ toplanıyor."),
+        "insufficient": (
+            "Yetersiz veri",
+            "Burada yeterince tam yıl yok; örneğin uydu kutup kışında ölçüm yapamıyor.",
+        ),
+        "no_snow": ("Kar yok", "Burada neredeyse hiç kar yağmıyor."),
         "prepared_only": (
             "Sadece hazır bölgeler",
             "Daha yavaş NASA servisleri gerektirdiği için seçili bölgelerde önceden hazırlanıyor.",
@@ -365,7 +396,261 @@ STATUS: dict[str, dict[str, tuple[str, str]]] = {
     },
 }
 
-REGION_NAMES = {"tr": {"colorado": "Colorado, ABD", "marmara": "İstanbul–Marmara, Türkiye"}}
+REGION_NAMES = {
+    "tr": {
+        "colorado": "Colorado, ABD",
+        "marmara": "İstanbul–Marmara, Türkiye",
+        "medina": "Medine, Suudi Arabistan",
+        "beijing": "Pekin, Çin",
+        "los_angeles": "Los Angeles, ABD",
+        "cairo_nile": "Kahire ve Nil Deltası, Mısır",
+        "amazon": "Amazon ormanı (Rondônia), Brezilya",
+        "sahel": "Sahel, Batı Afrika",
+        "alps": "Alpler, İsviçre ve Avusturya",
+        "siberia": "Sibirya (Yakutistan), Rusya",
+    }
+}
+
+# "Possible reasons" step (idea of Team Avni). The trend test shows THAT something changed, not
+# WHY, so these are common explanations from research, worded as possibilities.
+REASONS: dict[str, dict[str, dict[str, list[str]]]] = {
+    "en": {
+        "air_temperature": {
+            "up": [
+                "Greenhouse gases from burning coal, oil and gas trap heat; this is warming almost "
+                "every region of the world.",
+                "Growing cities add extra local heat (the urban heat island).",
+            ],
+            "down": [
+                "Cooling is rare in recent decades. It can come from natural cycles, more irrigation "
+                "or more haze that blocks sunlight.",
+            ],
+            "none": [
+                "Weather swings from year to year (and cycles such as El Niño) are large here "
+                "compared with any steady change, so the period may be too short to tell them apart.",
+            ],
+        },
+        "snowfall": {
+            "up": [
+                "Warmer air holds more moisture, so where it is still cold enough to snow, storms "
+                "can bring more snow.",
+                "Shifting storm tracks can bring more winter storms to a region.",
+            ],
+            "down": [
+                "Warming turns more winter precipitation into rain instead of snow, especially at "
+                "lower elevations.",
+                "Drier winters or shifting storm tracks can also mean less snow.",
+            ],
+            "none": [
+                "Snowfall depends on both temperature and precipitation, which can push in "
+                "opposite directions, and it varies strongly from winter to winter.",
+            ],
+        },
+        "no2": {
+            "up": [
+                "More traffic, industry and power plants as cities and economies grow.",
+                "More fires or more fuel burning nearby.",
+            ],
+            "down": [
+                "Cleaner cars, power plants and factories after emission rules such as exhaust "
+                "standards.",
+                "Less economic activity, for example during the 2020 COVID-19 lockdowns.",
+            ],
+            "none": [
+                "Growth (more traffic and industry) and cleaner technology can cancel each other "
+                "out, and noise in the satellite measurement hides small changes.",
+            ],
+        },
+        "aod": {
+            "up": [
+                "More desert dust storms, wildfires or smoke from burning fields.",
+                "More air pollution from industry, traffic and coal burning.",
+            ],
+            "down": [
+                "Clean-air rules that cut sulfur and soot from power plants, factories and vehicles.",
+                "Fewer fires or fewer dust storms in recent years.",
+            ],
+            "none": [
+                "Dust storms and wildfires make some years much hazier than others, which can hide "
+                "a slow change.",
+            ],
+        },
+        "ndvi": {
+            "up": [
+                "More rain or a longer, warmer growing season.",
+                "More farming or irrigation, or forests growing back.",
+                "More CO₂ in the air can help plants grow (the 'CO₂ fertilization' effect).",
+            ],
+            "down": [
+                "Deforestation, wildfires or cities spreading over green land.",
+                "Drought or hotter summers that stress plants.",
+            ],
+            "none": [
+                "Rain varies a lot from year to year, so green and dry years can hide a slow change.",
+            ],
+        },
+    },
+    "tr": {
+        "air_temperature": {
+            "up": [
+                "Kömür, petrol ve doğalgaz yakılınca çıkan sera gazları ısıyı tutar; bu, dünyanın "
+                "neredeyse her bölgesini ısıtıyor.",
+                "Büyüyen şehirler ek yerel ısı üretir (kentsel ısı adası).",
+            ],
+            "down": [
+                "Son on yıllarda soğuma nadirdir; doğal döngülerden, artan sulamadan ya da güneş "
+                "ışığını engelleyen pustan kaynaklanabilir.",
+            ],
+            "none": [
+                "Yıldan yıla hava değişimleri (ve El Niño gibi döngüler) buradaki istikrarlı "
+                "değişime göre büyük; dönem, ikisini ayırt etmek için kısa olabilir.",
+            ],
+        },
+        "snowfall": {
+            "up": [
+                "Isınan hava daha fazla nem taşır; hâlâ kar yağacak kadar soğuk yerlerde fırtınalar "
+                "daha çok kar getirebilir.",
+                "Kayan fırtına yolları bir bölgeye daha fazla kış fırtınası getirebilir.",
+            ],
+            "down": [
+                "Isınma, kış yağışının daha büyük kısmını kar yerine yağmura çevirir; özellikle "
+                "alçak yerlerde.",
+                "Daha kurak kışlar ya da kayan fırtına yolları da daha az kar demek olabilir.",
+            ],
+            "none": [
+                "Kar yağışı hem sıcaklığa hem yağışa bağlıdır; bunlar ters yönlere itebilir ve kar "
+                "kıştan kışa çok değişir.",
+            ],
+        },
+        "no2": {
+            "up": [
+                "Şehirler ve ekonomi büyüdükçe artan trafik, sanayi ve santraller.",
+                "Yakınlarda daha fazla yangın ya da yakıt yakılması.",
+            ],
+            "down": [
+                "Egzoz standartları gibi emisyon kurallarından sonra daha temiz arabalar, santraller "
+                "ve fabrikalar.",
+                "Azalan ekonomik faaliyet, örneğin 2020 COVID-19 kapanmaları.",
+            ],
+            "none": [
+                "Büyüme (daha çok trafik ve sanayi) ile daha temiz teknoloji birbirini dengeleyebilir; "
+                "uydu ölçümündeki gürültü de küçük değişimleri gizler.",
+            ],
+        },
+        "aod": {
+            "up": [
+                "Daha fazla çöl tozu fırtınası, orman yangını ya da tarla yakma dumanı.",
+                "Sanayi, trafik ve kömür yakımından daha fazla hava kirliliği.",
+            ],
+            "down": [
+                "Santral, fabrika ve araçlardan çıkan kükürt ve isi azaltan temiz hava kuralları.",
+                "Son yıllarda daha az yangın ya da daha az toz fırtınası.",
+            ],
+            "none": [
+                "Toz fırtınaları ve orman yangınları bazı yılları diğerlerinden çok daha puslu yapar; "
+                "bu, yavaş bir değişimi gizleyebilir.",
+            ],
+        },
+        "ndvi": {
+            "up": [
+                "Daha fazla yağmur ya da daha uzun, daha sıcak bir büyüme mevsimi.",
+                "Daha fazla tarım ya da sulama, veya yeniden büyüyen ormanlar.",
+                "Havadaki artan CO₂ bitkilerin büyümesine yardım edebilir ('CO₂ gübrelemesi').",
+            ],
+            "down": [
+                "Ormansızlaşma, orman yangınları ya da yeşil alanlara yayılan şehirler.",
+                "Bitkileri zorlayan kuraklık ya da daha sıcak yazlar.",
+            ],
+            "none": [
+                "Yağış yıldan yıla çok değişir; yeşil ve kurak yıllar yavaş bir değişimi gizleyebilir.",
+            ],
+        },
+    },
+}
+
+# Short local context for prepared regions (well-known facts, shown whatever the verdict is).
+REGION_CONTEXT: dict[str, dict[str, dict[str, str]]] = {
+    "en": {
+        "beijing": {
+            "no2": "China started a national clean-air plan in 2013. Try the period 2013 to 2025 "
+                   "to see what happened after it.",
+            "aod": "China's 2013 clean-air plan also targeted soot and dust (PM2.5).",
+        },
+        "los_angeles": {
+            "no2": "California has some of the world's strictest vehicle exhaust rules, tightened "
+                   "step by step since the 1990s.",
+        },
+        "alps": {
+            "no2": "European exhaust standards (Euro 1 to Euro 6) have lowered emissions from cars "
+                   "and trucks since the 1990s.",
+            "snowfall": "Snow in the Alps depends strongly on altitude: lower slopes are the most "
+                        "sensitive to warming.",
+        },
+        "sahel": {
+            "ndvi": "After severe droughts in the 1970s and 1980s, rains partly returned and "
+                    "satellites saw the Sahel 'greening'.",
+        },
+        "amazon": {
+            "ndvi": "Rondônia is part of the 'arc of deforestation', where forest has been cleared "
+                    "for farms and pasture.",
+            "aod": "Smoke from dry-season fires used to clear forest makes some years very hazy.",
+        },
+        "siberia": {
+            "air_temperature": "The Arctic and the lands around it are warming much faster than "
+                               "the world on average ('Arctic amplification').",
+            "aod": "Huge wildfires in Yakutia, for example in 2021, can make single years very "
+                   "smoky.",
+        },
+        "cairo_nile": {
+            "aod": "Desert dust, and in autumn the smoke from burning rice straw in the Nile Delta, "
+                   "often cover Cairo in haze.",
+        },
+        "medina": {
+            "aod": "Desert dust storms dominate the haze over the Arabian Peninsula.",
+        },
+    },
+    "tr": {
+        "beijing": {
+            "no2": "Çin 2013'te ulusal bir temiz hava planı başlattı. Sonrasında ne olduğunu görmek "
+                   "için 2013–2025 dönemini dene.",
+            "aod": "Çin'in 2013 temiz hava planı is ve tozu (PM2,5) da hedefliyordu.",
+        },
+        "los_angeles": {
+            "no2": "Kaliforniya, 1990'lardan beri adım adım sıkılaştırılan, dünyanın en katı araç "
+                   "egzoz kurallarından bazılarına sahip.",
+        },
+        "alps": {
+            "no2": "Avrupa egzoz standartları (Euro 1'den Euro 6'ya) 1990'lardan beri araba ve "
+                   "kamyon emisyonlarını düşürdü.",
+            "snowfall": "Alplerde kar büyük ölçüde yüksekliğe bağlı: ısınmaya en duyarlı yerler "
+                        "alçak yamaçlar.",
+        },
+        "sahel": {
+            "ndvi": "1970'ler ve 1980'lerdeki büyük kuraklıklardan sonra yağışlar kısmen geri döndü "
+                    "ve uydular Sahel'in 'yeşillendiğini' gördü.",
+        },
+        "amazon": {
+            "ndvi": "Rondônia, ormanın tarla ve mera için kesildiği 'ormansızlaşma yayının' bir "
+                    "parçası.",
+            "aod": "Orman açmak için kurak mevsimde çıkarılan yangınların dumanı bazı yılları çok "
+                   "puslu yapıyor.",
+        },
+        "siberia": {
+            "air_temperature": "Kuzey Kutbu ve çevresindeki karalar dünya ortalamasından çok daha "
+                               "hızlı ısınıyor ('Arktik güçlenmesi').",
+            "aod": "Yakutistan'daki dev orman yangınları, örneğin 2021'de, bazı yılları çok dumanlı "
+                   "yapabiliyor.",
+        },
+        "cairo_nile": {
+            "aod": "Çöl tozu ve sonbaharda Nil Deltası'nda yakılan pirinç saplarının dumanı "
+                   "Kahire'yi sık sık pusla kaplıyor.",
+        },
+        "medina": {
+            "aod": "Arap Yarımadası'ndaki pusu çoğunlukla çöl tozu fırtınaları oluşturuyor.",
+        },
+    },
+}
+
 
 # Display names of the second-witness test (the English names come from trend.stats).
 METHOD_NAMES = {
@@ -426,6 +711,26 @@ VARIABLE_TEXT: dict[str, dict[str, dict]] = {
                 "2022 sonrası değişimlere ekstra temkinle bak.",
             ],
         },
+        "aod": {
+            "name": "Toz ve duman (aerosol)",
+            "definition": (
+                "Havadaki toz, duman ve kirlilik pusu gibi minik parçacıkların güneş ışığını ne kadar "
+                "engellediği. Yüksek değer daha puslu hava demek."
+            ),
+            "annual_label": "Yıllık ortalama aerosol optik derinliği",
+            "unit": "AOD (birimsiz)",
+            "annual_unit": "AOD",
+            "year_axis_label": "Yıl",
+            "caveats": [
+                "Aerosol optik derinliği yalnızca yerde soluduğumuz havayı değil, tüm hava "
+                "sütunundaki parçacıkları sayar; bu yüzden PM2,5 ile aynı şey değildir.",
+                "Yaklaşık 100 km'lik (1 derece) ızgarada uydu tabanlı tahminlerden gelir ve 2001'de "
+                "başlar.",
+                "Çöl toz fırtınaları ve büyük orman yangınları bazı yılları öne çıkarabilir.",
+                "NASA POWER'daki en yeni aylar neredeyse gerçek zamanlı bir üründen gelebilir ve "
+                "sonradan düzeltilebilir.",
+            ],
+        },
         "ndvi": {
             "name": "Bitki yeşilliği (NDVI)",
             "definition": (
@@ -446,11 +751,13 @@ VARIABLE_TEXT: dict[str, dict[str, dict]] = {
 
 METHODS = {
     "en": """
-- **Area average:** for temperature and snowfall, the value for {region} is the average of all NASA
-  POWER grid cells whose centres lie inside or on the edge of the region's box, weighted by the
-  cosine of latitude (cells centred on the edge reach about a quarter of a degree beyond the box).
-  For air pollution and vegetation, NASA Giovanni and AppEEARS compute the average over the same
-  box; for vegetation, pixels over the sea have no value and are left out.
+- **Area average:** for temperature, snowfall and dust and smoke, the value for {region} is the
+  average of all NASA POWER grid cells whose centres lie inside or on the edge of the box, weighted
+  by the cosine of latitude (cells centred on the edge reach half a cell beyond the box). A
+  rectangle smaller than one grid cell uses the nearest cell with data, and a rectangle larger than
+  10° is fetched in pieces that are averaged together. For air pollution (NO₂) and vegetation, NASA
+  Giovanni and AppEEARS compute the average over the same box; for vegetation, pixels over the sea
+  have no value and are left out.
 - **One value per year:** monthly values are combined into one value per year, which removes the
   seasonal cycle. A year is used only if all of its months are available.
 - **Headline test:** a straight line is fitted with ordinary least squares (OLS). We report its
@@ -473,17 +780,20 @@ METHODS = {
 - **Confidence band:** the shaded band is the 95% confidence band of the fitted line, not a range for
   individual years.
 - **Short periods:** at least {min_years} years are required; fewer than 20 years gives a warning.
+- **Possible reasons** are common explanations from research for a rise, a fall or no clear trend;
+  the trend test itself cannot prove any of them.
 - **Many tests:** if you test many measurements, regions and periods, about 1 in 20 tests can look
   significant by chance alone.
 - **No significant trend detected** does not mean "no change"; a longer record may reveal one.
 """,
     "tr": """
-- **Bölge ortalaması:** sıcaklık ve kar yağışı için {region} değeri, merkezi bölge kutusunun
+- **Bölge ortalaması:** sıcaklık, kar yağışı ve toz-duman için {region} değeri, merkezi kutunun
   içinde ya da kenarında kalan tüm NASA POWER ızgara hücrelerinin enlemin kosinüsüyle
-  ağırlıklandırılmış ortalamasıdır (kenarda merkezlenen hücreler kutunun yaklaşık çeyrek derece
-  dışına uzanır). Hava kirliliği ve bitki yeşilliği için ortalamayı aynı kutu üzerinden NASA
-  Giovanni ve AppEEARS hesaplar; bitki yeşilliğinde deniz üzerindeki piksellerin değeri yoktur ve
-  hesaba katılmaz.
+  ağırlıklandırılmış ortalamasıdır (kenarda merkezlenen hücreler kutunun yarım hücre dışına uzanır).
+  Bir hücreden küçük dikdörtgenlerde veri olan en yakın hücre kullanılır; 10°'den büyük
+  dikdörtgenler parça parça getirilip birlikte ortalanır. Hava kirliliği (NO₂) ve bitki yeşilliği
+  için ortalamayı aynı kutu üzerinden NASA Giovanni ve AppEEARS hesaplar; bitki yeşilliğinde deniz
+  üzerindeki piksellerin değeri yoktur ve hesaba katılmaz.
 - **Yılda tek değer:** aylık değerler her yıl için tek bir değerde birleştirilir; böylece mevsim
   döngüsü ortadan kalkar. Bir yıl yalnızca tüm ayları mevcutsa kullanılır.
 - **Ana test:** en küçük kareler yöntemiyle (OLS) düz bir çizgi oturtulur. Eğimi, eğimin %95 güven
@@ -506,6 +816,8 @@ METHODS = {
 - **Güven bandı:** gölgeli bant, oturtulan çizginin %95 güven bandıdır; tek tek yılların aralığı
   değildir.
 - **Kısa dönemler:** en az {min_years} yıl gerekir; 20 yıldan kısa dönemlerde uyarı verilir.
+- **Olası nedenler**, bir artış, azalış ya da belirgin trend olmaması için araştırmalarda sık
+  geçen açıklamalardır; trend testi bunların hiçbirini kanıtlayamaz.
 - **Çok sayıda test:** çok sayıda ölçüm, bölge ve dönem test edersen, yaklaşık her 20 testten biri
   sadece tesadüfen anlamlı görünebilir.
 - **Anlamlı trend tespit edilmedi** demek "değişim yok" demek değildir; daha uzun bir kayıt bir trend
@@ -526,6 +838,15 @@ def status_text(lang: str, status: str) -> tuple[str, str]:
 
 def region_name(lang: str, region_key: str, default: str) -> str:
     return REGION_NAMES.get(lang, {}).get(region_key, default)
+
+
+def reasons(lang: str, variable_key: str, direction: str) -> list[str]:
+    """Common explanations for a rise ("up"), a fall ("down") or no clear trend ("none")."""
+    return REASONS.get(lang, REASONS["en"]).get(variable_key, {}).get(direction, [])
+
+
+def region_context(lang: str, region_key: str, variable_key: str) -> str | None:
+    return REGION_CONTEXT.get(lang, REGION_CONTEXT["en"]).get(region_key, {}).get(variable_key)
 
 
 def method_name(lang: str, method: str) -> str:

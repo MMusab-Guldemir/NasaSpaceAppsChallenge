@@ -7,13 +7,16 @@ from __future__ import annotations
 
 import io
 import logging
+import math
 import time
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
 import requests
 
+from trend.area import power_request_boxes
 from trend.regions import Region
 from trend.variables import Variable
 
@@ -29,6 +32,7 @@ RAW_DIR = PROJECT_ROOT / "data" / "raw"
 POWER_VARIABLES: dict[str, tuple[str, bool]] = {
     "air_temperature": ("T2M", False),
     "snowfall": ("PRECSNOLAND", True),
+    "aod": ("AOD_55", False),
 }
 
 
@@ -151,23 +155,129 @@ def is_transient(error: Exception) -> bool:
     return False
 
 
-def fetch_power_variable_retrying(
-    variable: Variable, region: Region, start_year: int, end_year: int, timeout: Timeout = 300,
-    pauses: tuple[float, ...] = RETRY_PAUSES,
-) -> tuple[pd.DataFrame, str]:
-    """``fetch_power_variable`` with a few quick retries for transient failures (used by the app)."""
+def _request_with_end_retry(
+    parameter: str, region: Region, start_year: int, end_year: int, timeout: Timeout
+) -> dict:
+    """One POWER request; an "end date out of range" answer is retried once without the newest year.
+
+    Any other error (box size, rate limit, server trouble) is reported as it is.
+    """
+    try:
+        return request_power_regional(parameter, region, start_year, end_year, timeout)
+    except DataSourceError as error:
+        if not (error.status == 422 and "end date" in str(error).lower()):
+            raise
+        LOG.info("POWER rejected end year %s; retrying with %s.", end_year, end_year - 1)
+        return request_power_regional(parameter, region, start_year, end_year - 1, timeout)
+
+
+def _request_retrying(
+    parameter: str, region: Region, start_year: int, end_year: int, timeout: Timeout,
+    pauses: tuple[float, ...],
+) -> dict:
+    """``_request_with_end_retry`` with a few quick retries for transient failures."""
     for attempt, pause in enumerate((*pauses, None), start=1):
         try:
-            return fetch_power_variable(variable, region, start_year, end_year, timeout)
+            return _request_with_end_retry(parameter, region, start_year, end_year, timeout)
         except (requests.RequestException, DataSourceError) as error:
             if pause is None or not is_transient(error):
                 raise
             LOG.warning(
                 "NASA POWER attempt %d failed for %s %s: %r; trying again in %.1f s.",
-                attempt, variable.key, region.bbox, error, pause,
+                attempt, parameter, region.bbox, error, pause,
             )
             _sleep(pause)
     raise AssertionError("unreachable")
+
+
+EDGE_TOLERANCE = 1e-6
+
+
+def _cell_center(feature: dict) -> tuple[float, float]:
+    lon, lat = feature["geometry"]["coordinates"][:2]
+    return round(float(lon), 6), round(float(lat), 6)
+
+
+def _has_data(feature: dict, parameter: str, fill_value: float) -> bool:
+    for key, value in feature["properties"]["parameter"][parameter].items():
+        if int(key[4:]) == 13 or value is None:
+            continue
+        value = float(value)
+        if not (np.isclose(value, fill_value) or value <= -998):
+            return True
+    return False
+
+
+def select_cells(
+    features: list[dict], bbox: tuple[float, float, float, float], parameter: str, fill_value: float
+) -> list[dict]:
+    """Grid cells for a rectangle: those whose centres lie inside it or on its edge.
+
+    A rectangle smaller than one grid cell may contain no centre; then the nearest cell that has
+    data is used. Duplicate cells from overlapping request boxes are dropped.
+    """
+    west, south, east, north = bbox
+    unique: dict[tuple[float, float], dict] = {}
+    for feature in features:
+        unique.setdefault(_cell_center(feature), feature)
+    inside = [
+        feature for (lon, lat), feature in unique.items()
+        if west - EDGE_TOLERANCE <= lon <= east + EDGE_TOLERANCE
+        and south - EDGE_TOLERANCE <= lat <= north + EDGE_TOLERANCE
+    ]
+    if inside:
+        return inside
+    center_lon, center_lat = (west + east) / 2, (south + north) / 2
+    scale = math.cos(math.radians(center_lat))
+
+    def distance(item):
+        (lon, lat), _ = item
+        return (lat - center_lat) ** 2 + ((lon - center_lon) * scale) ** 2
+
+    ranked = sorted(unique.items(), key=distance)
+    for _, feature in ranked:
+        if _has_data(feature, parameter, fill_value):
+            return [feature]
+    return [ranked[0][1]] if ranked else []
+
+
+def fetch_power_area(
+    variable: Variable, bbox: tuple[float, float, float, float], start_year: int, end_year: int,
+    timeout: Timeout = 300, pauses: tuple[float, ...] = RETRY_PAUSES, workers: int = 4,
+) -> tuple[pd.DataFrame, str]:
+    """Fetch one POWER variable for any rectangle the user picks (used by the app).
+
+    NASA POWER serves 2 to 10 degrees per side, so a small rectangle is requested inside a
+    2-degree box and a large one in several pieces (fetched in parallel); the area average then
+    uses only the grid cells of the rectangle itself (see ``select_cells``). Quick failures are
+    retried. Returns the monthly series in the cached unit and the data sources POWER reports.
+    """
+    if variable.key not in POWER_VARIABLES:
+        raise ValueError(f"'{variable.key}' is not served by the POWER API.")
+    parameter, is_daily_rate = POWER_VARIABLES[variable.key]
+    boxes = power_request_boxes(bbox)
+
+    def one(box):
+        region = Region("custom", "custom", *box)
+        return _request_retrying(parameter, region, start_year, end_year, timeout, pauses)
+
+    if len(boxes) == 1:
+        payloads = [one(boxes[0])]
+    else:
+        with ThreadPoolExecutor(max_workers=min(workers, len(boxes))) as pool:
+            payloads = list(pool.map(one, boxes))
+    try:
+        header = payloads[0].get("header", {})
+        fill_value = float(header.get("fill_value", -999.0))
+        features = [feature for payload in payloads for feature in payload.get("features", [])]
+        cells = select_cells(features, bbox, parameter, fill_value)
+        monthly = parse_power_regional({"header": header, "features": cells}, parameter)
+    except (KeyError, AttributeError, TypeError, ValueError, IndexError) as exc:
+        raise DataSourceError(UNEXPECTED_RESPONSE) from exc
+    if is_daily_rate:
+        monthly = daily_rate_to_monthly_total(monthly)
+    sources = sorted({part for payload in payloads for part in power_sources(payload).split(", ")})
+    return monthly, ", ".join(sources)
 
 
 def fetch_power_variable(
@@ -181,15 +291,7 @@ def fetch_power_variable(
     if variable.key not in POWER_VARIABLES:
         raise ValueError(f"'{variable.key}' is not served by the POWER API.")
     parameter, is_daily_rate = POWER_VARIABLES[variable.key]
-    try:
-        payload = request_power_regional(parameter, region, start_year, end_year, timeout)
-    except DataSourceError as error:
-        # Only an "end date out of range" answer means the newest year is not published yet;
-        # any other error (box size, rate limit, server trouble) is reported as it is.
-        if not (error.status == 422 and "end date" in str(error).lower()):
-            raise
-        print(f"POWER rejected end year {end_year}; retrying with {end_year - 1}.")
-        payload = request_power_regional(parameter, region, start_year, end_year - 1, timeout)
+    payload = _request_with_end_retry(parameter, region, start_year, end_year, timeout)
     try:
         monthly = parse_power_regional(payload, parameter)
     except (KeyError, AttributeError, TypeError, ValueError, IndexError) as exc:

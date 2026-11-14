@@ -10,6 +10,7 @@ from streamlit.testing.v1 import AppTest
 
 from trend.fetch import available_variable_keys
 from trend.i18n import TEXT
+from trend.regions import REGIONS
 
 APP = str(Path(__file__).resolve().parent.parent / "app.py")
 
@@ -105,7 +106,7 @@ def test_turkish_confirmed_stamp_wording():
     assert "Kanıtlandı" not in markdown
 
 
-def _synthetic_fetch(variable, region, start_year, end_year, timeout=300):
+def _synthetic_fetch(variable, bbox, start_year, end_year, timeout=300, **kwargs):
     import numpy as np
     import pandas as pd
 
@@ -121,7 +122,7 @@ def _corner_inputs(at):
 def test_switching_to_custom_starts_from_the_region_on_screen(monkeypatch):
     import trend.fetch
 
-    monkeypatch.setattr(trend.fetch, "fetch_power_variable", _synthetic_fetch)
+    monkeypatch.setattr(trend.fetch, "fetch_power_area", _synthetic_fetch)
     at = run_app("en")
     at.selectbox(key="region").set_value("marmara").run()
     at.radio(key="area_mode").set_value("custom").run()
@@ -133,7 +134,7 @@ def test_switching_to_custom_starts_from_the_region_on_screen(monkeypatch):
 def test_region_is_kept_after_visiting_custom_mode(monkeypatch):
     import trend.fetch
 
-    monkeypatch.setattr(trend.fetch, "fetch_power_variable", _synthetic_fetch)
+    monkeypatch.setattr(trend.fetch, "fetch_power_area", _synthetic_fetch)
     at = run_app("en")
     at.radio(key="area_mode").set_value("custom").run()  # seeded from Colorado
     at.radio(key="area_mode").set_value("prepared").run()
@@ -149,7 +150,7 @@ def test_region_is_kept_after_visiting_custom_mode(monkeypatch):
 def test_corner_inputs_match_a_typed_rectangle_after_a_round_trip(monkeypatch):
     import trend.fetch
 
-    monkeypatch.setattr(trend.fetch, "fetch_power_variable", _synthetic_fetch)
+    monkeypatch.setattr(trend.fetch, "fetch_power_area", _synthetic_fetch)
     at = run_app("en")
     at.selectbox(key="region").set_value("marmara").run()
     at.radio(key="area_mode").set_value("custom").run()
@@ -172,16 +173,13 @@ def test_offline_custom_area_shows_one_message_and_a_retry_button(monkeypatch):
 
     import trend.fetch
 
-    def offline(*args, **kwargs):
-        raise requests.ConnectionError("offline")
-
     calls = []
 
-    def offline_counted(*args, **kwargs):
-        calls.append(args[0].key)
-        offline()
+    def offline(parameter, region, start_year, end_year, timeout=300):
+        calls.append(parameter)
+        raise requests.ConnectionError("offline")
 
-    monkeypatch.setattr(trend.fetch, "fetch_power_variable", offline_counted)
+    monkeypatch.setattr(trend.fetch, "request_power_regional", offline)
     monkeypatch.setattr(trend.fetch, "_sleep", lambda seconds: None)
     at = AppTest.from_file(APP, default_timeout=60)
     at.session_state["area_mode"] = "custom"
@@ -191,4 +189,47 @@ def test_offline_custom_area_shows_one_message_and_a_retry_button(monkeypatch):
     assert [error.value for error in at.error] == [TEXT["en"]["fetch_failed_all"]]
     assert at.button(key="retry_fetch") is not None
     assert not at.warning
-    assert calls.count("air_temperature") == 3 and calls.count("snowfall") == 3  # quick retries
+    # Three quick attempts for each live measurement (temperature, snowfall, dust and smoke).
+    assert {p: calls.count(p) for p in set(calls)} == {"T2M": 3, "PRECSNOLAND": 3, "AOD_55": 3}
+
+
+@pytest.mark.parametrize("region_key", list(REGIONS))
+def test_every_prepared_region_renders(region_key):
+    at = AppTest.from_file(APP, default_timeout=60)
+    at.session_state["region"] = region_key
+    at.run()
+    assert not at.exception
+
+
+def test_desert_region_shows_no_snow_stamp():
+    at = AppTest.from_file(APP, default_timeout=60)
+    at.session_state["region"] = "medina"
+    at.run()
+    markdown = " ".join(md.value for md in at.markdown)
+    assert "stamp no_snow" in markdown
+
+
+def test_possible_reasons_step_shows_reasons_and_local_context():
+    at = AppTest.from_file(APP, default_timeout=60)
+    at.session_state["region"] = "beijing"
+    at.run()
+    at.button(key="open_no2").click().run()
+    assert not at.exception
+    markdown = " ".join(md.value for md in at.markdown)
+    assert TEXT["en"]["step_reasons"].split("·")[-1].strip() in markdown
+    assert any("2013" in info.value for info in at.info)
+
+
+def test_reasons_cover_every_measurement_in_both_languages():
+    from trend.i18n import REASONS, REGION_CONTEXT
+    from trend.variables import VARIABLES
+
+    for lang in ("en", "tr"):
+        for key in VARIABLES:
+            for direction in ("up", "down", "none"):
+                assert REASONS[lang][key][direction], (lang, key, direction)
+                assert len(REASONS[lang][key][direction]) == len(REASONS["en"][key][direction])
+    assert {r: set(v) for r, v in REGION_CONTEXT["en"].items()} == {
+        r: set(v) for r, v in REGION_CONTEXT["tr"].items()
+    }
+    assert set(REGION_CONTEXT["en"]) <= set(REGIONS)

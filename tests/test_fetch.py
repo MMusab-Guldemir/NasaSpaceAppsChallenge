@@ -220,68 +220,125 @@ def test_error_answer_that_is_not_an_object_is_a_data_source_error(monkeypatch, 
     assert info.value.status == 429
 
 
-def _retry_setup(monkeypatch, outcomes):
+def _grid_payload(box, parameter="T2M", value=None, fill=-999.0):
+    """Synthetic POWER payload with one cell per 0.5 x 0.625 degree grid point inside the box."""
+    import math
+
+    value = value or (lambda lon, lat: 10.0 + lat / 100)
+    west, south, east, north = box
+    features = []
+    for j in range(math.ceil(south / 0.5 - 1e-9), math.floor(north / 0.5 + 1e-9) + 1):
+        for k in range(math.ceil(west / 0.625 - 1e-9), math.floor(east / 0.625 + 1e-9) + 1):
+            lon, lat = k * 0.625, j * 0.5
+            series = {f"2020{m:02d}": value(lon, lat) for m in range(1, 13)}
+            features.append(
+                {"geometry": {"coordinates": [lon, lat, 0]}, "properties": {"parameter": {parameter: series}}}
+            )
+    return {"header": {"fill_value": fill, "sources": ["MERRA2"]}, "features": features}
+
+
+def _patch_requests(monkeypatch, behaviour):
     import trend.fetch
 
     calls, pauses = [], []
 
-    def fake(variable, region, start_year, end_year, timeout=300):
-        calls.append(timeout)
-        outcome = outcomes[len(calls) - 1]
-        if isinstance(outcome, Exception):
-            raise outcome
-        return outcome
+    def fake(parameter, region, start_year, end_year, timeout=300):
+        calls.append((parameter, region.bbox, end_year, timeout))
+        return behaviour(len(calls), parameter, region.bbox)
 
-    monkeypatch.setattr(trend.fetch, "fetch_power_variable", fake)
+    monkeypatch.setattr(trend.fetch, "request_power_regional", fake)
     monkeypatch.setattr(trend.fetch, "_sleep", pauses.append)
     return calls, pauses
 
 
-def _retry_call():
-    from trend.fetch import fetch_power_variable_retrying
-    from trend.regions import REGIONS
+def _area(bbox, key="air_temperature"):
+    from trend.fetch import fetch_power_area
     from trend.variables import get_variable
 
-    return fetch_power_variable_retrying(get_variable("air_temperature"), REGIONS["marmara"], 1981, 2026, timeout=(10, 45))
+    return fetch_power_area(get_variable(key), bbox, 2020, 2020, timeout=(10, 45))
+
+
+def test_small_rectangle_uses_the_nearest_grid_cell(monkeypatch):
+    calls, _ = _patch_requests(monkeypatch, lambda n, p, box: _grid_payload(box, parameter=p))
+    monthly, sources = _area((29.0, 41.05, 29.3, 41.2))
+    assert len(calls) == 1
+    west, south, east, north = calls[0][1]
+    assert 2 <= east - west <= 10 and 2 <= north - south <= 10
+    assert (monthly["n_cells"] == 1).all()  # no centre inside: the nearest cell (29.375, 41.0)
+    assert monthly["value"].iloc[0] == pytest.approx(10.41)
+    assert sources == "MERRA2"
+
+
+def test_cells_inside_a_rectangle_are_used(monkeypatch):
+    _patch_requests(monkeypatch, lambda n, p, box: _grid_payload(box, parameter=p))
+    monthly, _ = _area((28.6, 40.9, 29.5, 41.6))  # centres 28.75/29.375 x 41.0/41.5
+    assert (monthly["n_cells"] == 4).all()
+
+
+def test_large_rectangle_is_fetched_in_pieces_without_double_counting(monkeypatch):
+    calls, _ = _patch_requests(monkeypatch, lambda n, p, box: _grid_payload(box, parameter=p))
+    bbox = (20.0, 30.0, 45.0, 40.0)
+    monthly, _ = _area(bbox)
+    assert len(calls) == 6
+    expected = len(_grid_payload(bbox)["features"])
+    assert (monthly["n_cells"] == expected).all()
 
 
 def test_quick_failures_are_retried_until_an_answer_arrives(monkeypatch):
     import requests
 
-    calls, pauses = _retry_setup(monkeypatch, [requests.ConnectionError("reset"), requests.ConnectionError("reset"), ("data", "MERRA2")])
-    assert _retry_call() == ("data", "MERRA2")
-    assert calls == [(10, 45)] * 3
-    assert pauses == [1.5, 3.0]
+    def behaviour(n, parameter, box):
+        if n <= 2:
+            raise requests.ConnectionError("reset")
+        return _grid_payload(box, parameter=parameter)
+
+    calls, pauses = _patch_requests(monkeypatch, behaviour)
+    _area((27.0, 40.0, 30.0, 42.0))
+    assert len(calls) == 3 and pauses == [1.5, 3.0]
+    assert all(call[3] == (10, 45) for call in calls)
+
+
+def test_garbled_answer_is_retried(monkeypatch):
+    import requests
+
+    def behaviour(n, parameter, box):
+        if n == 1:
+            raise requests.exceptions.JSONDecodeError("bad", "doc", 0)
+        return _grid_payload(box, parameter=parameter)
+
+    calls, _ = _patch_requests(monkeypatch, behaviour)
+    _area((27.0, 40.0, 30.0, 42.0))
+    assert len(calls) == 2
 
 
 @pytest.mark.parametrize("status", [429, 503])
 def test_busy_server_gets_three_attempts_then_the_error(monkeypatch, status):
     from trend.fetch import DataSourceError
 
-    busy = DataSourceError("busy", status=status)
-    calls, _ = _retry_setup(monkeypatch, [busy, busy, busy])
+    def behaviour(n, parameter, box):
+        raise DataSourceError("busy", status=status)
+
+    calls, _ = _patch_requests(monkeypatch, behaviour)
     with pytest.raises(DataSourceError):
-        _retry_call()
+        _area((27.0, 40.0, 30.0, 42.0))
     assert len(calls) == 3
 
 
-def test_unexpected_answer_is_retried(monkeypatch):
-    from trend.fetch import UNEXPECTED_RESPONSE, DataSourceError
+def test_end_date_rejection_in_an_area_request_drops_the_newest_year(monkeypatch):
+    from trend.fetch import DataSourceError
 
-    calls, _ = _retry_setup(monkeypatch, [DataSourceError(UNEXPECTED_RESPONSE), ("data", "MERRA2")])
-    assert _retry_call() == ("data", "MERRA2")
-    assert len(calls) == 2
+    def behaviour(n, parameter, box):
+        if n == 1:
+            raise DataSourceError("Please provide a correct end date. Your end date out of range.", status=422)
+        return _grid_payload(box, parameter=parameter)
+
+    calls, pauses = _patch_requests(monkeypatch, behaviour)
+    _area((27.0, 40.0, 30.0, 42.0))
+    assert [call[2] for call in calls] == [2020, 2019] and pauses == []
 
 
-@pytest.mark.parametrize(
-    "error",
-    [
-        "timeout",
-        "box",
-        "fill",
-    ],
-)
-def test_timeouts_rejections_and_empty_areas_are_not_retried(monkeypatch, error):
+@pytest.mark.parametrize("error", ["timeout", "box"])
+def test_timeouts_and_rejected_requests_are_not_retried(monkeypatch, error):
     import requests
 
     from trend.fetch import DataSourceError
@@ -289,9 +346,29 @@ def test_timeouts_rejections_and_empty_areas_are_not_retried(monkeypatch, error)
     exception = {
         "timeout": requests.ReadTimeout("slow"),
         "box": DataSourceError("Please provide at least a 2 degree range", status=422),
-        "fill": DataSourceError("POWER returned only fill values for this request."),
     }[error]
-    calls, pauses = _retry_setup(monkeypatch, [exception])
+
+    def behaviour(n, parameter, box):
+        raise exception
+
+    calls, pauses = _patch_requests(monkeypatch, behaviour)
     with pytest.raises(type(exception)):
-        _retry_call()
+        _area((27.0, 40.0, 30.0, 42.0))
     assert len(calls) == 1 and pauses == []
+
+
+def test_area_over_the_sea_reports_no_data_without_retrying(monkeypatch):
+    from trend.fetch import DataSourceError
+
+    calls, pauses = _patch_requests(
+        monkeypatch, lambda n, p, box: _grid_payload(box, parameter=p, value=lambda lon, lat: -999.0)
+    )
+    with pytest.raises(DataSourceError, match="fill"):
+        _area((-30.0, 30.0, -27.0, 32.0), key="snowfall")
+    assert len(calls) == 1 and pauses == []
+
+
+def test_dust_and_smoke_is_served_by_power():
+    from trend.fetch import POWER_VARIABLES
+
+    assert POWER_VARIABLES["aod"] == ("AOD_55", False)

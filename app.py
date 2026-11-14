@@ -21,13 +21,20 @@ import requests
 from folium.plugins import Draw
 from streamlit_folium import st_folium
 
-from trend.area import AreaError, custom_region, format_bbox, normalize_bbox, pick_drawn_bbox
+from trend.area import (
+    AreaError,
+    custom_region,
+    format_bbox,
+    normalize_bbox,
+    pick_drawn_bbox,
+    power_request_boxes,
+)
 from trend.charts import annual_trend_figure, monthly_figure, sparkline_figure
 from trend.fetch import (
     POWER_VARIABLES,
     DataSourceError,
     available_variable_keys,
-    fetch_power_variable_retrying,
+    fetch_power_area,
     load_processed,
 )
 from trend.i18n import (
@@ -37,6 +44,8 @@ from trend.i18n import (
     lower_first,
     method_name,
     num,
+    reasons,
+    region_context,
     p_phrase,
     region_name,
     status_text,
@@ -68,7 +77,9 @@ STYLE = """
 .stamp.confirmed { color: #1c5cab; }
 .stamp.noevidence { color: #52514e; }
 .stamp.disputed, .stamp.weak { color: #a8501b; }
-.stamp.open, .stamp.prepared_only { color: #898781; border-style: dashed; }
+.stamp.open, .stamp.prepared_only, .stamp.insufficient, .stamp.no_snow {
+  color: #898781; border-style: dashed;
+}
 .clue-name { font-size: 0.78rem; letter-spacing: 0.06em; color: #52514e; min-height: 2.2em; }
 .clue-value { font-size: 1.45rem; font-weight: 700; color: #0b0b0b; line-height: 1.2; }
 .clue-unit { font-size: 0.82rem; color: #52514e; min-height: 2.6em; }
@@ -108,13 +119,12 @@ def load_monthly(region_key: str, variable_key: str) -> pd.DataFrame | None:
 def live_monthly(variable_key: str, bbox: tuple[float, float, float, float]) -> pd.DataFrame:
     """Fetch a POWER variable live for any rectangle (cached for a day per rectangle).
 
-    Quick failures are retried a couple of times inside ``fetch_power_variable_retrying``; a
-    timeout is not, so a NASA POWER that hangs does not keep the page waiting several times.
+    Any size works: ``fetch_power_area`` asks NASA POWER for 2-10 degree pieces and keeps the cells
+    of the rectangle. Quick failures are retried a couple of times; a timeout is not, so a NASA
+    POWER that hangs does not keep the page waiting several times.
     """
     variable = VARIABLES[variable_key]
-    monthly, sources = fetch_power_variable_retrying(
-        variable, Region("custom", "custom", *bbox), 1981, 2026, timeout=(10, 45)
-    )
+    monthly, sources = fetch_power_area(variable, bbox, 1981, 2026, timeout=(10, 45))
     monthly = monthly.copy()
     monthly["source"] = f"{variable.product}; live NASA POWER request; POWER sources: {sources}"
     return monthly
@@ -146,10 +156,10 @@ def area_map(bbox: tuple[float, float, float, float]) -> folium.Map:
     return fmap
 
 
-def set_custom_bbox(bbox: tuple[float, float, float, float], widened: bool) -> None:
+def set_custom_bbox(bbox: tuple[float, float, float, float]) -> None:
     st.session_state.update(
         {
-            "custom_bbox": bbox, "area_mode": "custom", "area_error": None, "area_widened": widened,
+            "custom_bbox": bbox, "area_mode": "custom", "area_error": None,
             "bbox_w": float(bbox[0]), "bbox_s": float(bbox[1]),
             "bbox_e": float(bbox[2]), "bbox_n": float(bbox[3]), "_custom_set": True,
         }
@@ -170,24 +180,23 @@ def on_mode_change() -> None:
     if st.session_state.get("area_mode") != "custom":
         return
     if st.session_state.get("_custom_set"):
-        bbox = tuple(st.session_state["custom_bbox"])
-        set_custom_bbox(bbox, st.session_state.get("area_widened", False))
+        set_custom_bbox(tuple(st.session_state["custom_bbox"]))
     else:
         region_key = st.session_state.get("region", next(iter(REGIONS)))
-        set_custom_bbox(REGIONS[region_key].bbox, False)
+        set_custom_bbox(REGIONS[region_key].bbox)
         st.session_state["_custom_set"] = False  # seeded from a region, not made by the user
 
 
 def apply_coords() -> None:
     try:
-        bbox, widened = normalize_bbox(
+        bbox = normalize_bbox(
             st.session_state["bbox_w"], st.session_state["bbox_s"],
             st.session_state["bbox_e"], st.session_state["bbox_n"],
         )
     except AreaError as error:
         st.session_state["area_error"] = error.code
         return
-    set_custom_bbox(bbox, widened)
+    set_custom_bbox(bbox)
 
 
 def use_drawn() -> None:
@@ -195,11 +204,11 @@ def use_drawn() -> None:
     if not drawn:
         return
     try:
-        bbox, widened = normalize_bbox(*drawn)
+        bbox = normalize_bbox(*drawn)
     except AreaError as error:
         st.session_state["area_error"] = error.code
         return
-    set_custom_bbox(bbox, widened)
+    set_custom_bbox(bbox)
 
 
 def case_status(result: TrendResult | None) -> str:
@@ -281,7 +290,7 @@ if "_url_loaded" not in st.session_state:
         st.session_state["region"] = params.get("region")
     elif params.get("region") == "custom":
         try:
-            shared_bbox, _ = normalize_bbox(params.get("w"), params.get("s"), params.get("e"), params.get("n"))
+            shared_bbox = normalize_bbox(params.get("w"), params.get("s"), params.get("e"), params.get("n"))
             st.session_state["area_mode"] = "custom"
             st.session_state["custom_bbox"] = shared_bbox
             st.session_state["_custom_set"] = True
@@ -377,8 +386,12 @@ if drawn_bbox:
             t(lang, "use_drawn", bbox=format_bbox(drawn_bbox, lang)), on_click=use_drawn,
             type="primary", key="use_drawn",
         )
-if custom_mode and st.session_state.get("area_widened"):
-    st.info(t(lang, "note_widened"))
+if custom_mode:
+    if active_bbox[2] - active_bbox[0] < 1 or active_bbox[3] - active_bbox[1] < 1:
+        st.info(t(lang, "note_small"))
+    pieces = len(power_request_boxes(active_bbox))
+    if pieces > 1:
+        st.info(t(lang, "note_large", n=pieces))
 
 # --- Collect the evidence: cached files for prepared regions, live NASA POWER for custom areas ---
 
@@ -427,9 +440,13 @@ for key, variable in VARIABLES.items():
         board_results[key] = None
         continue
     annual, incomplete = to_annual(monthly_by_key[key], variable)
+    if key == "snowfall" and len(annual) and annual["value"].max() < 1.0:
+        board_results[key] = None
+        unavailable_status[key] = "no_snow"
+        continue
     if len(annual) < MIN_YEARS:
         board_results[key] = None
-        unavailable_status[key] = "open"
+        unavailable_status[key] = "insufficient"
         continue
     annual_by_key[key], incomplete_by_key[key] = annual, incomplete
     board_results[key] = analyze_trend(annual["year"], annual["value"])
@@ -667,6 +684,16 @@ if result.end_year == last_year and result.n_years - 1 >= MIN_YEARS:
             sig=t(lang, "significant" if without_last.significant else "not_significant"),
         )
     )
+
+# Step 7: possible reasons (the test shows that something changed, not why)
+st.markdown(f"<div class='step'>{html.escape(t(lang, 'step_reasons'))}</div>", unsafe_allow_html=True)
+direction = ("up" if result.slope_per_year > 0 else "down") if result.significant else "none"
+intro = "reasons_intro_change" if direction != "none" else "reasons_intro_none"
+st.markdown(t(lang, intro, subject=subject))
+st.markdown("\n".join(f"- {line}" for line in reasons(lang, case_key, direction)))
+context = region_context(lang, region_key, case_key)
+if context:
+    st.info(f"**{t(lang, 'local_context')}:** {context}", icon="🔎")
 
 # Case notes
 st.markdown(f"<div class='step'>{html.escape(t(lang, 'case_notes'))}</div>", unsafe_allow_html=True)

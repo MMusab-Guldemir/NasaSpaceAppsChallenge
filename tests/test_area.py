@@ -13,30 +13,40 @@ from trend.area import (
     format_bbox,
     normalize_bbox,
     pick_drawn_bbox,
+    power_request_boxes,
 )
 
 
 def test_valid_rectangle_is_kept():
-    bbox, widened = normalize_bbox(27, 40, 30, 42)
-    assert bbox == (27.0, 40.0, 30.0, 42.0)
-    assert not widened
+    assert normalize_bbox(27, 40, 30, 42) == (27.0, 40.0, 30.0, 42.0)
 
 
-def test_small_rectangle_is_widened_to_two_degrees_around_its_center():
-    bbox, widened = normalize_bbox(28.5, 40.8, 29.5, 41.3)
-    assert widened
-    assert bbox == (28.0, 40.05, 30.0, 42.05)
+def test_small_rectangles_are_kept_as_they_are():
+    assert normalize_bbox(28.5, 40.8, 29.5, 41.3) == (28.5, 40.8, 29.5, 41.3)
 
 
-def test_widened_rectangle_stays_inside_the_globe():
-    bbox, _ = normalize_bbox(179.5, 89.5, 180.0, 90.0)
-    assert bbox[2] == 180.0 and bbox[3] == 90.0
-    assert bbox[2] - bbox[0] == pytest.approx(2.0)
+def test_tiny_rectangle_gets_the_smallest_size():
+    assert normalize_bbox(29.0, 41.0, 29.001, 41.001) == (29.0, 41.0, 29.01, 41.01)
+
+
+def test_tiny_rectangle_at_the_edge_of_the_globe():
+    west, south, east, north = normalize_bbox(179.999, 89.999, 180.0, 90.0)
+    assert east <= 180 and north <= 90
+    assert east - west >= 0.01 - 1e-9 and north - south >= 0.01 - 1e-9  # floats: 180 - 179.99
+
+
+def test_large_rectangles_up_to_40_degrees_are_allowed():
+    assert normalize_bbox(-20, 30, 20, 70) == (-20.0, 30.0, 20.0, 70.0)
 
 
 @pytest.mark.parametrize(
     "box, code",
-    [((30, 40, 27, 42), "order"), ((20, 30, 32, 42), "too_big"), ((0, 0, 0, 95), "range")],
+    [
+        ((30, 40, 27, 42), "order"),
+        ((0, 0, 45, 10), "too_big"),
+        ((0, 0, 10, 41), "too_big"),
+        ((0, 0, 0, 95), "range"),
+    ],
 )
 def test_bad_rectangles_are_rejected(box, code):
     with pytest.raises(AreaError) as error:
@@ -67,14 +77,14 @@ def test_app_runs_a_custom_area_with_live_data(monkeypatch):
 
     import trend.fetch
 
-    def fake_fetch(variable, region, start_year, end_year, timeout=300):
+    def fake_fetch(variable, bbox, start_year, end_year, timeout=300, **kwargs):
         assert timeout != 300  # the app uses a short timeout for live requests
         dates = pd.date_range("1981-01-01", "2025-12-01", freq="MS")
         rng = np.random.default_rng(0)
         values = 10 + 0.03 * (dates.year - 1981) + rng.normal(0, 0.5, dates.size)
         return pd.DataFrame({"date": dates, "value": values, "n_cells": 25}), "MERRA2"
 
-    monkeypatch.setattr(trend.fetch, "fetch_power_variable", fake_fetch)
+    monkeypatch.setattr(trend.fetch, "fetch_power_area", fake_fetch)
     app = str(Path(__file__).resolve().parent.parent / "app.py")
     at = AppTest.from_file(app, default_timeout=60)
     at.session_state["area_mode"] = "custom"
@@ -89,40 +99,54 @@ def test_format_bbox_uses_compass_letters():
     assert format_bbox((-109.05, 37.0, -102.04, 41.0)) == "109.0°W–102.0°W, 37.0°N–41.0°N"
 
 
+def _covers(boxes, bbox, samples=20):
+    west, south, east, north = bbox
+    for i in range(samples + 1):
+        for j in range(samples + 1):
+            lon = west + (east - west) * i / samples
+            lat = south + (north - south) * j / samples
+            eps = 1e-9  # sample points carry float noise
+            if not any(w - eps <= lon <= e + eps and s - eps <= lat <= n + eps for w, s, e, n in boxes):
+                return False
+    return True
+
+
 @pytest.mark.parametrize(
     "box",
     [
-        (-54.03, -8.23, -44.03, -6.24),
-        (127.18, -0.01, 129.18, 0.02),
+        (28.9, 40.95, 29.1, 41.1),
+        (27, 40, 30, 42),
         (10, 7.11, 12, 9.11),  # float difference 1.9999999999999991, rejected by NASA POWER
         (10, 55.73, 12, 65.73),  # float difference 10.000000000000007, rejected by NASA POWER
         (179.0, -90.0, 180.0, -89.5),
+        (20, 30, 45, 40),
+        (-180, -90, -140, -50),
+        (-20, 30, 20, 70),
     ],
 )
-def test_spans_sent_to_power_are_within_limits_in_plain_floats(box):
-    (west, south, east, north), _ = normalize_bbox(*box)
-    assert 2 <= east - west <= 10
-    assert 2 <= north - south <= 10
-    assert -180 <= west < east <= 180 and -90 <= south < north <= 90
+def test_power_request_boxes_meet_power_limits_and_cover_the_rectangle(box):
+    bbox = normalize_bbox(*box)
+    boxes = power_request_boxes(bbox)
+    for w, s, e, n in boxes:
+        assert 2 <= e - w <= 10 and 2 <= n - s <= 10  # plain floats, as NASA POWER checks them
+        assert -180 <= w < e <= 180 and -90 <= s < n <= 90
+    assert _covers(boxes, bbox)
 
 
-def test_random_rectangles_always_fit_power_limits():
+def test_random_rectangles_get_valid_power_boxes():
     rng = random.Random(7)
-    for _ in range(20000):
-        width, height = rng.uniform(0.01, 10), rng.uniform(0.01, 10)
-        west = round(rng.uniform(-180, 180 - width), 2)
-        south = round(rng.uniform(-90, 90 - height), 2)
-        east, north = round(west + width, 2), round(south + height, 2)
-        if east <= west or north <= south or east - west > 10 + 1e-9 or north - south > 10 + 1e-9:
-            continue
-        (w, s, e, n), _ = normalize_bbox(west, south, east, north)
-        assert 2 <= e - w <= 10 and 2 <= n - s <= 10
-        assert -180 <= w and e <= 180 and -90 <= s and n <= 90
+    for _ in range(1500):
+        width, height = rng.uniform(0.01, 40), rng.uniform(0.01, 40)
+        west, south = rng.uniform(-180, 180 - width), rng.uniform(-90, 90 - height)
+        bbox = normalize_bbox(west, south, min(west + width, 180.0), min(south + height, 90.0))
+        boxes = power_request_boxes(bbox)
+        assert all(2 <= e - w <= 10 and 2 <= n - s <= 10 for w, s, e, n in boxes)
+        assert _covers(boxes, bbox, samples=6)
 
 
-def test_exactly_two_degrees_is_not_reported_as_widened():
-    _, widened = normalize_bbox(10, 7.11, 12, 9.11)
-    assert not widened
+def test_large_rectangle_is_split_into_pieces():
+    assert len(power_request_boxes((20.0, 30.0, 45.0, 40.0))) == 6  # 3 x 2 pieces
+    assert len(power_request_boxes((27.0, 40.0, 30.0, 42.0))) == 1
 
 
 def rectangle(west, south, east, north):
