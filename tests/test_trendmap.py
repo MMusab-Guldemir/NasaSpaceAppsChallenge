@@ -362,3 +362,42 @@ def test_yearly_and_monthly_paths_give_the_same_cells():
     old = tm.cell_trends(cells, "air_temperature")
     new = tm.cell_trends_from_annual(annual_cells(cells, "air_temperature"), "air_temperature")
     pd.testing.assert_frame_equal(old.reset_index(drop=True), new.reset_index(drop=True))
+
+
+def test_the_scene_maps_hot_days_for_prepared_regions_only():
+    assert tm.scene_measurement("hot_days", "konya") == "hot_days"
+    assert tm.scene_measurement("hot_days", None) == "air_temperature"  # a drawn area has no daily cells
+    assert tm.scene_measurement("hot_days", "nowhere") == "air_temperature"
+    assert tm.scene_measurement("no2", "marmara") == "air_temperature"
+    for key in ("air_temperature", "precipitation", "snowfall", "aod"):
+        assert tm.scene_measurement(key, None) == key
+
+
+def test_app_tests_hot_days_cell_by_cell(monkeypatch):
+    import streamlit as st
+
+    def no_request(*args, **kwargs):
+        raise AssertionError("prepared hot days must come from the yearly files")
+
+    monkeypatch.setattr(tm, "fetch_cells", no_request)
+    st.cache_data.clear()
+    at = AppTest.from_file(APP, default_timeout=90)
+    at.session_state["region"] = "marmara"
+    at.session_state["case"] = "hot_days"
+    at.session_state["map_layer"] = "scene"
+    at.run()
+    assert not at.exception
+    assert not any("cannot be shown square by square" in info.value for info in at.info)
+    assert any("Hot days" in caption.value for caption in at.caption)
+
+
+def test_a_drawn_area_says_why_hot_days_are_not_mapped(monkeypatch):
+    monkeypatch.setattr(tm, "fetch_cells", _fake_fetch)  # the temperature fallback needs no network in tests
+    at = AppTest.from_file(APP, default_timeout=90)
+    at.session_state["area_mode"] = "custom"
+    at.session_state["custom_bbox"] = (27.0, 40.0, 29.0, 42.0)
+    at.session_state["case"] = "hot_days"
+    at.session_state["map_layer"] = "scene"
+    at.run()
+    assert not at.exception
+    assert any("needs daily data" in info.value for info in at.info)

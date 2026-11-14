@@ -24,6 +24,7 @@ import pandas as pd
 
 from trend.area import power_request_boxes
 from trend.fetch import (
+    PROJECT_ROOT,
     POWER_VARIABLES,
     RETRY_PAUSES,
     UNEXPECTED_RESPONSE,
@@ -43,6 +44,10 @@ NO_SNOW_MAX_MM = 1.0  # same rule as the app: a cell where snowfall never reache
 FIRST_YEAR = {"aod": 2001}  # CERES SYN1deg aerosols start in 2001; the MERRA-2 values in 1981
 DEFAULT_FIRST_YEAR = 1981
 LAST_YEAR = 2026  # like the board; POWER's "end date out of range" answer is retried one year earlier
+# Hot days come from daily data, prepared per grid cell for the prepared regions only
+# (data/processed/grid/<region>_hot_days_cells.csv); a drawn area cannot fetch them live.
+PREPARED_ONLY = {"hot_days"}
+GRID_FILES = PROJECT_ROOT / "data" / "processed" / "grid"
 YEARLY_DECIMALS = 6  # yearly cell values are compared at this precision (as stored in data/processed/grid)
 MAX_MAP_SPAN = 10.0  # degrees; a larger rectangle has too many cells for a readable map
 EDGE = 1e-6
@@ -58,6 +63,8 @@ MAP_TEXT = {
         "showing": "The map shows: {variable}, {start}–{end}",
         "fallback": "{picked} cannot be shown square by square on this map, so it shows air temperature. "
                     "Pick temperature, precipitation, snowfall or dust and smoke below to map them.",
+        "fallback_daily": "{picked} is mapped square by square only for the prepared regions, because it needs "
+                          "daily data; for a drawn area the map shows air temperature.",
         "loading": "Testing every grid cell...",
         "too_big": "The crime scene map works for areas up to {max}° per side. Draw a smaller "
                    "rectangle to see the dots.",
@@ -110,6 +117,8 @@ MAP_TEXT = {
         "showing": "Haritada: {variable}, {start}–{end}",
         "fallback": "{picked} bu haritada kare kare gösterilemiyor; harita hava sıcaklığını gösteriyor. "
                     "Sıcaklık, yağış, kar ya da toz ve dumanı haritada görmek için aşağıdan seç.",
+        "fallback_daily": "{picked} günlük veri gerektirdiği için kare kare yalnızca hazır bölgelerde gösteriliyor; "
+                          "çizilen bir alanda harita hava sıcaklığını gösteriyor.",
         "loading": "Her ızgara karesi test ediliyor...",
         "too_big": "Olay yeri haritası her kenarı en fazla {max}° olan alanlarda çalışıyor. Noktaları "
                    "görmek için daha küçük bir dikdörtgen çiz.",
@@ -407,6 +416,19 @@ def cell_trends_from_annual(annual: pd.DataFrame, variable_key: str, start_year:
             yield lat, lon, group.loc[:, ["year", "value"]].sort_values("year").reset_index(drop=True)
 
     return _trends_from_yearly(yearly(), variable_key, start_year, end_year)
+
+
+def scene_measurement(picked: str | None, region_key: str | None) -> str:
+    """The measurement the crime scene map tests: the picked one when it can be mapped, else air temperature.
+
+    NASA POWER's monthly grids give temperature, precipitation, snowfall and aerosols for any area; hot
+    days need daily data, prepared per cell for the prepared regions only.
+    """
+    if picked in POWER_VARIABLES:
+        return picked
+    if picked in PREPARED_ONLY and region_key and (GRID_FILES / f"{region_key}_{picked}_cells.csv").exists():
+        return picked
+    return "air_temperature"
 
 
 def cell_size(cells: pd.DataFrame) -> tuple[float, float]:

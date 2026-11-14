@@ -114,7 +114,9 @@ from trend.trendmap import (
     cell_size,
     cell_trends,
     cell_trends_from_annual,
+    PREPARED_ONLY,
     fetch_cells,
+    scene_measurement,
     legend_html,
     map_reasons,
     map_text,
@@ -820,9 +822,10 @@ if st.session_state["map_layer"] == "scene":
     picked = st.session_state.get("case")
     if not custom_mode and picked not in available_variable_keys(region_key):
         picked = None  # a clue left over from another place is not on screen here
-    scene_variable = picked if picked in POWER_VARIABLES else "air_temperature"
-    if picked and picked not in POWER_VARIABLES and picked in VARIABLES:
-        st.info(mtext["fallback"].format(picked=variable_text(lang, VARIABLES[picked])["name"]))
+    scene_variable = scene_measurement(picked, None if custom_mode else region_key)
+    if picked and picked != scene_variable and picked in VARIABLES:
+        fallback = mtext["fallback_daily"] if picked in PREPARED_ONLY else mtext["fallback"]
+        st.info(fallback.format(picked=variable_text(lang, VARIABLES[picked])["name"]))
     if max(active_bbox[2] - active_bbox[0], active_bbox[3] - active_bbox[1]) > MAX_MAP_SPAN:
         st.info(mtext["too_big"].format(max=num(MAX_MAP_SPAN, lang, 0)))
     else:
