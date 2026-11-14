@@ -77,4 +77,4 @@ def test_a_cell_matches_to_annual_on_the_cached_answers():
     built = pd.read_csv(path)
     built = built[(built["lat"] == lat) & (built["lon"] == lon)]
     assert built["year"].tolist() == annual["year"].tolist()
-    assert np.allclose(built["value"], annual["value"].round(3))
+    assert np.allclose(built["value"], annual["value"].round(6))

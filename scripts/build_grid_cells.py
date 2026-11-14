@@ -32,7 +32,7 @@ from trend.trendmap import DEFAULT_FIRST_YEAR, FIRST_YEAR, fetch_cells  # noqa: 
 from trend.variables import VARIABLES  # noqa: E402
 
 OUT = ROOT / "data" / "processed" / "grid"
-DECIMALS = {"air_temperature": 3, "precipitation": 1, "snowfall": 2, "aod": 4}
+DECIMALS = {"air_temperature": 6, "precipitation": 6, "snowfall": 6, "aod": 6}  # unrounded enough that no ties are created
 END_YEARS = (2026, 2025)  # the board's end year first; POWER answers for 2025 are an older cache
 
 
