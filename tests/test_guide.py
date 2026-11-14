@@ -90,7 +90,7 @@ def test_texts_exist_in_both_languages():
             "🧭 Not sure where to start? Answer two questions",
             "🧭 Nereden başlayacağını bilmiyor musun? İki soruyu cevapla",
         ),
-        "q_topic": ("What do you wonder about?", "Neyi merak ediyorsun?"),
+        "q_topic": ("What are you curious about?", "Neyi merak ediyorsun?"),
         "q_place": ("What kind of place?", "Nasıl bir yer?"),
         "open": ("Open this case", "Bu dosyayı aç"),
     }

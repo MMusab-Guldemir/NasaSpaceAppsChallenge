@@ -56,7 +56,7 @@ EXAMPLES: tuple[Example, ...] = (
     ),
     Example(
         "marmara", "hot_days", None, None,
-        {"en": "🏠 Home: are days above 30 °C becoming common in Istanbul?",
+        {"en": "🏠 Home: are days above 30 °C becoming more common in Istanbul?",
          "tr": "🏠 Evimiz: İstanbul'da 30 °C'yi geçen günler artıyor mu?"},
         "up",
     ),
@@ -89,7 +89,7 @@ EXAMPLES: tuple[Example, ...] = (
     Example(
         "konya", "groundwater", None, None,
         {
-            "en": "🌾 Türkiye's grain store: is Konya's groundwater falling?",
+            "en": "🌾 Türkiye's breadbasket: is Konya's groundwater falling?",
             "tr": "🌾 Türkiye'nin tahıl ambarı: Konya'da yeraltı suyu düşüyor mu?",
         },
         "none",
@@ -98,7 +98,7 @@ EXAMPLES: tuple[Example, ...] = (
         "alps", "groundwater", None, None,
         {
             "en": "🏔️ Mountains: is groundwater falling under the Alps?",
-            "tr": "🏔️ Dağlar: Alplerin altındaki yeraltı suyu azalıyor mu?",
+            "tr": "🏔️ Dağlar: Alpler'in altındaki yeraltı suyu azalıyor mu?",
         },
         "down",
     ),

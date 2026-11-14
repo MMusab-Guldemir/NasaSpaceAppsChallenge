@@ -77,7 +77,7 @@ Pick a place and a measurement from NASA Earth data, and find out **what** is ch
      `scripts/accuracy_report.py`). **Can chance fool the detective?** in the case file lets anyone
      check this live: one click makes 400 pretend worlds with no trend, as long and as persistent as
      the open record, and counts how often a naive test (no correction for persistence) and the
-     detective are fooled; for groundwater-like persistence (0.35) that is about 18% against 4%,
+     detective are fooled; for groundwater-like persistence (0.35) that is about 16% against 4-5%,
    - a **second opinion** from the Mann-Kendall test with Sen's slope, adjusted for persistence in
      the same way,
    - a plain-language summary for students and the public.
@@ -115,7 +115,7 @@ Pick a place and a measurement from NASA Earth data, and find out **what** is ch
     chance). Under the map: how many cells rise or fall, where the fastest change is, why the other
     cells have no dot, and possible reasons. Colorado snowfall, for example, rises in some cells and
     falls in others. Link: `?map=scene`.
-11. **Third witness and "Why is it not verified?":** for the prepared regions, the case file
+11. **Third witness and "Why is it not Confirmed?":** for the prepared regions, the case file
     compares the result with a second NASA dataset over exactly the years both have, and says how
     independent that dataset is: NASA GISTEMP v4 weather stations for temperature (independent), GPCP
     for precipitation (partly independent; over the Sahel and the Nile delta the two rain records are
@@ -335,7 +335,7 @@ trend/i18n.py          English and Turkish texts, number formatting
 trend/share.py         share links
 trend/game.py          Detective exam game: cases, answers, explanations and the game page
 trend/trendmap.py      crime scene map: a trend test per grid cell, the many-cells correction, the map layer
-trend/verify.py        third witness (a second NASA dataset) and the reasons a result is not verified
+trend/verify.py        third witness (a second NASA dataset) and the reasons a result is not Confirmed
 trend/timelapse.py     time travel map: yearly squares, differences from the normal, NASA imagery, the page
 trend/guide.py         guided start: two questions (what and where) that lead to up to three prepared cases
 trend/seasonal.py      "Which season is changing?": the trend test for each three-month season, next to the whole year

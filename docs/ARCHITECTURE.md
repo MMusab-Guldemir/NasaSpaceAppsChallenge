@@ -208,7 +208,7 @@ NasaSpaceAppsChallenge/
 │   ├── hotdays.py          # hot days: daily maximum temperature counted per grid cell
 │   │                       # (scripts/build_grid_cells.py writes per-cell yearly values for the time map)
 │   ├── trendmap.py         # crime scene map: grid-cell trends with a Benjamini-Hochberg filter
-│   ├── verify.py           # third witness and "why is it not verified?"
+│   ├── verify.py           # third witness and "why is it not Confirmed?"
 │   ├── timelapse.py        # time travel map: each grid cell's yearly difference from its normal
 │   │                       # (and the "Compare two years" swipe)
 │   ├── report.py           # downloadable case report: one printable, self-contained HTML page

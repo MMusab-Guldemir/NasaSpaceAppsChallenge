@@ -81,7 +81,7 @@ STATUS_ORDER = {"confirmed": 0, "disputed": 1, "weak": 2, "noevidence": 3}
 GUIDE_TEXT = {
     "en": {
         "title": "🧭 Not sure where to start? Answer two questions",
-        "q_topic": "What do you wonder about?",
+        "q_topic": "What are you curious about?",
         "q_place": "What kind of place?",
         "open": "Open this case",
         "none": "No prepared case for this pair yet; try another place.",

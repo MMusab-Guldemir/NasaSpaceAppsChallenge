@@ -63,7 +63,7 @@ TIMELINE_TEXT = {
             "({status})."
         ),
         "up": "artış", "down": "azalış",
-        "x_title": "Kaydın son yılı", "y_title": "Tesadüf ihtimali (p değeri, log ölçek)",
+        "x_title": "Kaydın son yılı", "y_title": "Tesadüf ihtimali (p-değeri, log ölçek)",
         "line": "%5 çizgisi", "hover": "Kayıt {start}–%{{x}}: p = %{{customdata}}",
     },
 }

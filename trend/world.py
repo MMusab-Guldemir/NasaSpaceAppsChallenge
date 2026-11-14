@@ -98,13 +98,13 @@ WORLD_TEXT = {
         "opposite_line": "**{variable}** {up} bölgesinde artıyor, {down} bölgesinde azalıyor.",
         "opposite_none": "Henüz zıt yönde doğrulanmış trendi olan bir ölçüm yok.",
         "opposite_why": (
-            "Yarışmanın ana fikri: Aynı yer sistemi değişkeni farklı yerlerde zıt yönlere gidebilir, "
+            "Yarışmanın ana fikri: Aynı Dünya sistemi değişkeni farklı yerlerde zıt yönlere gidebilir, "
             "çünkü yerel nedenler (yağmur kuşakları, yasalar, yangınlar, tarım) farklıdır."
         ),
         "open_case": "Aç: {region} – {variable}",
         "counts": (
             "{tested} dosya incelendi: {confirmed} doğrulandı, {disputed} tartışmalı, {weak} zayıf ipucu, "
-            "{none} delilsiz."
+            "{none} delil yok."
         ),
         "chance_note": (
             "Unutma: Hiçbir yerde hiçbir şey değişmiyor olsaydı bile {tested} testin yaklaşık {low}-{high} "

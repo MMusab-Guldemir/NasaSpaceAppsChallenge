@@ -96,7 +96,7 @@ in Konya), adding that a record year is not a trend by itself.
 
 **Can chance fool the detective?** One click in the case file makes 400 pretend worlds with no
 trend, as long and as persistent as the open record, and shows how often a naive test and the
-detective are fooled (for a persistence of 0.35, about 18% against 4%), next to the real case's
+detective are fooled (for a persistence of 0.35, about 16% against 4-5%), next to the real case's
 p-value.
 
 **Case report and open data.** One button downloads the case as a printable, self-contained HTML
@@ -125,7 +125,7 @@ example, rises in some cells and falls in others. Under the map the page counts 
 falling cells, names where the fastest change is, explains why the other cells have no dot, and
 gives possible reasons.
 
-**Third witness and "Why is it not verified?".** For the prepared regions, each case is compared
+**Third witness and "Why is it not Confirmed?".** For the prepared regions, each case is compared
 with a second NASA dataset over exactly the years both have, and the page says how independent that
 dataset is: NASA GISTEMP v4 weather-station records for temperature (independent of the MERRA-2
 reanalysis), GPCP for precipitation (partly independent, and related to the app's rain over Africa;

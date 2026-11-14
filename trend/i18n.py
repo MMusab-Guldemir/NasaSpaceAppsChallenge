@@ -168,9 +168,9 @@ TEXT: dict[str, dict[str, str]] = {
         "apply_coords": "Investigate these coordinates",
         "custom_help": (
             "Temperature, precipitation, snowfall and dust and smoke come live from NASA POWER for "
-            "any rectangle up to 40° × 40°. NO₂, carbon monoxide, soot, CO₂, vegetation greenness and "
-            "hot days are available for prepared regions only, because NASA delivers them through "
-            "slower services or as large daily files."
+            "any rectangle up to 40° × 40°. NO₂, carbon monoxide, soot, CO₂, vegetation greenness, "
+            "groundwater and hot days are available for prepared regions only, because NASA delivers "
+            "them through slower services or as large daily files."
         ),
         "map_help": (
             "Draw a rectangle with the square tool on the left of the map, or move and resize the "
@@ -367,9 +367,9 @@ TEXT: dict[str, dict[str, str]] = {
         "apply_coords": "Bu koordinatları incele",
         "custom_help": (
             "Sıcaklık, yağış, kar yağışı ve toz-duman, 40° × 40°'ye kadar her dikdörtgen için NASA "
-            "POWER'dan canlı gelir. NO₂, karbon monoksit, is, CO₂, bitki yeşilliği ve sıcak gün sayısı ise "
-            "NASA'nın daha yavaş servislerinden ya da büyük günlük dosyalarından geldiği için sadece "
-            "hazır bölgelerde var."
+            "POWER'dan canlı gelir. NO₂, karbon monoksit, is, CO₂, bitki yeşilliği, yeraltı suyu ve sıcak "
+            "gün sayısı ise NASA'nın daha yavaş servislerinden ya da büyük günlük dosyalarından geldiği "
+            "için sadece hazır bölgelerde var."
         ),
         "map_help": (
             "Haritanın solundaki kare aracıyla bir dikdörtgen çiz ya da mevcut dikdörtgeni "
@@ -609,8 +609,8 @@ REASONS: dict[str, dict[str, dict[str, list[str]]]] = {
                 "refill it.",
             ],
             "none": [
-                "Groundwater changes slowly and the record (since 2003) is short; wet and dry years can hide "
-                "a trend.",
+                "Groundwater changes slowly and the record (complete years since 2004) is short; wet and "
+                "dry years can hide a trend.",
             ],
         },
         "tree_cover": {
@@ -642,7 +642,7 @@ REASONS: dict[str, dict[str, dict[str, list[str]]]] = {
     "tr": {
         "air_temperature": {
             "up": [
-                "Kömür, petrol ve doğalgaz yakılınca çıkan sera gazları ısıyı tutar; bu, dünyanın "
+                "Kömür, petrol ve doğal gaz yakılınca çıkan sera gazları ısıyı tutar; bu, dünyanın "
                 "neredeyse her bölgesini ısıtıyor.",
                 "Büyüyen şehirler ek yerel ısı üretir (kentsel ısı adası); ancak bu kaba çözünürlüklü "
                 "NASA verisi tek tek şehirleri değil, çoğunlukla bölgesel ısınmayı gösterir.",
@@ -757,7 +757,7 @@ REASONS: dict[str, dict[str, dict[str, list[str]]]] = {
         },
         "co2": {
             "up": [
-                "Kömür, petrol ve doğalgaz yakmak, bitkilerin ve okyanusların geri alabileceğinden "
+                "Kömür, petrol ve doğal gaz yakmak, bitkilerin ve okyanusların geri alabileceğinden "
                 "daha hızlı CO₂ ekliyor.",
                 "CO₂ tüm gezegene yayılır; bu yüzden neredeyse her yerde aynı hızla artar.",
             ],
@@ -779,8 +779,8 @@ REASONS: dict[str, dict[str, dict[str, list[str]]]] = {
                 "doldurabileceğinden daha hızlı olabilir.",
             ],
             "none": [
-                "Yeraltı suyu yavaş değişir ve kayıt (2003'ten bu yana) kısadır; yağışlı ve kurak yılların "
-                "dalgalanması bir trendi gizleyebilir.",
+                "Yeraltı suyu yavaş değişir ve kayıt (tam yıllarla 2004'ten bu yana) kısadır; yağışlı ve "
+                "kurak yılların dalgalanması bir trendi gizleyebilir.",
             ],
         },
         "tree_cover": {
@@ -817,7 +817,7 @@ REGION_CONTEXT: dict[str, dict[str, dict[str, str]]] = {
         "beijing": {
             "no2": "China started a national clean-air plan in 2013. Try the period 2013 to 2025 "
                    "to see what happened after it.",
-            "aod": "China's 2013 clean-air plan also targeted soot and dust (PM2.5).",
+            "aod": "China's 2013 clean-air plan targeted fine particles (PM2.5) such as soot and dust.",
             "black_carbon": "China's 2013 clean-air plan cut coal burning and targeted soot. Try the "
                             "period 2013 to 2025.",
             "precipitation": "Check with a second record: NASA's GPCP satellite-gauge data show a "
@@ -850,8 +850,9 @@ REGION_CONTEXT: dict[str, dict[str, dict[str, str]]] = {
         },
         "amazon": {
             "precipitation": "Suspicious clue: this record drops suddenly around 2005. NASA's GPCP "
-                             "satellite-gauge record also shows drying here, but about half as strong "
-                             "(-125 mm per decade, 1983-2025), so part of the drop probably comes from "
+                             "satellite-gauge record also shows drying here, but only about 60% as "
+                             "strong (-125 against -200 mm per decade, 1983-2025), so part of the drop "
+                             "probably comes from "
                              "a change in the rain-gauge data, not the weather.",
             "tree_cover": "Rondônia is part of the 'arc of deforestation', where forest has been "
                           "cleared for farms and pasture.",
@@ -906,7 +907,7 @@ REGION_CONTEXT: dict[str, dict[str, dict[str, str]]] = {
         "alps": {
             "no2": "Avrupa egzoz standartları (Euro 1'den Euro 6'ya) 1990'lardan beri araba ve "
                    "kamyon emisyonlarını düşürdü.",
-            "snowfall": "Alplerde kar büyük ölçüde yüksekliğe bağlı: ısınmaya en duyarlı yerler "
+            "snowfall": "Alpler'de kar büyük ölçüde yüksekliğe bağlı: ısınmaya en duyarlı yerler "
                         "alçak yamaçlar.",
             "groundwater": "Avrupa'nın şiddetli kuraklık yaşadığı 2022, tüm kaydın (2004'ten beri) en "
                            "düşük yılı. Daha az kar, yeraltına süzülen erime suyunun da azalması demek.",
@@ -924,8 +925,9 @@ REGION_CONTEXT: dict[str, dict[str, dict[str, str]]] = {
         },
         "amazon": {
             "precipitation": "Şüpheli ipucu: bu kayıt 2005 civarında aniden düşüyor. NASA'nın GPCP "
-                             "uydu-yağmur ölçer kaydı da burada kuruma gösteriyor ama yaklaşık yarısı "
-                             "kadar (1983–2025, 10 yılda −125 mm); bu yüzden düşüşün bir kısmı büyük "
+                             "uydu-yağmur ölçer kaydı da burada kuruma gösteriyor ama bunun yalnızca "
+                             "yaklaşık %60'ı kadar (1983–2025, on yılda −125 mm su; bu kayıtta −200); bu "
+                             "yüzden düşüşün bir kısmı büyük "
                              "ihtimalle havadan değil yağmur ölçer verisindeki değişimden geliyor.",
             "tree_cover": "Rondônia, ormanın tarla ve mera için kesildiği 'ormansızlaşma yayının' "
                           "bir parçası.",
@@ -1095,7 +1097,7 @@ VARIABLE_TEXT: dict[str, dict[str, dict]] = {
         },
         "co2": {
             "name": "Karbondioksit (CO₂)",
-            "definition": "Ana sera gazı; çoğunlukla kömür, petrol ve doğalgaz yakılınca çıkar, bir kısmını bitkiler ve okyanuslar geri alır.",
+            "definition": "Ana sera gazı; çoğunlukla kömür, petrol ve doğal gaz yakılınca çıkar, bir kısmını bitkiler ve okyanuslar geri alır.",
             "annual_label": "Hava sütununda yıllık ortalama CO₂",
             "unit": "ppm",
             "annual_unit": "ppm",
@@ -1193,8 +1195,8 @@ METHODS = {
   average of all NASA POWER grid cells whose centres lie inside or on the edge of the box, weighted
   by the cosine of latitude (cells centred on the edge reach half a cell beyond the box). A
   rectangle smaller than one grid cell uses the nearest cell with data, and a rectangle larger than
-  10° is fetched in pieces that are averaged together. For NO₂, carbon monoxide, soot and CO₂, NASA
-  Giovanni computes the average over the same box, and for vegetation greenness and tree cover,
+  10° is fetched in pieces that are averaged together. For NO₂, carbon monoxide, soot, CO₂ and
+  groundwater, NASA Giovanni computes the average over the same box, and for vegetation greenness and tree cover,
   NASA AppEEARS does; there, pixels over the sea have no value and are left out.
 - **One value per year:** monthly values are combined into one value per year, which removes the
   seasonal cycle. A year is used only if all of its months are available.
@@ -1240,8 +1242,8 @@ METHODS = {
   içinde ya da kenarında kalan tüm NASA POWER ızgara hücrelerinin enlemin kosinüsüyle
   ağırlıklandırılmış ortalamasıdır (kenarda merkezlenen hücreler kutunun yarım hücre dışına uzanır).
   Bir hücreden küçük dikdörtgenlerde veri olan en yakın hücre kullanılır; 10°'den büyük
-  dikdörtgenler parça parça getirilip birlikte ortalanır. NO₂, karbon monoksit, is ve CO₂ için
-  ortalamayı aynı kutu üzerinden NASA Giovanni, bitki yeşilliği ve ağaç örtüsü için NASA AppEEARS
+  dikdörtgenler parça parça getirilip birlikte ortalanır. NO₂, karbon monoksit, is, CO₂ ve yeraltı
+  suyu için ortalamayı aynı kutu üzerinden NASA Giovanni, bitki yeşilliği ve ağaç örtüsü için NASA AppEEARS
   hesaplar; orada deniz üzerindeki piksellerin değeri yoktur ve hesaba katılmaz.
 - **Yılda tek değer:** aylık değerler her yıl için tek bir değerde birleştirilir; böylece mevsim
   döngüsü ortadan kalkar. Bir yıl yalnızca tüm ayları mevcutsa kullanılır.
@@ -1257,8 +1259,8 @@ METHODS = {
   bir *Doğrulandı*, yıllar bağımsızken vakaların yaklaşık %3'ünde, orta süreklilikte 15 yıl ve
   üzerinde %5–7'sinde (yalnızca 10 yılda yaklaşık %10), is gibi çok sürekli serilerde %9–18'inde
   çıkıyor. Bu yüzden kısa kayıtlar uyarı alır.
-- **Gerçek bir trendi ne sıklıkla bulur?** On yılda bir tipik yıllık dalgalanma kadar büyük gerçek
-  bir trend, yıllar bağımsızken 10 yıllık kayıtta vakaların yaklaşık %7'sinde, 20 yılda %51'inde,
+- **Gerçek bir trendi ne sıklıkla bulur?** Büyüklüğü on yılda tipik bir yıldan yıla dalgalanma kadar
+  olan gerçek bir trend, yıllar bağımsızken 10 yıllık kayıtta vakaların yaklaşık %7'sinde, 20 yılda %51'inde,
   25 yılda %81'inde, 35 yıl ve üzerinde %99'undan fazlasında doğrulanır; yıllar birbirine benziyorsa
   daha uzun kayıt gerekir (25 yılda %41, 45 yılda %95). Bu yüzden "anlamlı trend yok" çoğu zaman
   "kayıt kısa" demektir, "değişim yok" değil. Sayılar scripts/accuracy_report.py ile yeniden
