@@ -25,9 +25,12 @@ from trend.fetch import (  # noqa: E402
     build_monthly_from_giovanni,
     RAW_DIR,
     build_no2_from_giovanni,
+    daily_to_monthly_mean,
     fetch_power_variable,
+    load_giovanni_csv,
     save_processed,
 )
+import pandas as pd  # noqa: E402
 from trend.appeears import load_appeears_statistics, load_ndvi_statistics  # noqa: E402
 from trend.regions import get_region  # noqa: E402
 from trend.variables import VARIABLES, get_variable  # noqa: E402
@@ -65,6 +68,15 @@ def main(argv: list[str] | None = None) -> int:
             if not valid.between(-0.2, 1.0).all():
                 raise ValueError("NDVI area means outside -0.2..1: check scale factors.")
             source = f"{variable.product}; {variable.provider}; file: {files[0].name}"
+        elif key == "groundwater":
+            files = sorted(RAW_DIR.glob(f"giovanni_groundwater_{region.key}_*.csv"))
+            if not files:
+                print(f"skip groundwater: no giovanni_groundwater_{region.key}_*.csv files in data/raw")
+                continue
+            daily = pd.concat([load_giovanni_csv(f) for f in files], ignore_index=True)
+            daily = daily.sort_values("date").drop_duplicates(subset="date", keep="first")
+            monthly = daily_to_monthly_mean(daily, variable.min_valid_days or 25)
+            source = f"{variable.product}; {variable.provider}; files: {', '.join(f.name for f in files)}"
         elif key in GIOVANNI_MONTHLY:
             files = sorted(RAW_DIR.glob(f"giovanni_{key}_{region.key}.csv"))
             if not files:

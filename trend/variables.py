@@ -49,6 +49,11 @@ MOD44B_REFERENCE = (
     "Yearly L3 Global 250m SIN Grid V061. NASA EOSDIS Land Processes Distributed Active Archive "
     "Center."
 )
+GLDAS_DA_REFERENCE = (
+    "Li, B., Beaudoing, H., & Rodell, M., NASA/GSFC/HSL (2020). GLDAS Catchment Land Surface Model L4 "
+    "daily 0.25 x 0.25 degree GRACE-DA1 V2.2. NASA Goddard Earth Sciences Data and Information Services "
+    "Center (GES DISC)."
+)
 APPEEARS_ACKNOWLEDGMENT = (
     "Area statistics were produced with AppEEARS (Application for Extracting and Exploring "
     "Analysis Ready Samples), NASA EOSDIS LP DAAC and USGS EROS Center."
@@ -349,6 +354,37 @@ VARIABLES: dict[str, Variable] = {
             "affect recent values.",
         ),
         decimals=3,
+    ),
+    "groundwater": Variable(
+        key="groundwater",
+        name="Groundwater storage",
+        definition=(
+            "How much water is stored underground below the root zone, as a depth of water. NASA "
+            "estimates it with the GLDAS land model, corrected with the GRACE satellites, which weigh "
+            "the water in an area by measuring tiny changes in Earth's gravity."
+        ),
+        unit="mm of water",
+        annual_label="Mean groundwater storage per year",
+        annual_unit="mm of water",
+        year_axis_label="Year",
+        aggregation="mean",
+        season_months=ALL_MONTHS,
+        year_starts_month=1,
+        product="NASA GLDAS-2.2 Catchment model with GRACE data assimilation (GLDAS_CLSM025_DA1_D v2.2), "
+                "groundwater storage, daily, 0.25 degree",
+        provider="NASA GES DISC (GLDAS, NASA Goddard Hydrological Sciences Laboratory)",
+        doi="10.5067/TXBMLX370XX8",
+        citation=f"{GLDAS_DA_REFERENCE} {GIOVANNI_ACKNOWLEDGMENT}",
+        caveats=(
+            "GRACE sees water over areas of a few hundred kilometres, so the trend is regional, not the "
+            "level of a single well.",
+            "It is a model guided by satellite gravity, starting in 2003; the gap between the GRACE and "
+            "GRACE-FO missions (late 2017 to mid 2018) is filled by the model.",
+            "The value is the stored depth in the model; the change over time matters more than the "
+            "number itself.",
+        ),
+        min_valid_days=25,
+        decimals=1,
     ),
     "tree_cover": Variable(
         key="tree_cover",

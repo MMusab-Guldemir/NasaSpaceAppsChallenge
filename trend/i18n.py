@@ -26,7 +26,7 @@ TEXT: dict[str, dict[str, str]] = {
         "step1_caption": "Each card is one measurement from NASA Earth data over its full record.",
         "group_climate": "Climate",
         "group_air": "Air",
-        "group_carbon_green": "Carbon and green land",
+        "group_carbon_green": "Carbon, green land and water",
         "short_record_note": (
             "This measurement has only {n} years of NASA data, fewer than the usual {usual}. The app "
             "allows it because the change is large compared with year-to-year swings; read the "
@@ -218,7 +218,7 @@ TEXT: dict[str, dict[str, str]] = {
         "step1_caption": "Her kart, NASA Dünya verisinden bir ölçümü tüm kayıt boyunca gösterir.",
         "group_climate": "İklim",
         "group_air": "Hava",
-        "group_carbon_green": "Karbon ve yeşil alan",
+        "group_carbon_green": "Karbon, yeşil alan ve su",
         "short_record_note": (
             "Bu ölçümün yalnızca {n} yıllık NASA verisi var; her zamanki {usual} yıldan az. Değişim "
             "yıldan yıla dalgalanmaya göre büyük olduğu için izin veriyoruz; sonuca ekstra dikkatle bak."
@@ -443,6 +443,7 @@ REGION_NAMES = {
         "sahel": "Sahel, Batı Afrika",
         "alps": "Alpler, İsviçre ve Avusturya",
         "siberia": "Sibirya (Yakutistan), Rusya",
+        "konya": "Konya Kapalı Havzası, Türkiye",
     }
 }
 
@@ -575,6 +576,21 @@ REASONS: dict[str, dict[str, dict[str, list[str]]]] = {
             ],
             "none": [
                 "The record here is short, so a change may not show up yet.",
+            ],
+        },
+        "groundwater": {
+            "up": [
+                "Wetter years or less pumping from wells let groundwater refill.",
+                "Dams and irrigation canals can raise groundwater nearby.",
+            ],
+            "down": [
+                "Pumping for irrigation, cities and industry can take water out faster than rain and snow "
+                "refill it.",
+                "Droughts reduce the water that soaks down to the groundwater.",
+            ],
+            "none": [
+                "Groundwater changes slowly and the record (since 2003) is short; wet and dry years can hide "
+                "a trend.",
             ],
         },
         "tree_cover": {
@@ -732,6 +748,21 @@ REASONS: dict[str, dict[str, dict[str, list[str]]]] = {
                 "Buradaki kayıt kısa; bir değişim henüz görünmeyebilir.",
             ],
         },
+        "groundwater": {
+            "up": [
+                "Yağışlı yıllar ya da daha az kuyu suyu çekimi, yeraltı suyunun yeniden dolmasını sağlar.",
+                "Barajlar ve sulama kanalları yakınlardaki yeraltı suyunu yükseltebilir.",
+            ],
+            "down": [
+                "Sulama, şehirler ve sanayi için kuyulardan çekilen su, yağmur ve karın yeniden "
+                "doldurabileceğinden daha hızlı olabilir.",
+                "Kuraklık yıllarında yeraltına süzülen su azalır.",
+            ],
+            "none": [
+                "Yeraltı suyu yavaş değişir ve kayıt (2003'ten bu yana) kısadır; yağışlı ve kurak yılların "
+                "dalgalanması bir trendi gizleyebilir.",
+            ],
+        },
         "tree_cover": {
             "up": [
                 "Yeniden büyüyen ormanlar, ağaçlandırma ya da plantasyonlar ve meyve bahçeleri.",
@@ -784,6 +815,8 @@ REGION_CONTEXT: dict[str, dict[str, dict[str, str]]] = {
                    "and trucks since the 1990s.",
             "snowfall": "Snow in the Alps depends strongly on altitude: lower slopes are the most "
                         "sensitive to warming.",
+            "groundwater": "The lowest year in this series is 2022, the year of Europe's severe "
+                           "drought. Less snow also means less meltwater soaking into the ground.",
         },
         "sahel": {
             "ndvi": "After severe droughts in the 1970s and 1980s, rains partly returned and "
@@ -791,6 +824,9 @@ REGION_CONTEXT: dict[str, dict[str, dict[str, str]]] = {
             "precipitation": "NASA's GPCP satellite-gauge record shows a rise here too (+29 mm per "
                              "decade, 1983-2025), in line with the rainfall recovery after the "
                              "1970s-80s droughts.",
+            "groundwater": "Rising groundwater in a dry region is a known 'Sahel paradox': where "
+                           "natural bush is cleared for fields, more rain runs off into ponds that leak "
+                           "into the ground. The rains also partly returned after the 1970s-80s droughts.",
         },
         "amazon": {
             "precipitation": "Suspicious clue: this record drops suddenly around 2005. NASA's GPCP "
@@ -804,6 +840,8 @@ REGION_CONTEXT: dict[str, dict[str, dict[str, str]]] = {
                     "northern mid-latitudes, but the dry season here, so this card measures "
                     "dry-season greenness.",
             "aod": "Smoke from dry-season fires used to clear forest makes some years very hazy.",
+            "groundwater": "The record ends with the severe Amazon droughts of 2023 and 2024; 2024 is "
+                           "the lowest year in this series.",
         },
         "siberia": {
             "air_temperature": "High northern latitudes are, on average, warming faster than the "
@@ -818,6 +856,12 @@ REGION_CONTEXT: dict[str, dict[str, dict[str, str]]] = {
         },
         "medina": {
             "aod": "Desert dust storms dominate the haze over the Arabian Peninsula.",
+        },
+        "konya": {
+            "groundwater": "Most fields on the Konya plain are watered from wells, and sinkholes "
+                           "('obruk') have become more common. GRACE weighs water over areas a few "
+                           "hundred kilometres wide, so a fall in the wells can look smaller and slower "
+                           "here than it is on the ground.",
         },
     },
     "tr": {
@@ -842,6 +886,8 @@ REGION_CONTEXT: dict[str, dict[str, dict[str, str]]] = {
                    "kamyon emisyonlarını düşürdü.",
             "snowfall": "Alplerde kar büyük ölçüde yüksekliğe bağlı: ısınmaya en duyarlı yerler "
                         "alçak yamaçlar.",
+            "groundwater": "Bu serinin en düşük yılı, Avrupa'nın şiddetli kuraklık yaşadığı 2022. Daha "
+                           "az kar, yeraltına süzülen erime suyunun da azalması demek.",
         },
         "sahel": {
             "ndvi": "1970'ler ve 1980'lerdeki büyük kuraklıklardan sonra yağışlar kısmen geri döndü "
@@ -849,6 +895,10 @@ REGION_CONTEXT: dict[str, dict[str, dict[str, str]]] = {
             "precipitation": "NASA'nın GPCP uydu-yağmur ölçer kaydı da burada artış gösteriyor "
                              "(1983–2025, 10 yılda +29 mm); bu, 1970'ler-80'lerdeki kuraklıklardan "
                              "sonraki yağış toparlanmasıyla uyumlu.",
+            "groundwater": "Kurak bir bölgede yükselen yeraltı suyu bilinen bir 'Sahel paradoksu': "
+                           "doğal çalılık tarla için temizlenince yağmur suyu daha çok akıp göletlerde "
+                           "toplanıyor ve oradan yeraltına süzülüyor. Yağışlar da 1970'ler-80'lerdeki "
+                           "kuraklıklardan sonra kısmen geri döndü.",
         },
         "amazon": {
             "precipitation": "Şüpheli ipucu: bu kayıt 2005 civarında aniden düşüyor. NASA'nın GPCP "
@@ -862,6 +912,8 @@ REGION_CONTEXT: dict[str, dict[str, dict[str, str]]] = {
                     "kurak mevsimdir; yani bu kart kurak mevsimdeki yeşilliği ölçüyor.",
             "aod": "Orman açmak için kurak mevsimde çıkarılan yangınların dumanı bazı yılları çok "
                    "puslu yapıyor.",
+            "groundwater": "Kayıt, Amazon'un 2023 ve 2024'teki şiddetli kuraklıklarıyla bitiyor; 2024 bu "
+                           "serinin en düşük yılı.",
         },
         "siberia": {
             "air_temperature": "Yüksek kuzey enlemleri ortalamada dünyanın geri kalanından daha "
@@ -876,6 +928,11 @@ REGION_CONTEXT: dict[str, dict[str, dict[str, str]]] = {
         },
         "medina": {
             "aod": "Arap Yarımadası'ndaki pusu çoğunlukla çöl tozu fırtınaları oluşturuyor.",
+        },
+        "konya": {
+            "groundwater": "Konya ovasındaki tarlaların çoğu kuyulardan sulanıyor ve obruklar giderek "
+                           "sıklaşıyor. GRACE suyu birkaç yüz kilometre genişliğindeki alanlarda tarttığı "
+                           "için kuyulardaki düşüş burada sahadakinden daha küçük ve yavaş görünebilir.",
         },
     },
 }
@@ -1049,6 +1106,26 @@ VARIABLE_TEXT: dict[str, dict[str, dict]] = {
                 "Çöl toz fırtınaları ve büyük orman yangınları bazı yılları öne çıkarabilir.",
                 "NASA POWER'daki en yeni aylar neredeyse gerçek zamanlı bir üründen gelebilir ve "
                 "sonradan düzeltilebilir.",
+            ],
+        },
+        "groundwater": {
+            "name": "Yeraltı suyu",
+            "definition": (
+                "Kök bölgesinin altında, yeraltında depolanan suyun su yüksekliği olarak miktarı. NASA bunu "
+                "GLDAS kara modeliyle ve bir bölgedeki suyu Dünya'nın çekim gücündeki küçük değişimlerden "
+                "tartan GRACE uydularıyla düzelterek hesaplar."
+            ),
+            "annual_label": "Yıllık ortalama yeraltı suyu",
+            "unit": "mm su",
+            "annual_unit": "mm su",
+            "year_axis_label": "Yıl",
+            "caveats": [
+                "GRACE suyu birkaç yüz kilometrelik alanlarda görür; bu yüzden trend bölgeseldir, tek bir "
+                "kuyunun seviyesi değildir.",
+                "Uydu çekim ölçümleriyle yönlendirilen bir modeldir ve 2003'te başlar; GRACE ile GRACE-FO "
+                "görevleri arasındaki boşluğu (2017 sonu–2018 ortası) model doldurur.",
+                "Değer, modeldeki depolanmış su yüksekliğidir; sayının kendisinden çok zaman içindeki "
+                "değişimi önemlidir.",
             ],
         },
         "tree_cover": {

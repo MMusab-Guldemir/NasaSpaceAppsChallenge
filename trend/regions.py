@@ -97,6 +97,11 @@ REGIONS: dict[str, Region] = {
         north=65.0,
         description="Central Yakutia around Yakutsk in eastern Siberia, a cold permafrost region.",
     ),
+    "konya": Region(
+        key="konya", name="Konya Closed Basin, Türkiye", west=31.75, south=37.0, east=34.25, north=39.0,
+        description="The Konya Closed Basin in central Anatolia (Konya, Karaman, Aksaray and Lake Tuz), "
+        "Türkiye's grain belt, where irrigation draws on groundwater and sinkholes have appeared.",
+    ),
 }
 
 

@@ -36,6 +36,9 @@ from trend.area import (
 )
 from trend.charts import annual_trend_figure, monthly_figure, sparkline_figure
 from trend.examples import EXAMPLES, example_key, example_label, examples_title
+from trend.guide import (
+    PLACES, TOPICS, guide_text, place_label, suggest, suggestion_key, suggestion_label, topic_label,
+)
 from trend.fetch import (
     POWER_VARIABLES,
     TRANSIENT_STATUS,
@@ -73,6 +76,8 @@ from trend.seasons import (
     season_text,
     seasonal_swing,
 )
+from trend import seasonal
+from trend.report import case_report_html, report_filename, report_text
 from trend.share import build_share_link, parse_period
 from trend.stats import MIN_YEARS, RECOMMENDED_YEARS, TrendResult, analyze_trend, trend_line_band
 from trend.timeline import (
@@ -193,6 +198,18 @@ STYLE = """
 }
 .stamp.slam { animation: slam 0.45s ease-out 1; font-size: 1.1rem; }
 @media (prefers-reduced-motion: reduce) { .stamp.slam { animation: none; } }
+/* Phones: two clue cards per row instead of one long column */
+@media (max-width: 640px) {
+  div[data-testid="stHorizontalBlock"]:has(.clue-name) {
+    flex-direction: row !important; flex-wrap: wrap !important; gap: 0.5rem !important;
+  }
+  div[data-testid="stHorizontalBlock"]:has(.clue-name) > div[data-testid="stColumn"] {
+    flex: 1 1 calc(50% - 0.5rem) !important; width: calc(50% - 0.5rem) !important;
+    min-width: calc(50% - 0.5rem) !important;
+  }
+  .clue-value { font-size: 1.15rem; }
+  .clue-name { font-size: 0.72rem; }
+}
 </style>
 """
 
@@ -224,6 +241,12 @@ def measured_somewhere(files: tuple) -> frozenset:
 def world_board(files: tuple) -> dict:
     """Verdicts for every prepared region and measurement (full records), for the World board."""
     return world_cells(load_monthly)
+
+
+@st.cache_data(show_spinner=False)
+def guide_suggestions(topic: str, place: str, files: tuple) -> list:
+    """Guided start: the prepared cases for one what/where pair (recomputed when a data file changes)."""
+    return suggest(topic, place, loader=load_monthly)
 
 
 @st.cache_data(show_spinner=False, ttl=24 * 3600, max_entries=64)
@@ -611,6 +634,31 @@ if st.session_state["view"] == "exam":
 
 verdict_slot = st.container()  # filled with the current case's verdict once it is known
 
+# Guided start (the challenge suggests what/where questions that lead to variables): two questions,
+# then up to three prepared cases with their stamps (trend/guide.py, checked by tests/test_guide.py).
+with st.expander(guide_text(lang, "title")):
+    guide_topic = st.pills(
+        guide_text(lang, "q_topic"), list(TOPICS), format_func=lambda key: topic_label(lang, key),
+        key="guide_topic",
+    )
+    guide_place = st.pills(
+        guide_text(lang, "q_place"), list(PLACES), format_func=lambda key: place_label(lang, key),
+        key="guide_place",
+    )
+    if guide_topic and guide_place:
+        guide_found = guide_suggestions(guide_topic, guide_place, data_files())
+        if not guide_found:
+            st.info(guide_text(lang, "none"))
+        for suggestion in guide_found:
+            text_column, button_column = st.columns([3, 1], vertical_alignment="center")
+            text_column.markdown(suggestion_label(suggestion, lang))
+            button_column.button(
+                guide_text(lang, "open"), key=suggestion_key(suggestion), on_click=open_famous_case,
+                args=(suggestion,), width="stretch",
+            )
+        if any(suggestion.status == "noevidence" for suggestion in guide_found):
+            st.caption(guide_text(lang, "note"))
+
 # Famous cases from around the world (the challenge asks for demonstration examples): one click
 # opens a region, a measurement and a period (trend/examples.py, each checked by a test).
 st.caption(examples_title(lang))
@@ -899,7 +947,7 @@ st.caption(t(lang, "step1_caption"))
 BOARD_GROUPS = (
     ("group_climate", ("air_temperature", "precipitation", "snowfall", "hot_days")),
     ("group_air", ("no2", "co", "black_carbon", "aod")),
-    ("group_carbon_green", ("co2", "ndvi", "tree_cover")),
+    ("group_carbon_green", ("co2", "ndvi", "groundwater", "tree_cover")),
 )
 board_cells = []
 measured = measured_somewhere(data_files())
@@ -1175,6 +1223,20 @@ if len(replay_table) >= 2:
         )
         st.markdown(replay_sentence(lang, replay_summary(replay_table)))
 
+# Which season is changing? The same test for each three-month season (trend/seasonal.py)
+if case_key in seasonal.SUPPORTED:
+    with st.expander(seasonal.section_text(lang, "title")):
+        season_table = seasonal.season_trends(monthly, case_key, start_year, end_year)
+        season_latitude = region.center[0]
+        st.caption(seasonal.section_text(lang, "intro"))
+        st.plotly_chart(
+            seasonal.season_figure(season_table, lang, season_latitude, unit, separators, decimals),
+            width="stretch", theme=None, config={"displaylogo": False, "displayModeBar": False},
+            key="seasonal_chart",
+        )
+        st.caption(seasonal.figure_note(lang, case_key))
+        st.markdown(seasonal.season_sentence(lang, season_table, case_key, season_latitude, unit))
+
 # Step 5: the second witness
 st.markdown(f"<div class='step'>{html.escape(t(lang, 'step_witness'))}</div>", unsafe_allow_html=True)
 found = t(lang, {"increasing": "found_increasing", "decreasing": "found_decreasing"}.get(
@@ -1332,6 +1394,50 @@ with st.expander(t(lang, "table_title")):
         t(lang, "dl_results"), pd.DataFrame([results_row]).to_csv(index=False).encode("utf-8"),
         file_name=f"{file_stem}_case_results.csv", mime="text/csv",
     )
+
+# Downloadable case report: verdict, chart, witness, reasons and sources on one printable page (trend/report.py)
+report_area = "custom_" + "_".join(f"{v:g}" for v in active_bbox) if custom_mode else region_key
+report_caveats = list(texts["caveats"])
+if line_note.show:  # the "not a straight line" note explains a No evidence stamp on a clearly one-way chart
+    report_caveats.insert(0, line_text(lang, p_phrase(line_note.plain_mk_p, lang), num(result.n_effective, lang, 0)))
+st.download_button(
+    report_text(lang, "button"),
+    case_report_html(
+        lang,
+        region_label=region_label,
+        variable_name=texts["name"],
+        definition=texts["definition"],
+        annual_label=texts["annual_label"],
+        unit=unit,
+        start_year=start_year,
+        end_year=end_year,
+        result=result,
+        status=status,
+        stamp_text=status_text(lang, status)[0],
+        chance_text=chance_phrase(result.p_value, lang),
+        p_text=p_phrase(result.p_value, lang),
+        witness_text=t(
+            lang, "witness_agrees" if result.agrees else "witness_disagrees",
+            method=method_name(lang, result.mk_method), found=found, p=p_phrase(result.mk_p_value, lang),
+            sen=num(result.sen_slope_per_decade, lang, decimals, signed=True), unit=unit,
+        ),
+        reasons=reason_lines + ([f"**{t(lang, 'local_context')}:** {context}"] if context else []),
+        caveats=report_caveats,
+        source=f"{variable.product}, {variable.provider}",
+        citation=variable.citation,
+        doi=variable.doi,
+        share_link=build_share_link(
+            lang, region_key, case_key, start_year, end_year, bbox=active_bbox if custom_mode else None,
+        ),
+        years=annual["year"].tolist(),
+        values=annual["value"].tolist(),
+        decimals=decimals,
+    ).encode("utf-8"),
+    file_name=report_filename(report_area, case_key, start_year, end_year),
+    mime="text/html",
+    help=report_text(lang, "button_help"),
+    key="case_report_download",
+)
 
 with st.expander(t(lang, "methods_title")):
     st.markdown(METHODS[lang].format(region=region_label, min_years=MIN_YEARS))

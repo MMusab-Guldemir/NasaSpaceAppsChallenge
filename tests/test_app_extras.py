@@ -5,6 +5,7 @@ NASA Space Apps Challenge 2026.
 """
 from pathlib import Path
 
+import pytest
 from streamlit.testing.v1 import AppTest
 
 from trend.fetch import available_variable_keys
@@ -86,3 +87,38 @@ def test_failed_live_requests_are_not_repeated_on_every_rerun(monkeypatch):
     retry = next(b for b in at.button if b.key == "retry_fetch")
     retry.click().run()  # the Retry button asks again
     assert len(calls) > first
+
+
+def test_guided_start_opens_a_suggested_case():
+    at = AppTest.from_file(APP, default_timeout=90)
+    at.query_params["lang"] = "tr"
+    at.session_state["guide_topic"] = "heat"
+    at.session_state["guide_place"] = "city"
+    at.run()
+    assert not at.exception
+    button = next(b for b in at.button if b.key == "guide_marmara_hot_days")
+    button.click().run()
+    assert not at.exception
+    assert at.session_state["region"] == "marmara" and at.session_state["case"] == "hot_days"
+
+
+@pytest.mark.parametrize("case, shown", [("air_temperature", True), ("hot_days", True), ("no2", False)])
+def test_season_section_only_for_the_three_seasonal_measurements(case, shown):
+    at = AppTest.from_file(APP, default_timeout=90)
+    at.query_params["region"] = "marmara"
+    at.query_params["case"] = case
+    at.run()
+    assert not at.exception
+    labels = [e.label for e in at.expander]
+    assert ("Which season is changing?" in labels) is shown
+
+
+def test_case_report_download_is_a_printable_page():
+    at = AppTest.from_file(APP, default_timeout=90)
+    at.query_params["lang"] = "tr"
+    at.query_params["region"] = "konya"
+    at.query_params["case"] = "hot_days"
+    at.run()
+    assert not at.exception
+    labels = [b.proto.label for b in at.get("download_button")]
+    assert any("Dosya raporunu indir" in label for label in labels)

@@ -76,6 +76,32 @@ EXAMPLES: tuple[Example, ...] = (
         },
         "none",
     ),
+    # Underground water (GRACE-assisted GLDAS, 2003 on): a rise, a "you can see it but cannot prove it
+    # yet", and a fall, in that order
+    Example(
+        "sahel", "groundwater", None, None,
+        {
+            "en": "🏜️ Desert edge: is groundwater rising in the Sahel?",
+            "tr": "🏜️ Çöl kenarı: Sahel'de yeraltı suyu yükseliyor mu?",
+        },
+        "up",
+    ),
+    Example(
+        "konya", "groundwater", None, None,
+        {
+            "en": "🌾 Türkiye's grain store: is Konya's groundwater falling?",
+            "tr": "🌾 Türkiye'nin tahıl ambarı: Konya'da yeraltı suyu düşüyor mu?",
+        },
+        "none",
+    ),
+    Example(
+        "alps", "groundwater", None, None,
+        {
+            "en": "🏔️ Mountains: is groundwater falling under the Alps?",
+            "tr": "🏔️ Dağlar: Alplerin altındaki yeraltı suyu azalıyor mu?",
+        },
+        "down",
+    ),
 )
 
 EXAMPLES_TEXT = {

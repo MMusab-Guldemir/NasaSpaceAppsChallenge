@@ -33,12 +33,12 @@ SHORT_NAMES = {
     "en": {
         "colorado": "Colorado", "marmara": "Istanbul", "medina": "Medina", "beijing": "Beijing",
         "los_angeles": "Los Angeles", "cairo_nile": "Cairo", "amazon": "Amazon", "sahel": "Sahel",
-        "alps": "Alps", "siberia": "Siberia",
+        "alps": "Alps", "siberia": "Siberia", "konya": "Konya",
     },
     "tr": {
         "colorado": "Colorado", "marmara": "İstanbul", "medina": "Medine", "beijing": "Pekin",
         "los_angeles": "Los Angeles", "cairo_nile": "Kahire", "amazon": "Amazon", "sahel": "Sahel",
-        "alps": "Alpler", "siberia": "Sibirya",
+        "alps": "Alpler", "siberia": "Sibirya", "konya": "Konya",
     },
 }
 

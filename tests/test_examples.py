@@ -34,7 +34,7 @@ def test_each_question_matches_the_real_data(example):
 
 def test_keys_are_unique_and_labels_exist_in_both_languages():
     keys = [example_key(example) for example in EXAMPLES]
-    assert len(set(keys)) == len(keys) == 6
+    assert len(set(keys)) == len(keys) == 9
     for example in EXAMPLES:
         assert example.expect in EXPECTED_ANSWERS
         assert example.label["en"].strip() and example.label["tr"].strip()
