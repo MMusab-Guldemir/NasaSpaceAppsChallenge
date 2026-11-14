@@ -46,6 +46,18 @@ REGIONS: dict[str, Region] = {
         map_scope="usa",
         us_state="CO",
     ),
+    "marmara": Region(
+        key="marmara",
+        name="Istanbul–Marmara, Türkiye",
+        west=27.0,
+        south=40.0,
+        east=30.0,
+        north=42.0,
+        description=(
+            "Istanbul and the Marmara region of Türkiye, including parts of the Marmara and "
+            "Black Sea coasts."
+        ),
+    ),
 }
 
 

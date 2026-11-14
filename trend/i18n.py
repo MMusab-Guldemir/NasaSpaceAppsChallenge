@@ -339,7 +339,7 @@ STATUS: dict[str, dict[str, tuple[str, str]]] = {
     },
 }
 
-REGION_NAMES = {"tr": {"colorado": "Colorado, ABD"}}
+REGION_NAMES = {"tr": {"colorado": "Colorado, ABD", "marmara": "İstanbul–Marmara, Türkiye"}}
 
 VARIABLE_TEXT: dict[str, dict[str, dict]] = {
     "tr": {

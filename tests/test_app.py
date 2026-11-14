@@ -29,6 +29,14 @@ def test_board_and_default_case_render(lang):
     assert TEXT[lang]["step_verdict"].split("·")[-1].strip() in markdown
 
 
+def test_marmara_region_renders():
+    at = AppTest.from_file(APP, default_timeout=60)
+    at.session_state["region"] = "marmara"
+    at.run()
+    assert not at.exception
+    assert any("Istanbul" in h.value for h in at.header)
+
+
 def test_example_case_opens_case_and_period():
     at = run_app("en")
     at.button(key="example_no2").click().run()
