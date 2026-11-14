@@ -111,10 +111,15 @@ def submit_area_request(
 
 def load_ndvi_statistics(path: Path) -> pd.DataFrame:
     """Monthly NDVI area means from an AppEEARS statistics CSV (columns ``date``, ``value``, ``n_pixels``)."""
+    return load_appeears_statistics(path, "NDVI")
+
+
+def load_appeears_statistics(path: Path, dataset: str) -> pd.DataFrame:
+    """Area means of one layer from an AppEEARS statistics CSV (``date``, ``value``, ``n_pixels``)."""
     table = pd.read_csv(path)
     table.columns = [c.strip() for c in table.columns]
     if "Dataset" in table.columns:
-        table = table[table["Dataset"].astype(str).str.contains("NDVI", case=False)]
+        table = table[table["Dataset"].astype(str).str.contains(dataset, case=False)]
     out = pd.DataFrame(
         {
             "date": pd.to_datetime(table["Date"]).dt.to_period("M").dt.to_timestamp(),

@@ -32,6 +32,23 @@ CERES_SYN1DEG_REFERENCE = (
     "Doelling, D. R., et al. (2013). Geostationary enhanced temporal interpolation for CERES flux "
     "products. Journal of Atmospheric and Oceanic Technology, 30, 1072-1090."
 )
+MOPITT_REFERENCE = (
+    "Drummond, J., Gille, J., & Worden, H. MOPITT CO gridded monthly means (Near and Thermal "
+    "Infrared Radiances) V010. NASA Langley Atmospheric Science Data Center."
+)
+MERRA2_AEROSOL_REFERENCE = (
+    "Global Modeling and Assimilation Office (GMAO) (2015). MERRA-2 tavgM_2d_aer_Nx: 2d, Monthly "
+    "mean, Time-averaged, Single-Level, Assimilation, Aerosol Diagnostics V5.12.4. NASA GES DISC."
+)
+OCO2_GEOS_REFERENCE = (
+    "Weir, B., Ott, L., & OCO-2 Science Team (2022). OCO-2 GEOS Level 3 monthly, 0.5x0.625 "
+    "assimilated CO2 V10r. NASA GES DISC."
+)
+MOD44B_REFERENCE = (
+    "DiMiceli, C., Sohlberg, R., & Townshend, J. (2022). MODIS/Terra Vegetation Continuous Fields "
+    "Yearly L3 Global 250m SIN Grid V061. NASA EOSDIS Land Processes Distributed Active Archive "
+    "Center."
+)
 APPEEARS_ACKNOWLEDGMENT = (
     "Area statistics were produced with AppEEARS (Application for Extracting and Exploring "
     "Analysis Ready Samples), NASA EOSDIS LP DAAC and USGS EROS Center."
@@ -59,6 +76,7 @@ class Variable:
     caveats: tuple[str, ...] = ()
     min_valid_days: int | None = None  # for monthly means built from daily data
     decimals: int = 2  # decimals shown for values and rates in this variable's unit
+    min_years: int = 10  # complete years needed for a trend test (fewer only for short NASA records)
 
 
 VARIABLES: dict[str, Variable] = {
@@ -83,6 +101,30 @@ VARIABLES: dict[str, Variable] = {
             "The newest months in NASA POWER can come from a near-real-time product and may be "
             "revised later.",
         ),
+    ),
+    "precipitation": Variable(
+        key="precipitation",
+        name="Precipitation (rain and snow)",
+        definition="How much water falls from the sky as rain and snow, measured as a depth of water.",
+        unit="mm of water per month",
+        annual_label="Total precipitation per year",
+        annual_unit="mm of water",
+        year_axis_label="Year",
+        aggregation="sum",
+        season_months=ALL_MONTHS,
+        year_starts_month=1,
+        product="NASA POWER monthly PRECTOTCORR (MERRA-2 based, corrected with observations)",
+        provider="NASA Langley Research Center POWER Project",
+        doi="10.1175/JCLI-D-16-0758.1",
+        citation=f"{POWER_ACKNOWLEDGMENT} {MERRA2_REFERENCE}",
+        caveats=(
+            "Comes from the MERRA-2 reanalysis, corrected with observed precipitation where "
+            "available, on a grid of about 50 km.",
+            "Rain varies a lot from year to year, so a trend needs a long record to show up.",
+            "The newest months in NASA POWER can come from a near-real-time product and may be "
+            "revised later.",
+        ),
+        decimals=1,
     ),
     "snowfall": Variable(
         key="snowfall",
@@ -138,6 +180,55 @@ VARIABLES: dict[str, Variable] = {
         ),
         min_valid_days=10,
     ),
+    "co": Variable(
+        key="co",
+        name="Carbon monoxide (CO)",
+        definition=(
+            "A poisonous gas from incomplete burning: car exhaust, industry, stoves and fires."
+        ),
+        unit="10¹⁸ molecules/cm²",
+        annual_label="Annual mean carbon monoxide column",
+        annual_unit="10¹⁸ molecules/cm²",
+        year_axis_label="Year",
+        aggregation="mean",
+        season_months=ALL_MONTHS,
+        year_starts_month=1,
+        product="MOPITT MOP03JM v010, total column, daytime",
+        provider="NASA Langley ASDC, via Giovanni",
+        doi="10.5067/TERRA/MOPITT/MOP03JM_L3.010",
+        citation=f"{MOPITT_REFERENCE} {GIOVANNI_ACKNOWLEDGMENT}",
+        caveats=(
+            "The value counts carbon monoxide in the whole column of air, not only at the ground.",
+            "Big fire years, for example in the Amazon or Siberia, can stand out.",
+            "MOPITT data in Giovanni currently end in December 2024.",
+        ),
+    ),
+    "black_carbon": Variable(
+        key="black_carbon",
+        name="Soot (black carbon)",
+        definition=(
+            "Tiny black particles of soot from burning diesel, coal, wood and forests, in the air "
+            "near the ground."
+        ),
+        unit="µg/m³",
+        annual_label="Annual mean black carbon near the ground",
+        annual_unit="µg/m³",
+        year_axis_label="Year",
+        aggregation="mean",
+        season_months=ALL_MONTHS,
+        year_starts_month=1,
+        product="MERRA-2 M2TMNXAER v5.12.4, black carbon surface mass concentration",
+        provider="NASA GMAO and GES DISC, via Giovanni",
+        doi="10.5067/FH9A0MLJPC7N",
+        citation=f"{MERRA2_AEROSOL_REFERENCE} {MERRA2_REFERENCE} {GIOVANNI_ACKNOWLEDGMENT}",
+        caveats=(
+            "Comes from the MERRA-2 aerosol reanalysis: a model guided by satellite aerosol "
+            "measurements, on a grid of about 50 km.",
+            "The emission data the model uses can lag behind real changes in recent years.",
+            "Wildfire smoke can make single years stand out.",
+        ),
+        decimals=3,
+    ),
     "aod": Variable(
         key="aod",
         name="Dust and smoke (aerosols)",
@@ -169,6 +260,33 @@ VARIABLES: dict[str, Variable] = {
         ),
         decimals=3,
     ),
+    "co2": Variable(
+        key="co2",
+        name="Carbon dioxide (CO₂)",
+        definition=(
+            "The main greenhouse gas, released mostly by burning coal, oil and gas; plants and "
+            "oceans take part of it back."
+        ),
+        unit="ppm",
+        annual_label="Annual mean CO₂ in the air column",
+        annual_unit="ppm",
+        year_axis_label="Year",
+        aggregation="mean",
+        season_months=ALL_MONTHS,
+        year_starts_month=1,
+        product="OCO-2 GEOS L3 monthly V10r, assimilated column-average CO₂",
+        provider="NASA GES DISC, via Giovanni",
+        doi="10.5067/BGFIODET3HZ8",
+        citation=f"{OCO2_GEOS_REFERENCE} {GIOVANNI_ACKNOWLEDGMENT}",
+        caveats=(
+            "This NASA record covers only 2015 to 2021, so the app allows 7 years here instead of "
+            "its usual 10; CO₂ rises so steadily that 7 years can still show it.",
+            "CO₂ mixes around the whole planet within about a year, so local cuts in emissions "
+            "hardly show in a regional value.",
+            "It combines OCO-2 satellite measurements with the GEOS model.",
+        ),
+        min_years=7,
+    ),
     "ndvi": Variable(
         key="ndvi",
         name="Vegetation greenness (NDVI)",
@@ -192,6 +310,28 @@ VARIABLES: dict[str, Variable] = {
             "affect recent values.",
         ),
         decimals=3,
+    ),
+    "tree_cover": Variable(
+        key="tree_cover",
+        name="Tree cover",
+        definition="The share of the land covered by tree crowns, in percent.",
+        unit="% of the land",
+        annual_label="Tree cover (yearly map)",
+        annual_unit="% of the land",
+        year_axis_label="Year",
+        aggregation="mean",
+        season_months=(3,),  # one yearly map, dated in March of its year
+        year_starts_month=1,
+        product="MODIS Terra MOD44B v061 Vegetation Continuous Fields, yearly, 250 m",
+        provider="NASA LP DAAC, via AppEEARS",
+        doi="10.5067/MODIS/MOD44B.061",
+        citation=f"{MOD44B_REFERENCE} {APPEEARS_ACKNOWLEDGMENT}",
+        caveats=(
+            "A yearly map made from a whole year of MODIS images; water and missing pixels are "
+            "left out.",
+            "Plantations and orchards count as trees, so tree cover can grow while natural forest "
+            "shrinks.",
+        ),
     ),
 }
 

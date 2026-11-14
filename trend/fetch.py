@@ -35,8 +35,16 @@ ZERO_MEANS_MISSING = {"AOD_55"}
 
 POWER_VARIABLES: dict[str, tuple[str, bool]] = {
     "air_temperature": ("T2M", False),
+    "precipitation": ("PRECTOTCORR", True),
     "snowfall": ("PRECSNOLAND", True),
     "aod": ("AOD_55", False),
+}
+
+# Monthly measurements from Giovanni area averages: variable key -> factor to the cached unit.
+GIOVANNI_MONTHLY: dict[str, float] = {
+    "co": 1e-18,  # molecules/cm² -> 10^18 molecules/cm²
+    "black_carbon": 1e9,  # kg/m³ -> µg/m³
+    "co2": 1e6,  # mol/mol -> ppm
 }
 
 
@@ -344,6 +352,20 @@ def load_giovanni_csv(path: Path) -> pd.DataFrame:
         table.loc[np.isclose(table["value"], fill_value), "value"] = np.nan
     table.loc[table["value"] < -1e20, "value"] = np.nan
     return table.dropna(subset=["date"]).reset_index(drop=True)
+
+
+def build_monthly_from_giovanni(files: list[Path], factor: float) -> pd.DataFrame:
+    """Monthly series from Giovanni area-averaged CSVs of a monthly product.
+
+    Giovanni time stamps sit in the middle of each month; they are moved to the first day, and the
+    values are multiplied by ``factor`` to reach the cached unit.
+    """
+    frames = [load_giovanni_csv(path) for path in files]
+    table = pd.concat(frames, ignore_index=True)
+    table["date"] = table["date"].dt.to_period("M").dt.to_timestamp()
+    monthly = table.groupby("date", as_index=False)["value"].mean()
+    monthly["value"] = monthly["value"] * factor
+    return monthly.sort_values("date").reset_index(drop=True)
 
 
 def daily_to_monthly_mean(daily: pd.DataFrame, min_valid_days: int) -> pd.DataFrame:

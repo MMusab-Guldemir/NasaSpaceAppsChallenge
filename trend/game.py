@@ -35,7 +35,6 @@ SPECIAL_CASES: tuple[tuple, ...] = (
     ("colorado", "air_temperature", ("last", 20), "temp_recent", False),
     ("marmara", "air_temperature", ("last", 20), "temp_recent", False),
     ("alps", "air_temperature", ("last", 20), "temp_recent", False),
-    ("colorado", "no2", (2005, 2019), "no2_rules", False),
     ("beijing", "no2", (2013, 2025), "beijing_no2_plan", False),
     ("beijing", "aod", (2013, 2025), "beijing_aod_plan", False),
     ("marmara", "ndvi", (2000, 2019), "ndvi_greening", False),

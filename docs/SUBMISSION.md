@@ -16,8 +16,8 @@ Earth System Trend Detective is a free web tool that turns NASA Earth observatio
 checkable answers to four questions: **what** is changing, **where**, **by how much**, and **is the
 change statistically significant?** A user picks a region (ten prepared regions from Colorado and
 Istanbul–Marmara to Beijing, the Amazon and Siberia, or any rectangle on Earth drawn on a world
-map), a measurement (air temperature, snowfall, tropospheric NO₂, dust and smoke, or vegetation
-greenness) and a period. The tool builds a long time series
+map), a measurement (air temperature, precipitation, snowfall, tropospheric NO₂, carbon monoxide,
+soot, dust and smoke, CO₂, vegetation greenness or tree cover) and a period. The tool builds a long time series
 from NASA data, removes the seasonal cycle by using one value per year, fits a linear trend, and
 reports the rate of change per decade with its 95% confidence interval and a significance test. A
 second test of a different kind (Mann-Kendall with Sen's slope) acts as a "second witness". Results
@@ -50,10 +50,10 @@ harder than the other topics, and it interested me more than any of the others."
 **Any place on Earth.** Besides ten prepared regions, users can draw, move and resize a rectangle
 on a world map, or type its corners, to investigate any area from 0.01° to 40° on each side. A
 rectangle smaller than NASA's grid uses the nearest grid cell; a large one is fetched in pieces of
-at most 10° × 10°. Temperature, snowfall and dust and smoke (aerosol optical depth) for that
-rectangle are fetched live from the NASA POWER API within seconds; air pollution (NO₂) and
-vegetation, which come from slower NASA services that need a login, are prepared in advance for
-the prepared regions.
+at most 10° × 10°. Temperature, precipitation, snowfall and dust and smoke (aerosol optical depth)
+for that rectangle are fetched live from the NASA POWER API within seconds; NO₂, carbon monoxide,
+soot, CO₂, vegetation greenness and tree cover, which come from slower NASA services that need a
+login, are prepared in advance for the prepared regions.
 
 **What it does.** The user opens an **investigation board** for a region: one clue card per
 measurement, each with its rate of change, a verdict stamp (Confirmed, Disputed, No evidence, Weak clue, Open case; plus No snow, Not enough data and No data where they apply) and a small sparkline. After picking a clue, the user (1) chooses the
@@ -77,20 +77,24 @@ same statistics as the investigation board, so the game teaches what "significan
 NASA data.
 
 **How it works.**
-1. *Data:* monthly area averages over the region, from NASA POWER (MERRA-2 based temperature and
-   snowfall; aerosol optical depth from CERES SYN1deg), OMI tropospheric NO₂ (Giovanni
-   area-averaged time series) and MODIS NDVI (AppEEARS area statistics). Data for prepared regions are cached as small CSV files, so the app works even
+1. *Data:* monthly area averages over the region, from NASA POWER (MERRA-2 based temperature,
+   precipitation and snowfall; aerosol optical depth from CERES SYN1deg), Giovanni area-averaged
+   time series (OMI tropospheric NO₂, MOPITT carbon monoxide, MERRA-2 black carbon, OCO-2 GEOS CO₂)
+   and AppEEARS area statistics (MODIS NDVI and tree cover). Data for prepared regions are cached as small CSV files, so the app works even
    when the source services are busy.
 2. *One value per year:* monthly values are aggregated per year (calendar-year means, water-year
    snowfall totals from October to September, NDVI means from May to September),
    using only complete years.
 3. *Headline test:* ordinary least squares slope, 95% confidence interval and two-sided t-test. When
    consecutive years are positively correlated, the uncertainty is widened with an effective sample
-   size (Santer et al., 2000), so results are less overconfident (for short records the correction
-   is only partial).
+   size (Santer et al., 2000) with the small-sample adjustment of Nychka et al. (2000), because short
+   records underestimate persistence. In simulations of trendless data, a false "Confirmed" appears
+   in about 3% of cases for independent years and about 5-8% for strongly persistent ones (25 years
+   or more), instead of up to 9-13% before the adjustment.
 4. *Second witness:* Mann-Kendall test with Sen's slope, widened with the same effective sample size
    (in the spirit of Yue and Wang, 2004); the app says whether it agrees with the headline result.
-5. *Guards:* fewer than 10 years is blocked, fewer than 20 years gets a warning, and a
+5. *Guards:* fewer than 10 years is blocked (7 for CO₂, whose NASA record is short, with a visible
+   note), fewer than 20 years gets a warning, and a
    non-significant result is reported as "no significant trend detected", never as "no change".
 
 **First findings (full records).**
@@ -99,15 +103,17 @@ NASA data.
 |---|---|---|
 | Air temperature, annual mean (1981-2025) | +0.33 °C per decade, about +1.4 °C along the trend line (p < 0.001), Confirmed | +0.55 °C per decade, about +2.4 °C along the trend line (p < 0.001), Confirmed |
 | Snowfall, water-year total (1982-2026) | no significant trend (p = 0.66) | no significant trend (p = 0.60) |
-| Tropospheric NO₂, annual mean (2005-2025) | no significant straight-line trend (p = 0.23): a decline until a 2020 low, then a rise; the pre-pandemic decline 2005-2019 alone is significant (p = 0.016) | no significant trend (p = 0.87; 2024 left out as incomplete) |
-| Vegetation greenness, May-Sep NDVI (2000-2025) | no significant trend (p = 0.39) | +0.014 per decade (p = 0.03), but the second witness disagrees (p = 0.07), so the case is Disputed |
+| Tropospheric NO₂, annual mean (2005-2025) | no significant straight-line trend (p = 0.49): a decline until a 2020 low, then a rise; the 2005-2019 decline alone is not significant once short-record persistence is accounted for (p = 0.11) | no significant trend (p = 0.90; 2024 left out as incomplete) |
+| Vegetation greenness, May-Sep NDVI (2000-2025) | no significant trend (p = 0.39) | +0.014 per decade, no significant trend (p = 0.07) |
+| Carbon monoxide (2002-2024) | −0.06 × 10¹⁸ molecules/cm² per decade (p = 0.007), Confirmed | −0.10 × 10¹⁸ molecules/cm² per decade (p = 0.006), Confirmed |
+| CO₂ (2015-2021, 7 years) | +25 ppm per decade (p < 0.001), Confirmed | +25 ppm per decade (p < 0.001), Confirmed |
 
 The same measurement can behave differently in two places: both regions are warming, Istanbul–
-Marmara faster, and Colorado's NO₂ fell until 2019 while Istanbul–Marmara's shows no clear change.
+Marmara faster, while CO₂ rises at the same pace in both because it mixes around the planet.
 Among the world regions, Beijing's NO₂ fell by about 3.7 × 10¹⁵ molecules/cm² per decade from 2013
-to 2025 (p < 0.001, both tests agree), after China's 2013 clean-air plan, and air temperature rose
-significantly in every prepared region (from +0.12 °C per decade in the Sahel to +0.55 °C per
-decade in Istanbul–Marmara, 1981-2025).
+to 2025 (p = 0.013, both tests agree), after China's 2013 clean-air plan, and air temperature rose
+significantly in nine of the ten prepared regions (from +0.12 °C per decade in the Sahel to +0.55 °C
+per decade in Istanbul–Marmara, 1981-2025; Beijing is borderline, p = 0.06).
 
 **Benefits.** Students and the public can explore real NASA data, see how scientists decide whether a
 change is real, and download everything to check the result themselves. Every number comes with its
@@ -116,18 +122,21 @@ uncertainty and its data source.
 **What we hope to achieve.** In Team Avni's own words: "In the future, the project should become a
 place where anyone who is really interested in NASA or in this topic can come to do research and
 learn." Ten regions are prepared today (vegetation greenness for the eight world regions is added as
-NASA AppEEARS delivers it), and the same pipeline can be repeated for more regions.
+NASA AppEEARS delivers it, tree cover likewise), and the same pipeline can be repeated for more
+regions.
 
 **Tools.** Python, Streamlit, Plotly, pandas, NumPy, SciPy, pymannkendall, requests, folium and
 streamlit-folium (Leaflet, Leaflet.draw, OpenStreetMap map tiles); NASA POWER API, Giovanni and
-AppEEARS; GitHub; Streamlit Community Cloud. 149 automated tests check the statistics, the data
+AppEEARS; GitHub; Streamlit Community Cloud. 165 automated tests check the statistics, the data
 loaders, the game and the app.
 
 ## Use of Super Intelligence (SI)
 
 Team Avni chose the challenge, the regions (Colorado,
 Istanbul–Marmara and eight world regions picked from a list of options), the measurements
-(including dust and smoke for any rectangle), the "secret expert detective" theme, the pick a clue →
+(including dust and smoke for any rectangle, and precipitation, carbon monoxide,
+soot, CO₂ and tree cover picked from a list of NASA options), the goal of keeping false results as
+rare as possible, the "secret expert detective" theme, the pick a clue →
 choose the period → "real or chance?" flow, the Turkish option, the any-place-on-Earth rectangle of
 any size and the "possible reasons" step. Where the team asked for options (for example page layouts and candidate regions), the
 AI offered some and the team chose. The Detective exam game was one of several feature ideas the
@@ -150,6 +159,11 @@ so on every slide; no other AI-generated images, video or audio are used.
 | Tropospheric NO₂ | OMI `OMNO2d` v004, 30% cloud screened | Giovanni (NASA GES DISC) | Krotkov et al. (2024), doi:10.5067/AURA/OMI/DATA3407 |
 | Vegetation greenness | MODIS Terra `MOD13A3` v061, monthly 1 km NDVI | AppEEARS (NASA LP DAAC) | Didan (2021), doi:10.5067/MODIS/MOD13A3.061 |
 | Dust and smoke | NASA POWER monthly `AOD_55` (CERES SYN1deg, about 1°) | POWER API | Doelling et al. (2013), doi:10.1175/JTECH-D-12-00136.1 |
+| Precipitation | NASA POWER monthly `PRECTOTCORR` (MERRA-2, corrected with observations) | POWER API | Gelaro et al. (2017), doi:10.1175/JCLI-D-16-0758.1 |
+| Carbon monoxide | MOPITT `MOP03JM` v010, total column, daytime | Giovanni (NASA LaRC ASDC) | Drummond, Gille & Worden, doi:10.5067/TERRA/MOPITT/MOP03JM_L3.010 |
+| Soot (black carbon) | MERRA-2 `M2TMNXAER` v5.12.4, surface concentration | Giovanni (NASA GES DISC) | GMAO (2015), doi:10.5067/FH9A0MLJPC7N |
+| Carbon dioxide | OCO-2 GEOS L3 monthly V10r, column-average CO₂ | Giovanni (NASA GES DISC) | Weir, Ott & OCO-2 Science Team (2022), doi:10.5067/BGFIODET3HZ8 |
+| Tree cover | MODIS Terra `MOD44B` v061, yearly 250 m | AppEEARS (NASA LP DAAC) | DiMiceli, Sohlberg & Townshend (2022), doi:10.5067/MODIS/MOD44B.061 |
 
 These data were obtained from the NASA Langley Research Center (LaRC) POWER Project funded through the
 NASA Earth Science/Applied Science Program. Area averages of NO₂ were produced with the Giovanni
@@ -189,6 +203,17 @@ produced with AppEEARS (NASA EOSDIS LP DAAC and USGS EROS Center).
   1072-1090. doi:10.1175/JTECH-D-12-00136.1
 - Santer, B. D., et al. (2000). Statistical significance of trends and trend differences in
   layer-average atmospheric temperature time series. *J. Geophys. Res.*, 105, 7337-7356.
+- Nychka, D., Buchberger, R., Wigley, T. M. L., Santer, B. D., Taylor, K. E., & Jones, R. (2000).
+  Confidence intervals for trend estimates with autocorrelated observations. NCAR manuscript.
+- Drummond, J., Gille, J., & Worden, H. MOPITT CO gridded monthly means (Near and Thermal
+  Infrared Radiances) V010. NASA Langley ASDC. doi:10.5067/TERRA/MOPITT/MOP03JM_L3.010
+- Global Modeling and Assimilation Office (GMAO) (2015). MERRA-2 tavgM_2d_aer_Nx: 2d, Monthly mean,
+  Time-averaged, Single-Level, Assimilation, Aerosol Diagnostics V5.12.4. NASA GES DISC.
+  doi:10.5067/FH9A0MLJPC7N
+- Weir, B., Ott, L., & OCO-2 Science Team (2022). OCO-2 GEOS Level 3 monthly, 0.5x0.625
+  assimilated CO2 V10r. NASA GES DISC. doi:10.5067/BGFIODET3HZ8
+- DiMiceli, C., Sohlberg, R., & Townshend, J. (2022). MODIS/Terra Vegetation Continuous Fields
+  Yearly L3 Global 250m SIN Grid V061. NASA LP DAAC. doi:10.5067/MODIS/MOD44B.061
 - Mann, H. B. (1945). Nonparametric tests against trend. *Econometrica*, 13, 245-259.
 - Kendall, M. G. (1975). *Rank Correlation Methods*. Griffin, London.
 - Sen, P. K. (1968). Estimates of the regression coefficient based on Kendall's tau. *JASA*, 63, 1379-1389.

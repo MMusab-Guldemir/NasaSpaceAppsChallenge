@@ -20,13 +20,15 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from trend.fetch import (  # noqa: E402
+    GIOVANNI_MONTHLY,
     POWER_VARIABLES,
+    build_monthly_from_giovanni,
     RAW_DIR,
     build_no2_from_giovanni,
     fetch_power_variable,
     save_processed,
 )
-from trend.appeears import load_ndvi_statistics  # noqa: E402
+from trend.appeears import load_appeears_statistics, load_ndvi_statistics  # noqa: E402
 from trend.regions import get_region  # noqa: E402
 from trend.variables import VARIABLES, get_variable  # noqa: E402
 
@@ -62,6 +64,23 @@ def main(argv: list[str] | None = None) -> int:
             valid = monthly["value"].dropna()
             if not valid.between(-0.2, 1.0).all():
                 raise ValueError("NDVI area means outside -0.2..1: check scale factors.")
+            source = f"{variable.product}; {variable.provider}; file: {files[0].name}"
+        elif key in GIOVANNI_MONTHLY:
+            files = sorted(RAW_DIR.glob(f"giovanni_{key}_{region.key}.csv"))
+            if not files:
+                print(f"skip {key}: no giovanni_{key}_{region.key}.csv file in data/raw")
+                continue
+            monthly = build_monthly_from_giovanni(files, GIOVANNI_MONTHLY[key])
+            source = f"{variable.product}; {variable.provider}; file: {files[0].name}"
+        elif key == "tree_cover":
+            files = sorted(RAW_DIR.glob(f"appeears_treecover_{region.key}*.csv"))
+            if not files:
+                print(f"skip tree_cover: no appeears_treecover_{region.key}*.csv file in data/raw")
+                continue
+            monthly = load_appeears_statistics(files[0], "Tree_Cover")
+            valid = monthly["value"].dropna()
+            if not valid.between(0, 100).all():
+                raise ValueError("Tree cover area means outside 0..100 %: check fill values.")
             source = f"{variable.product}; {variable.provider}; file: {files[0].name}"
         else:
             print(f"skip {key}: no loader yet")

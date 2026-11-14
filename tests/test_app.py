@@ -79,7 +79,7 @@ def test_turkish_numbers_use_a_decimal_comma():
     assert "+0,33" in markdown
 
 
-def test_marmara_ndvi_shows_three_decimals_and_a_borderline_headline():
+def test_marmara_ndvi_shows_three_decimals():
     at = AppTest.from_file(APP, default_timeout=60)
     at.session_state["region"] = "marmara"
     at.run()
@@ -87,6 +87,15 @@ def test_marmara_ndvi_shows_three_decimals_and_a_borderline_headline():
     assert not at.exception
     markdown = " ".join(md.value for md in at.markdown)
     assert "+0.014" in markdown
+
+
+def test_disputed_case_gets_the_borderline_headline():
+    at = AppTest.from_file(APP, default_timeout=60)
+    at.session_state["region"] = "beijing"
+    at.run()
+    at.button(key="open_snowfall").click().run()
+    assert not at.exception
+    markdown = " ".join(md.value for md in at.markdown)
     assert TEXT["en"]["headline_disputed"] in markdown
 
 
@@ -190,7 +199,9 @@ def test_offline_custom_area_shows_one_message_and_a_retry_button(monkeypatch):
     assert at.button(key="retry_fetch") is not None
     assert not at.warning
     # Three quick attempts for each live measurement (temperature, snowfall, dust and smoke).
-    assert {p: calls.count(p) for p in set(calls)} == {"T2M": 3, "PRECSNOLAND": 3, "AOD_55": 3}
+    assert {p: calls.count(p) for p in set(calls)} == {
+        "T2M": 3, "PRECTOTCORR": 3, "PRECSNOLAND": 3, "AOD_55": 3
+    }
 
 
 @pytest.mark.parametrize("region_key", list(REGIONS))
@@ -237,17 +248,48 @@ def test_reasons_cover_every_measurement_in_both_languages():
 
 def test_disputed_case_says_the_change_is_not_certain():
     at = AppTest.from_file(APP, default_timeout=60)
-    at.session_state["region"] = "marmara"
+    at.session_state["region"] = "beijing"
     at.run()
-    at.button(key="open_ndvi").click().run()
+    at.button(key="open_snowfall").click().run()
     markdown = " ".join(md.value for md in at.markdown)
     assert "not certain" in markdown
     assert "The test shows that" not in markdown
 
 
 def test_covid_reason_only_when_the_period_includes_2020():
-    at = run_app("en")
-    at.button(key="example_no2").click().run()  # Colorado NO2 2005-2019: a significant fall
+    at = AppTest.from_file(APP, default_timeout=60)
+    at.session_state["region"] = "alps"
+    at.run()
+    at.button(key="open_no2").click().run()
+    at.slider(key="period_no2").set_value((2005, 2019)).run()  # a significant fall before 2020
     markdown = " ".join(md.value for md in at.markdown)
-    assert "COVID-19 lockdowns briefly" not in markdown
     assert "economic slowdown" in markdown
+    assert "COVID-19 lockdowns briefly" not in markdown
+    at.slider(key="period_no2").set_value((2005, 2025)).run()  # the period includes 2020
+    markdown = " ".join(md.value for md in at.markdown)
+    assert "COVID-19 lockdowns briefly" in markdown
+
+
+def test_co2_uses_its_short_record_with_a_note(monkeypatch):
+    import numpy as np
+    import pandas as pd
+
+    import trend.fetch
+
+    dates = pd.date_range("2015-01-01", "2022-02-01", freq="MS")
+    values = 399 + 2.4 * (dates.year - 2015 + dates.month / 12) + np.random.default_rng(3).normal(0, 0.2, dates.size)
+    real_loader = trend.fetch.load_processed
+
+    def loader(region_key, variable_key):
+        if variable_key == "co2":
+            return pd.DataFrame({"date": dates, "value": values, "source": "synthetic"})
+        return real_loader(region_key, variable_key)
+
+    monkeypatch.setattr(trend.fetch, "load_processed", loader)
+    monkeypatch.setattr(trend.fetch, "available_variable_keys", lambda region: ["air_temperature", "co2"])
+    at = AppTest.from_file(APP, default_timeout=60)
+    at.session_state["region"] = "marmara"
+    at.run()
+    at.button(key="open_co2").click().run()
+    assert not at.exception
+    assert any("fewer than the usual 10" in info.value for info in at.info)

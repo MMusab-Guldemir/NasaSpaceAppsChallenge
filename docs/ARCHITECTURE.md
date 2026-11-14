@@ -79,7 +79,10 @@ autocorrelation. A year enters the analysis only if it is complete for its aggre
 Tests on the annual series:
 - **Headline:** OLS linear trend with slope, 95% confidence interval and two-sided t-test p-value.
   When the lag-1 autocorrelation r1 of the residuals is positive, the standard error and degrees of
-  freedom use the effective sample size n_eff = n (1 - r1) / (1 + r1) (Santer et al., 2000).
+  freedom use the effective sample size n_eff = n (1 - r1 - 0.68/sqrt(n)) / (1 + r1 + 0.68/sqrt(n))
+  (Santer et al., 2000, with the small-sample adjustment of Nychka et al., 2000). Simulations of
+  trendless AR(1) noise during the hackathon showed false "Confirmed" rates of up to 9-13% without
+  the adjustment and about 3-8% with it for 25 years or more.
 - **Second witness:** Mann-Kendall with Sen's slope, shown as "agrees" or "disagrees" with the
   headline. It uses the same persistence rule: when r1 > 0 its z-score is scaled by sqrt(n_eff / n)
   (an effective-sample-size correction in the spirit of Yue and Wang, 2004).
@@ -89,7 +92,7 @@ Tests on the annual series:
   (fewer than 10 complete years, for example aerosols in the polar winter), No data (NASA has no
   values there, for example over open sea).
 - **Rate:** per decade. **Total change:** slope x span of years, not last minus first.
-- **Guards:** block analysis below 10 years, warn below 20 years, always show n and the period.
+- **Guards:** block analysis below 10 years (7 for CO2, with a visible note), warn below 20 years, always show n and the period.
   A non-significant result is worded "no significant trend detected", never "no change".
 - **Multiple testing:** one sentence in the methods explaining that many tests at alpha = 0.05 can
   produce false positives.
@@ -143,7 +146,7 @@ NasaSpaceAppsChallenge/
 
 ## Testing
 
-118 automated tests (`python -m pytest -q`), all offline:
+165 automated tests (`python -m pytest -q`), all offline:
 - statistics: known-slope series, white and autocorrelated noise (false-positive rates of both
   tests), completeness rules, water-year labelling, total change, constant series;
 - loaders: POWER payload parsing, fill values, land-only cells, Giovanni CSVs, retry rules;

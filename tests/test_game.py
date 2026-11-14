@@ -69,8 +69,8 @@ def test_answers_match_the_app_statistics(cases_en):
 
 
 def test_disputed_clues_are_left_out(cases_en):
-    # Marmara's 2000-2025 greenness is significant but the second test disagrees: not a fair puzzle.
-    assert "marmara-ndvi-2000-2025" not in {c["id"] for c in cases_en}
+    # Beijing's snowfall is significant but the second test disagrees: not a fair puzzle.
+    assert "beijing-snowfall-1982-2026" not in {c["id"] for c in cases_en}
 
 
 def test_places_where_it_never_snows_are_left_out(cases_en):

@@ -150,6 +150,24 @@ def test_positive_autocorrelation_does_not_inflate_false_positives():
     assert hits / 300 < 0.13
 
 
+def test_small_sample_correction_keeps_false_alarms_low():
+    # 25 years of strongly persistent noise: without the small-sample adjustment the headline test
+    # fired in about 11% of runs; with it, close to the nominal 5%.
+    rng = np.random.default_rng(12)
+    years = np.arange(2001, 2026)
+    hits = sum(analyze_trend(years, ar1_series(rng, 0.5, years.size)).significant for _ in range(400))
+    assert hits / 400 < 0.09
+
+
+def test_short_records_can_be_allowed_per_measurement():
+    years = np.arange(2015, 2022)
+    values = 400 + 2.4 * (years - 2015) + np.array([0.1, -0.2, 0.15, -0.1, 0.05, -0.05, 0.1])
+    with pytest.raises(ValueError):
+        analyze_trend(years, values)
+    result = analyze_trend(years, values, min_years=7)
+    assert result.n_years == 7 and result.slope_per_year > 2
+
+
 def test_second_witness_uses_the_same_persistence_rule():
     rng = np.random.default_rng(5)
     years = np.arange(1981, 2026)

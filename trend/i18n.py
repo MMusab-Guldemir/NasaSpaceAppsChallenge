@@ -24,6 +24,14 @@ TEXT: dict[str, dict[str, str]] = {
         "step_where": "Step 1 · Where?",
         "step_what": "Step 2 · What do you want to investigate?",
         "step1_caption": "Each card is one measurement from NASA Earth data over its full record.",
+        "group_climate": "Climate",
+        "group_air": "Air",
+        "group_carbon_green": "Carbon and green land",
+        "short_record_note": (
+            "This measurement has only {n} years of NASA data, fewer than the usual {usual}. The app "
+            "allows it because the change is large compared with year-to-year swings; read the "
+            "result with extra care."
+        ),
         "examples_title": "Famous cases: open one with a single click",
         "why_title": "Why it matters",
         "why_body": (
@@ -205,6 +213,13 @@ TEXT: dict[str, dict[str, str]] = {
         "step_where": "1. adım · Nerede?",
         "step_what": "2. adım · Neyi incelemek istiyorsun?",
         "step1_caption": "Her kart, NASA Dünya verisinden bir ölçümü tüm kayıt boyunca gösterir.",
+        "group_climate": "İklim",
+        "group_air": "Hava",
+        "group_carbon_green": "Karbon ve yeşil alan",
+        "short_record_note": (
+            "Bu ölçümün yalnızca {n} yıllık NASA verisi var; her zamanki {usual} yıldan az. Değişim "
+            "yıldan yıla dalgalanmaya göre büyük olduğu için izin veriyoruz; sonuca ekstra dikkatle bak."
+        ),
         "examples_title": "Ünlü dosyalar: tek tıkla aç",
         "why_title": "Neden önemli?",
         "why_body": (
@@ -488,6 +503,66 @@ REASONS: dict[str, dict[str, dict[str, list[str]]]] = {
                 "a slow change.",
             ],
         },
+        "precipitation": {
+            "up": [
+                "Warmer air holds more water vapour, so storms can drop more rain.",
+                "Shifting storm tracks or monsoon changes can bring more rain to a region.",
+            ],
+            "down": [
+                "Shifting storm tracks or a stronger dry season can bring less rain.",
+                "Natural cycles that last several years (such as El Niño) can shift rainfall.",
+            ],
+            "none": [
+                "Rain varies a lot from year to year, so a slow change is hard to see.",
+            ],
+        },
+        "co": {
+            "up": [
+                "More fires, or more fuel burned for traffic, heating and industry.",
+            ],
+            "down": [
+                "Cleaner engines with catalytic converters and cleaner industry.",
+                "Fewer fires in recent years.",
+            ],
+            "none": [
+                "Fires change a lot from year to year and can hide a slow change.",
+            ],
+        },
+        "black_carbon": {
+            "up": [
+                "More diesel traffic, coal or wood burning, or more wildfires.",
+            ],
+            "down": [
+                "Cleaner diesel engines and particle filters, and less coal and wood burning.",
+                "Fewer wildfires in recent years.",
+            ],
+            "none": [
+                "Fires and weather change soot from year to year and can hide a slow change.",
+            ],
+        },
+        "co2": {
+            "up": [
+                "Burning coal, oil and gas adds CO₂ faster than plants and oceans can take it back.",
+                "CO₂ spreads around the planet, so it rises almost everywhere at the same pace.",
+            ],
+            "down": [
+                "A fall in CO₂ would be very unusual today; check the data and the period.",
+            ],
+            "none": [
+                "The record here is short, so a change may not show up yet.",
+            ],
+        },
+        "tree_cover": {
+            "up": [
+                "Forests growing back, tree planting, or plantations and orchards.",
+            ],
+            "down": [
+                "Forest cut for farms, pasture or cities, or lost to wildfires.",
+            ],
+            "none": [
+                "Losses and gains of trees can balance out, and small changes are hard to see.",
+            ],
+        },
         "ndvi": {
             "up": [
                 "More rain or a longer, warmer growing season.",
@@ -565,6 +640,67 @@ REASONS: dict[str, dict[str, dict[str, list[str]]]] = {
                 "bu, yavaş bir değişimi gizleyebilir.",
             ],
         },
+        "precipitation": {
+            "up": [
+                "Isınan hava daha fazla su buharı taşır; fırtınalar daha fazla yağmur bırakabilir.",
+                "Kayan fırtına yolları ya da muson değişimleri bir bölgeye daha fazla yağmur getirebilir.",
+            ],
+            "down": [
+                "Kayan fırtına yolları ya da daha güçlü bir kurak mevsim daha az yağmur getirebilir.",
+                "Birkaç yıl süren doğal döngüler (El Niño gibi) yağışı kaydırabilir.",
+            ],
+            "none": [
+                "Yağış yıldan yıla çok değişir; bu yüzden yavaş bir değişimi görmek zordur.",
+            ],
+        },
+        "co": {
+            "up": [
+                "Daha fazla yangın ya da trafik, ısınma ve sanayi için daha fazla yakıt yakılması.",
+            ],
+            "down": [
+                "Katalitik konvertörlü daha temiz motorlar ve daha temiz sanayi.",
+                "Son yıllarda daha az yangın.",
+            ],
+            "none": [
+                "Yangınlar yıldan yıla çok değişir ve yavaş bir değişimi gizleyebilir.",
+            ],
+        },
+        "black_carbon": {
+            "up": [
+                "Daha fazla dizel trafik, kömür ya da odun yakımı veya daha fazla orman yangını.",
+            ],
+            "down": [
+                "Daha temiz dizel motorlar ve partikül filtreleri, daha az kömür ve odun yakımı.",
+                "Son yıllarda daha az orman yangını.",
+            ],
+            "none": [
+                "Yangınlar ve hava koşulları isi yıldan yıla değiştirir ve yavaş bir değişimi gizleyebilir.",
+            ],
+        },
+        "co2": {
+            "up": [
+                "Kömür, petrol ve doğalgaz yakmak, bitkilerin ve okyanusların geri alabileceğinden "
+                "daha hızlı CO₂ ekliyor.",
+                "CO₂ tüm gezegene yayılır; bu yüzden neredeyse her yerde aynı hızla artar.",
+            ],
+            "down": [
+                "Bugün CO₂'nin düşmesi çok olağan dışı olurdu; veriyi ve dönemi kontrol et.",
+            ],
+            "none": [
+                "Buradaki kayıt kısa; bir değişim henüz görünmeyebilir.",
+            ],
+        },
+        "tree_cover": {
+            "up": [
+                "Yeniden büyüyen ormanlar, ağaçlandırma ya da plantasyonlar ve meyve bahçeleri.",
+            ],
+            "down": [
+                "Tarla, mera ya da şehir için kesilen veya yangınlarda kaybedilen orman.",
+            ],
+            "none": [
+                "Ağaç kayıpları ve kazançları birbirini dengeleyebilir; küçük değişimleri görmek zordur.",
+            ],
+        },
         "ndvi": {
             "up": [
                 "Daha fazla yağmur ya da daha uzun, daha sıcak bir büyüme mevsimi.",
@@ -589,6 +725,8 @@ REGION_CONTEXT: dict[str, dict[str, dict[str, str]]] = {
             "no2": "China started a national clean-air plan in 2013. Try the period 2013 to 2025 "
                    "to see what happened after it.",
             "aod": "China's 2013 clean-air plan also targeted soot and dust (PM2.5).",
+            "black_carbon": "China's 2013 clean-air plan cut coal burning and targeted soot. Try the "
+                            "period 2013 to 2025.",
         },
         "los_angeles": {
             "no2": "California has some of the world's strictest vehicle exhaust rules, tightened "
@@ -605,6 +743,8 @@ REGION_CONTEXT: dict[str, dict[str, dict[str, str]]] = {
                     "satellites saw the Sahel 'greening'.",
         },
         "amazon": {
+            "tree_cover": "Rondônia is part of the 'arc of deforestation', where forest has been "
+                          "cleared for farms and pasture.",
             "ndvi": "Rondônia is part of the 'arc of deforestation', where forest has been cleared "
                     "for farms and pasture.",
             "aod": "Smoke from dry-season fires used to clear forest makes some years very hazy.",
@@ -629,6 +769,8 @@ REGION_CONTEXT: dict[str, dict[str, dict[str, str]]] = {
             "no2": "Çin 2013'te ulusal bir temiz hava planı başlattı. Sonrasında ne olduğunu görmek "
                    "için 2013–2025 dönemini dene.",
             "aod": "Çin'in 2013 temiz hava planı is ve tozu (PM2,5) da hedefliyordu.",
+            "black_carbon": "Çin'in 2013 temiz hava planı kömür yakımını azalttı ve isi hedefledi. "
+                            "2013–2025 dönemini dene.",
         },
         "los_angeles": {
             "no2": "Kaliforniya, 1990'lardan beri adım adım sıkılaştırılan, dünyanın en katı araç "
@@ -645,6 +787,8 @@ REGION_CONTEXT: dict[str, dict[str, dict[str, str]]] = {
                     "ve uydular Sahel'in 'yeşillendiğini' gördü.",
         },
         "amazon": {
+            "tree_cover": "Rondônia, ormanın tarla ve mera için kesildiği 'ormansızlaşma yayının' "
+                          "bir parçası.",
             "ndvi": "Rondônia, ormanın tarla ve mera için kesildiği 'ormansızlaşma yayının' bir "
                     "parçası.",
             "aod": "Orman açmak için kurak mevsimde çıkarılan yangınların dumanı bazı yılları çok "
@@ -727,6 +871,65 @@ VARIABLE_TEXT: dict[str, dict[str, dict]] = {
                 "2022 sonrası değişimlere ekstra temkinle bak.",
             ],
         },
+        "precipitation": {
+            "name": "Yağış (yağmur ve kar)",
+            "definition": "Gökyüzünden yağmur ve kar olarak düşen su miktarı; su yüksekliği olarak ölçülür.",
+            "annual_label": "Yıllık toplam yağış",
+            "unit": "ayda mm su",
+            "annual_unit": "mm su",
+            "year_axis_label": "Yıl",
+            "caveats": [
+                "MERRA-2 reanalizinden gelir; mümkün olan yerlerde ölçülen yağışla düzeltilmiştir; "
+                "yaklaşık 50 km'lik ızgara.",
+                "Yağış yıldan yıla çok değişir; bir trendin görünmesi için uzun kayıt gerekir.",
+                "NASA POWER'daki en yeni aylar neredeyse gerçek zamanlı bir üründen gelebilir ve "
+                "sonradan düzeltilebilir.",
+            ],
+        },
+        "co": {
+            "name": "Karbon monoksit (CO)",
+            "definition": "Eksik yanmadan çıkan zehirli bir gaz: araba egzozu, sanayi, sobalar ve yangınlar.",
+            "annual_label": "Yıllık ortalama karbon monoksit sütunu",
+            "unit": "10¹⁸ molekül/cm²",
+            "annual_unit": "10¹⁸ molekül/cm²",
+            "year_axis_label": "Yıl",
+            "caveats": [
+                "Değer, yalnızca yerdeki değil tüm hava sütunundaki karbon monoksidi sayar.",
+                "Amazon ya da Sibirya'daki gibi büyük yangın yılları öne çıkabilir.",
+                "Giovanni'deki MOPITT verisi şu an Aralık 2024'te bitiyor.",
+            ],
+        },
+        "black_carbon": {
+            "name": "Kara karbon (is)",
+            "definition": "Dizel, kömür, odun ve orman yakılınca çıkan minik siyah is parçacıkları; yere yakın havada.",
+            "annual_label": "Yere yakın havada yıllık ortalama kara karbon",
+            "unit": "µg/m³",
+            "annual_unit": "µg/m³",
+            "year_axis_label": "Yıl",
+            "caveats": [
+                "MERRA-2 aerosol reanalizinden gelir: uydu aerosol ölçümleriyle yönlendirilen bir "
+                "model, yaklaşık 50 km'lik ızgara.",
+                "Modelin kullandığı emisyon verileri son yıllardaki gerçek değişimlerin gerisinde "
+                "kalabilir.",
+                "Orman yangını dumanı bazı yılları öne çıkarabilir.",
+            ],
+        },
+        "co2": {
+            "name": "Karbondioksit (CO₂)",
+            "definition": "Ana sera gazı; çoğunlukla kömür, petrol ve doğalgaz yakılınca çıkar, bir kısmını bitkiler ve okyanuslar geri alır.",
+            "annual_label": "Hava sütununda yıllık ortalama CO₂",
+            "unit": "ppm",
+            "annual_unit": "ppm",
+            "year_axis_label": "Yıl",
+            "caveats": [
+                "Bu NASA kaydı yalnızca 2015–2021'i kapsıyor; bu yüzden burada her zamanki 10 yıl "
+                "yerine 7 yıla izin veriyoruz. CO₂ o kadar düzenli artıyor ki 7 yıl bile bunu "
+                "gösterebiliyor.",
+                "CO₂ yaklaşık bir yıl içinde tüm gezegene karışır; bu yüzden yerel emisyon "
+                "azaltımları bölgesel değerde neredeyse görünmez.",
+                "OCO-2 uydu ölçümlerini GEOS modeliyle birleştirir.",
+            ],
+        },
         "aod": {
             "name": "Toz ve duman (aerosol)",
             "definition": (
@@ -747,6 +950,20 @@ VARIABLE_TEXT: dict[str, dict[str, dict]] = {
                 "Çöl toz fırtınaları ve büyük orman yangınları bazı yılları öne çıkarabilir.",
                 "NASA POWER'daki en yeni aylar neredeyse gerçek zamanlı bir üründen gelebilir ve "
                 "sonradan düzeltilebilir.",
+            ],
+        },
+        "tree_cover": {
+            "name": "Ağaç örtüsü",
+            "definition": "Toprağın ağaç taçlarıyla kaplı kısmı, yüzde olarak.",
+            "annual_label": "Ağaç örtüsü (yıllık harita)",
+            "unit": "toprağın %'si",
+            "annual_unit": "toprağın %'si",
+            "year_axis_label": "Yıl",
+            "caveats": [
+                "Bir yılın MODIS görüntülerinden yapılan yıllık bir harita; su ve eksik pikseller "
+                "hesaba katılmaz.",
+                "Plantasyonlar ve meyve bahçeleri de ağaç sayılır; bu yüzden doğal orman küçülürken "
+                "ağaç örtüsü artabilir.",
             ],
         },
         "ndvi": {
@@ -784,8 +1001,11 @@ METHODS = {
   We call a trend significant ("unlikely to be chance") when p < 0.05.
 - **Year-to-year persistence:** when a year's departure from the trend line tends to be followed by
   a similar departure (positive autocorrelation), the uncertainty is widened using an effective
-  sample size (Santer et al., 2000), which makes the result less overconfident (for short records
-  the correction is only partial).
+  sample size (Santer et al., 2000) with a small-sample adjustment (Nychka et al., 2000), because
+  short records underestimate this persistence.
+- **How often can the detective be wrong?** In simulations of data with no trend at all, a false
+  *Confirmed* appears in about 3% of cases when years are independent and in about 5-8% when
+  neighbouring years strongly resemble each other (25 years or more; more for shorter records).
 - **Second witness:** the Mann-Kendall test checks for a steady rise or fall without assuming a
   straight line; Sen's slope is a robust estimate of the rate. When neighbouring years are
   positively correlated, its uncertainty is widened with the same effective sample size as the
@@ -798,7 +1018,8 @@ METHODS = {
   last value minus the first.
 - **Confidence band:** the shaded band is the 95% confidence band of the fitted line, not a range for
   individual years.
-- **Short periods:** at least {min_years} years are required; fewer than 20 years gives a warning.
+- **Short periods:** at least {min_years} years are required (7 for CO₂, whose NASA record is
+  short); fewer than 20 years gives a warning.
 - **Possible reasons** are common explanations from research for a rise, a fall or no clear trend;
   the trend test itself cannot prove any of them.
 - **Many tests:** if you test many measurements, regions and periods, about 1 in 20 tests can look
@@ -821,8 +1042,11 @@ METHODS = {
   zor") kabul ederiz.
 - **Yıldan yıla süreklilik:** bir yılın trend çizgisinden sapması, ardından gelen yılda benzer bir
   sapmayla devam ediyorsa (pozitif otokorelasyon), belirsizlik etkin örneklem büyüklüğüyle büyütülür
-  (Santer ve ark., 2000); böylece sonuç daha az iddialı çıkar (kısa kayıtlarda bu düzeltme
-  kısmidir).
+  (Santer ve ark., 2000); kısa kayıtlar bu sürekliliği olduğundan az gösterdiği için küçük örneklem
+  düzeltmesi de uygulanır (Nychka ve ark., 2000).
+- **Dedektif ne sıklıkla yanılabilir?** Hiç trend olmayan verilerle yapılan simülasyonlarda yanlış
+  bir *Doğrulandı*, yıllar bağımsızken vakaların yaklaşık %3'ünde, komşu yıllar birbirine çok
+  benzediğinde yaklaşık %5–8'inde çıkıyor (25 yıl ve üzeri; daha kısa kayıtlarda daha sık).
 - **İkinci tanık:** Mann-Kendall testi, düz bir çizgi varsaymadan istikrarlı bir artış ya da azalış
   olup olmadığına bakar; Sen eğimi, değişim hızının sağlam bir tahminidir. Komşu yıllar birbiriyle
   pozitif ilişkiliyse, bu testin belirsizliği de ana testteki aynı etkin örneklem büyüklüğüyle
@@ -835,7 +1059,8 @@ METHODS = {
   eksi ilk değer değildir.
 - **Güven bandı:** gölgeli bant, oturtulan çizginin %95 güven bandıdır; tek tek yılların aralığı
   değildir.
-- **Kısa dönemler:** en az {min_years} yıl gerekir; 20 yıldan kısa dönemlerde uyarı verilir.
+- **Kısa dönemler:** en az {min_years} yıl gerekir (NASA kaydı kısa olan CO₂ için 7); 20 yıldan
+  kısa dönemlerde uyarı verilir.
 - **Olası nedenler**, bir artış, azalış ya da belirgin trend olmaması için araştırmalarda sık
   geçen açıklamalardır; trend testi bunların hiçbirini kanıtlayamaz.
 - **Çok sayıda test:** çok sayıda ölçüm, bölge ve dönem test edersen, yaklaşık her 20 testten biri

@@ -10,10 +10,11 @@ Method
    autocorrelation.
 2. Headline test: ordinary least squares (OLS) linear trend with the 95% confidence interval of the
    slope and a two-sided t-test of "slope = 0". When the residuals are positively autocorrelated
-   (lag-1 correlation r1 > 0), the standard error and degrees of freedom use the effective sample
-   size n_eff = n (1 - r1) / (1 + r1) (Santer et al., 2000, J. Geophys. Res. 105, 7337-7356),
-   so persistent year-to-year swings produce less overconfident results (for short records the
-   correction is only partial).
+   (lag-1 correlation r1 > 0), the standard error and degrees of freedom use an effective sample
+   size (Santer et al., 2000, J. Geophys. Res. 105, 7337-7356) with the small-sample adjustment of
+   Nychka et al. (2000): n_eff = n (1 - r1 - 0.68/sqrt(n)) / (1 + r1 + 0.68/sqrt(n)). Short records
+   underestimate r1, and the adjustment compensates: in simulations of trendless data it roughly
+   halves the false alarms of persistent series (see tests/test_stats.py).
 3. Robustness check: the Mann-Kendall test with Sen's slope. It follows the same persistence rule
    as the headline test: when r1 > 0, the variance of the Mann-Kendall statistic is inflated by
    n / n_eff (its z-score is scaled by sqrt(n_eff / n)), an effective-sample-size correction in the
@@ -142,11 +143,18 @@ def _lag1_autocorrelation(residuals: np.ndarray) -> float:
     return float(np.sum(centered[:-1] * centered[1:]) / denominator)
 
 
+NYCHKA_CONSTANT = 0.68  # small-sample adjustment of the effective sample size (Nychka et al., 2000)
+
+
 def _effective_dof(residuals: np.ndarray) -> tuple[float, float, float]:
     """Return (r1, n_eff, df) for the OLS slope, adjusting only for positive autocorrelation."""
     n = residuals.size
     r1 = _lag1_autocorrelation(residuals)
-    n_eff = n * (1 - r1) / (1 + r1) if r1 > 0 else float(n)
+    if r1 > 0:
+        adjust = NYCHKA_CONSTANT / np.sqrt(n)
+        n_eff = max(n * (1 - r1 - adjust) / (1 + r1 + adjust), 2.0)
+    else:
+        n_eff = float(n)
     df = max(n_eff - 2.0, 1.0)
     return r1, float(n_eff), df
 
@@ -162,16 +170,17 @@ def _constant_series_result(x: np.ndarray, y: np.ndarray, alpha: float, warning:
     )
 
 
-def analyze_trend(years, values, alpha: float = DEFAULT_ALPHA) -> TrendResult:
+def analyze_trend(years, values, alpha: float = DEFAULT_ALPHA, min_years: int = MIN_YEARS) -> TrendResult:
     """Run the headline OLS trend test and the Mann-Kendall robustness check.
 
-    Raises ``ValueError`` when fewer than ``MIN_YEARS`` distinct usable years are given.
+    Raises ``ValueError`` when fewer than ``min_years`` distinct usable years are given (10 by
+    default; a measurement with a short NASA record, such as CO2, may allow fewer).
     """
     x, y = _clean_xy(years, values)
     n = int(x.size)
-    if np.unique(x).size < MIN_YEARS:
+    if np.unique(x).size < min_years:
         raise ValueError(
-            f"At least {MIN_YEARS} complete years are needed for a trend test; "
+            f"At least {min_years} complete years are needed for a trend test; "
             f"this selection has {np.unique(x).size}."
         )
     warning = None

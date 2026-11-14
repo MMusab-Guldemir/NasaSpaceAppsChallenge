@@ -468,12 +468,12 @@ for key, variable in VARIABLES.items():
         board_results[key] = None
         unavailable_status[key] = "no_snow"
         continue
-    if len(annual) < MIN_YEARS:
+    if len(annual) < variable.min_years:
         board_results[key] = None
         unavailable_status[key] = "insufficient"
         continue
     annual_by_key[key], incomplete_by_key[key] = annual, incomplete
-    board_results[key] = analyze_trend(annual["year"], annual["value"])
+    board_results[key] = analyze_trend(annual["year"], annual["value"], min_years=variable.min_years)
 
 if not annual_by_key:
     if custom_mode and fetch_failed:
@@ -502,7 +502,25 @@ if examples:
             args=(example["case"], example["start"], example["end"]), width="stretch",
         )
 st.caption(t(lang, "step1_caption"))
-for column, (key, variable) in zip(st.columns(len(VARIABLES)), VARIABLES.items()):
+BOARD_GROUPS = (
+    ("group_climate", ("air_temperature", "precipitation", "snowfall")),
+    ("group_air", ("no2", "co", "black_carbon", "aod")),
+    ("group_carbon_green", ("co2", "ndvi", "tree_cover")),
+)
+board_cells = []
+for group_key, group_variables in BOARD_GROUPS:
+    keys = [k for k in group_variables if k in VARIABLES]
+    st.markdown(
+        f"<div class='eyebrow' lang='{lang}'>{html.escape(t(lang, group_key))}</div>",
+        unsafe_allow_html=True,
+    )
+    board_cells.extend(zip(st.columns(4), keys))
+listed = {k for _, ks in BOARD_GROUPS for k in ks}
+extra = [k for k in VARIABLES if k not in listed]  # any measurement not placed in a group
+if extra:
+    board_cells.extend(zip(st.columns(4), extra))
+for column, key in board_cells:
+    variable = VARIABLES[key]
     texts = variable_text(lang, variable)
     result = board_results[key]
     status = case_status(result) if result is not None else unavailable_status.get(key, "open")
@@ -585,11 +603,14 @@ for corner, value in zip(("w", "s", "e", "n"), active_bbox if custom_mode else (
     state[corner] = str(value)
 st.query_params.from_dict(state)
 annual = annual_all[annual_all["year"].between(start_year, end_year)].reset_index(drop=True)
-if len(annual) < MIN_YEARS:
-    st.error(t(lang, "too_short", min=MIN_YEARS, n=len(annual)))
+min_years = variable.min_years
+if len(annual) < min_years:
+    st.error(t(lang, "too_short", min=min_years, n=len(annual)))
     st.stop()
+if min_years < MIN_YEARS:
+    st.info(t(lang, "short_record_note", n=len(annual), usual=MIN_YEARS))
 
-result = analyze_trend(annual["year"], annual["value"])
+result = analyze_trend(annual["year"], annual["value"], min_years=min_years)
 band = trend_line_band(annual["year"], annual["value"])
 status = case_status(result)
 rate = num(result.slope_per_decade, lang, decimals, signed=True)
@@ -698,8 +719,8 @@ st.markdown(
         sen=num(result.sen_slope_per_decade, lang, decimals, signed=True), unit=unit,
     )
 )
-if result.end_year == last_year and result.n_years - 1 >= MIN_YEARS:
-    without_last = analyze_trend(annual["year"].iloc[:-1], annual["value"].iloc[:-1])
+if result.end_year == last_year and result.n_years - 1 >= min_years:
+    without_last = analyze_trend(annual["year"].iloc[:-1], annual["value"].iloc[:-1], min_years=min_years)
     st.caption(
         t(
             lang, "cross_exam", year=last_year,

@@ -11,15 +11,16 @@ Pick a place and a measurement from NASA Earth data, and find out **what** is ch
 
 ## What it does
 
-1. **Where?** Pick one of ten prepared regions with up to five measurements each (Colorado,
+1. **Where?** Pick one of ten prepared regions with up to ten measurements each (Colorado,
    Istanbul–Marmara, Medina, Beijing, Los Angeles, Cairo and the Nile Delta, the Amazon, the Sahel,
    the Alps and Siberia; vegetation greenness for the world regions is added as NASA AppEEARS
-   delivers it), or investigate **anywhere on Earth**: draw a rectangle on the world map,
+   delivers it, tree cover likewise), or investigate **anywhere on Earth**: draw a rectangle on the world map,
    move or resize it with the edit tool (then click Save), or type its corners in the left panel.
    Any size from 0.01° to 40° per side works: a rectangle smaller than NASA's grid uses the nearest
-   grid cell, and a large one is fetched in pieces. Temperature, snowfall and dust and smoke come
-   live from NASA POWER for any rectangle; air pollution (NO₂) and vegetation are prepared in
-   advance for the prepared regions.
+   grid cell, and a large one is fetched in pieces. Temperature, precipitation, snowfall and dust and
+   smoke come live from NASA POWER for any rectangle; NO₂, carbon monoxide, soot (black carbon),
+   CO₂, vegetation greenness and tree cover are prepared in advance for the prepared regions. The
+   cards are grouped into Climate, Air, and Carbon and green land.
 2. An **investigation board** shows every clue for the area: one card per measurement with its
    rate of change and a verdict stamp (Confirmed, Disputed, No evidence, Weak clue, Open case; plus No snow, Not enough data and No data where they apply).
 3. The user picks a clue, chooses the **period**, and immediately gets a large
@@ -29,7 +30,8 @@ Pick a place and a measurement from NASA Earth data, and find out **what** is ch
 5. The app fits a linear trend and reports:
    - the **rate of change per decade** with its 95% confidence interval,
    - whether the trend is **significant** (two-sided t-test, adjusted for year-to-year persistence
-     with an effective sample size),
+     with an effective sample size and a small-sample correction that keeps false alarms close to
+     the nominal 5%),
    - a **second opinion** from the Mann-Kendall test with Sen's slope, adjusted for persistence in
      the same way,
    - a plain-language summary for students and the public.
@@ -51,21 +53,24 @@ Pick a place and a measurement from NASA Earth data, and find out **what** is ch
 |---|---|---|
 | Air temperature, annual mean (1981-2025) | **+0.33 °C per decade** (p < 0.001), Confirmed | **+0.55 °C per decade** (p < 0.001), Confirmed |
 | Snowfall, water-year total (1982-2026) | no significant trend (p = 0.66) | no significant trend (p = 0.60) |
-| Tropospheric NO₂, annual mean (2005-2025) | no significant straight-line trend (p = 0.23); the pre-pandemic decline 2005-2019 is significant (p = 0.016) | no significant trend (p = 0.87)¹ |
-| Vegetation greenness, May-Sep NDVI (2000-2025) | no significant trend (p = 0.39) | +0.014 per decade (p = 0.03), but the second witness disagrees (p = 0.07), Disputed |
+| Tropospheric NO₂, annual mean (2005-2025) | no significant straight-line trend (p = 0.49); the 2005-2019 decline is not significant either once short-record persistence is accounted for (p = 0.11) | no significant trend (p = 0.90)¹ |
+| Vegetation greenness, May-Sep NDVI (2000-2025) | no significant trend (p = 0.39) | +0.014 per decade, no significant trend (p = 0.07) |
+| Carbon monoxide (2002-2024) | −0.06 × 10¹⁸ molecules/cm² per decade (p = 0.007), Confirmed | −0.10 × 10¹⁸ molecules/cm² per decade (p = 0.006), Confirmed |
+| CO₂ (2015-2021, 7 years) | +25 ppm per decade (p < 0.001), Confirmed | +25 ppm per decade (p < 0.001), Confirmed |
 
 ¹ 2024 is left out because January 2024 has fewer than 10 valid OMI days.
 
 The same measurement can behave differently in two places: both regions are warming, Istanbul–
-Marmara faster; Colorado's NO₂ fell until 2019 while Istanbul–Marmara's shows no clear change.
+Marmara faster, while CO₂ rises at the same pace in both because it mixes around the planet.
 
 Highlights from the world regions (full records unless stated):
-- Beijing NO₂ fell by about 3.7 × 10¹⁵ molecules/cm² per decade from 2013 to 2025 (p < 0.001, both
+- Beijing NO₂ fell by about 3.7 × 10¹⁵ molecules/cm² per decade from 2013 to 2025 (p = 0.013, both
   tests agree), after China's 2013 clean-air plan; over 2005-2025 the rise-then-fall shape is not a
-  significant straight-line trend (p = 0.07).
-- NO₂ over the Alps fell by about 0.42 × 10¹⁵ molecules/cm² per decade (2005-2025, p < 0.001).
-- Air temperature rose significantly in every prepared region, from +0.12 °C per decade in the Sahel
-  to +0.55 °C per decade in Istanbul–Marmara (1981-2025).
+  significant straight-line trend (p = 0.23).
+- NO₂ over the Alps fell by about 0.42 × 10¹⁵ molecules/cm² per decade (2005-2025, p = 0.002).
+- Air temperature rose significantly in nine of the ten prepared regions, from +0.12 °C per decade
+  in the Sahel to +0.55 °C per decade in Istanbul–Marmara (1981-2025); in Beijing the rise
+  (+0.23 °C per decade) is borderline (p = 0.06).
 
 ## Data
 
@@ -76,6 +81,11 @@ Highlights from the world regions (full records unless stated):
 | Air pollution (NO₂) | OMI `OMNO2d` v004 tropospheric column (daily, averaged per month) | Giovanni area-averaged time series |
 | Vegetation greenness (NDVI) | MODIS Terra `MOD13A3` v061 (monthly, 1 km) | AppEEARS area statistics |
 | Dust and smoke (aerosols) | NASA POWER monthly `AOD_55` (CERES SYN1deg, about 1°) | POWER API |
+| Precipitation | NASA POWER monthly `PRECTOTCORR` (MERRA-2, corrected with observations) | POWER API |
+| Carbon monoxide (CO) | MOPITT `MOP03JM` v010 total column, daytime (monthly, 1°) | Giovanni area-averaged time series |
+| Soot (black carbon) | MERRA-2 `M2TMNXAER` v5.12.4 black carbon surface concentration (monthly) | Giovanni area-averaged time series |
+| Carbon dioxide (CO₂) | OCO-2 GEOS L3 monthly V10r column-average CO₂ (2015-2022) | Giovanni area-averaged time series |
+| Tree cover | MODIS Terra `MOD44B` v061 Vegetation Continuous Fields (yearly, 250 m) | AppEEARS area statistics |
 
 - These data were obtained from the NASA Langley Research Center (LaRC) POWER Project funded
   through the NASA Earth Science/Applied Science Program.
@@ -98,9 +108,21 @@ Highlights from the world regions (full records unless stated):
   1072-1090. https://doi.org/10.1175/JTECH-D-12-00136.1 (CERES SYN1deg, the source of NASA POWER's
   aerosol optical depth)
 
+- Drummond, J., Gille, J., & Worden, H. MOPITT CO gridded monthly means (Near and Thermal
+  Infrared Radiances) V010. NASA Langley ASDC. https://doi.org/10.5067/TERRA/MOPITT/MOP03JM_L3.010
+- Global Modeling and Assimilation Office (GMAO) (2015). MERRA-2 tavgM_2d_aer_Nx: 2d, Monthly mean,
+  Time-averaged, Single-Level, Assimilation, Aerosol Diagnostics V5.12.4. NASA GES DISC.
+  https://doi.org/10.5067/FH9A0MLJPC7N
+- Weir, B., Ott, L., & OCO-2 Science Team (2022). OCO-2 GEOS Level 3 monthly, 0.5x0.625
+  assimilated CO2 V10r. NASA GES DISC. https://doi.org/10.5067/BGFIODET3HZ8
+- DiMiceli, C., Sohlberg, R., & Townshend, J. (2022). MODIS/Terra Vegetation Continuous Fields
+  Yearly L3 Global 250m SIN Grid V061. NASA LP DAAC. https://doi.org/10.5067/MODIS/MOD44B.061
+
 Methods references:
 - Santer, B. D., et al. (2000). Statistical significance of trends and trend differences in
   layer-average atmospheric temperature time series. *J. Geophys. Res.*, 105, 7337-7356.
+- Nychka, D., Buchberger, R., Wigley, T. M. L., Santer, B. D., Taylor, K. E., & Jones, R. (2000).
+  Confidence intervals for trend estimates with autocorrelated observations. NCAR manuscript.
 - Mann, H. B. (1945). Nonparametric tests against trend. *Econometrica*, 13, 245-259.
 - Kendall, M. G. (1975). *Rank Correlation Methods*. Griffin, London.
 - Sen, P. K. (1968). Estimates of the regression coefficient based on Kendall's tau. *JASA*, 63,
@@ -162,7 +184,7 @@ trend/share.py         share links
 trend/game.py          Detective exam game: cases, answers, explanations and the game page
 scripts/prefetch.py    fetches and caches data for a region
 data/processed/        small cached monthly CSVs used by the app
-tests/                 unit and app tests (149)
+tests/                 unit and app tests (165)
 docs/ARCHITECTURE.md   design and methods
 docs/SUBMISSION.md     draft of the Space Apps project page
 ```
@@ -170,7 +192,9 @@ docs/SUBMISSION.md     draft of the Space Apps project page
 ## Use of AI
 
 Team Avni chose the challenge, the regions (Colorado, Istanbul–Marmara and eight world regions
-picked from a list of options), the measurements (including dust and smoke for any rectangle), the
+picked from a list of options), the measurements (including dust and smoke for any rectangle, and precipitation, carbon monoxide,
+soot, CO₂ and tree cover picked from a list of NASA options), the goal of keeping false results as
+rare as possible, the
 "secret expert detective" theme, the pick a clue → choose the period → "real or chance?" flow, the
 Turkish option, the any-place-on-Earth rectangle of any size and the "possible reasons" step. Where the team asked for options (for
 example page layouts and candidate regions), the AI offered some and the team chose. The
