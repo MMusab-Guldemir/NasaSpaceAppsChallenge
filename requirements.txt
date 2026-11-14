@@ -1,6 +1,6 @@
 # Runtime dependencies for Streamlit Community Cloud (pinned). Editing this file makes the
 # Cloud rebuild the app from scratch, which also reloads every module in trend/.
-# Rebuild marker: time map summary backing and twice-as-fast crime scene map (2026-11-14 23:25)
+# Rebuild marker: Konya, groundwater, seasons, case report, guided start, open data, swipe (2026-11-14 23:59)
 streamlit==1.67.0
 plotly==7.1.0
 pandas==3.1.1
