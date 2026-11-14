@@ -60,6 +60,7 @@ def annual_trend_figure(
     y_title: str,
     unit: str,
     separators: str = ".,",
+    decimals: int = 2,
 ) -> go.Figure:
     """Annual values with the fitted linear trend and its 95% confidence band."""
     fig = go.Figure()
@@ -80,28 +81,29 @@ def annual_trend_figure(
             x=annual["year"], y=annual["value"], mode="lines+markers", name=series_name,
             line={"color": SERIES_1, "width": 2},
             marker={"size": 8, "color": SERIES_1, "line": {"color": SURFACE, "width": 2}},
-            hovertemplate=f"%{{y:.2f}} {unit}<extra></extra>",
+            hovertemplate=f"%{{y:.{decimals}f}} {unit}<extra></extra>",
         )
     )
     fig.add_trace(
         go.Scatter(
             x=band["year"], y=band["fit"], mode="lines", name=trend_name,
             line={"color": SERIES_2, "width": 2},
-            hovertemplate=f"%{{y:.2f}} {unit}<extra></extra>",
+            hovertemplate=f"%{{y:.{decimals}f}} {unit}<extra></extra>",
         )
     )
     return _style(fig, x_title, y_title, True, separators)
 
 
 def monthly_figure(
-    monthly: pd.DataFrame, *, x_title: str, y_title: str, unit: str, separators: str = ".,"
+    monthly: pd.DataFrame, *, x_title: str, y_title: str, unit: str, separators: str = ".,",
+    decimals: int = 2,
 ) -> go.Figure:
     """Monthly values, including the seasonal cycle, for context."""
     fig = go.Figure(
         go.Scatter(
             x=monthly["date"], y=monthly["value"], mode="lines",
             line={"color": SERIES_1, "width": 1.5},
-            hovertemplate=f"%{{y:.2f}} {unit}<extra></extra>",
+            hovertemplate=f"%{{y:.{decimals}f}} {unit}<extra></extra>",
         )
     )
     return _style(fig, x_title, y_title, False, separators)

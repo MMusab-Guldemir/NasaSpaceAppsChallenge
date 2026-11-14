@@ -230,3 +230,10 @@ data/raw/
 
 # Turkish summary for the participant (kept out of the repo)
 Proje_Ozeti.pdf
+
+# Earthdata credentials and cookies (never commit)
+.netrc
+_netrc
+.urs_cookies
+.env.*
+!.env.example

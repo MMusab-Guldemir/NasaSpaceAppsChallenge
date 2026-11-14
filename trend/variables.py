@@ -15,6 +15,23 @@ MERRA2_REFERENCE = (
     "Gelaro, R., et al. (2017). The Modern-Era Retrospective Analysis for Research and "
     "Applications, Version 2 (MERRA-2). Journal of Climate, 30, 5419-5454."
 )
+OMNO2D_REFERENCE = (
+    "Krotkov, N. A., Lamsal, L. N., et al. (2024). OMI/Aura NO2 Cloud-Screened Total and "
+    "Tropospheric Column L3 Global Gridded 0.25 degree x 0.25 degree Ver 5.0, Col 004 (OMNO2d). "
+    "NASA Goddard Earth Sciences Data and Information Services Center (GES DISC)."
+)
+GIOVANNI_ACKNOWLEDGMENT = (
+    "Area averages were produced with the Giovanni online data system, developed and maintained "
+    "by the NASA GES DISC."
+)
+MOD13A3_REFERENCE = (
+    "Didan, K. (2021). MODIS/Terra Vegetation Indices Monthly L3 Global 1km SIN Grid V061. "
+    "NASA EOSDIS Land Processes Distributed Active Archive Center."
+)
+APPEEARS_ACKNOWLEDGMENT = (
+    "Area statistics were produced with AppEEARS (Application for Extracting and Exploring "
+    "Analysis Ready Samples), NASA EOSDIS LP DAAC and USGS EROS Center."
+)
 
 
 @dataclass(frozen=True)
@@ -37,6 +54,7 @@ class Variable:
     citation: str
     caveats: tuple[str, ...] = ()
     min_valid_days: int | None = None  # for monthly means built from daily data
+    decimals: int = 2  # decimals shown for values and rates in this variable's unit
 
 
 VARIABLES: dict[str, Variable] = {
@@ -103,11 +121,11 @@ VARIABLES: dict[str, Variable] = {
         year_starts_month=1,
         product="OMI OMNO2d v004, tropospheric column, 30% cloud screened",
         provider="NASA GES DISC, via Giovanni",
-        doi=None,  # to be confirmed from the Giovanni download metadata
-        citation="OMI NO2 Level 3 daily product (OMNO2d), NASA Goddard Earth Sciences Data and "
-        "Information Services Center (GES DISC).",
+        doi="10.5067/AURA/OMI/DATA3407",
+        citation=f"{OMNO2D_REFERENCE} {GIOVANNI_ACKNOWLEDGMENT}",
         caveats=(
-            "A state-wide average is dominated by rural areas, so city pollution is diluted.",
+            "The value is an average over the whole box, including rural areas and, near coasts, "
+            "the sea, so pollution in cities is diluted.",
             "The OMI instrument has a 'row anomaly' that reduces the number of usable "
             "measurements.",
             "2020 shows a dip linked to reduced activity during the COVID-19 pandemic.",
@@ -133,12 +151,12 @@ VARIABLES: dict[str, Variable] = {
         product="MODIS Terra MOD13A3 v061, monthly, 1 km",
         provider="NASA LP DAAC, via AppEEARS",
         doi="10.5067/MODIS/MOD13A3.061",
-        citation="Didan, K. (2021). MODIS/Terra Vegetation Indices Monthly L3 Global 1km SIN "
-        "Grid V061. NASA EOSDIS Land Processes Distributed Active Archive Center.",
+        citation=f"{MOD13A3_REFERENCE} {APPEEARS_ACKNOWLEDGMENT}",
         caveats=(
             "The Terra satellite's orbit has drifted since about 2020, which can slightly "
             "affect recent values.",
         ),
+        decimals=3,
     ),
 }
 

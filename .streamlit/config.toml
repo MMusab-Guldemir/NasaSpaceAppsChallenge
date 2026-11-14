@@ -8,3 +8,7 @@ font = "sans serif"
 
 [server]
 headless = true
+
+[client]
+# Show only the error type in the browser; full tracebacks go to the server log.
+showErrorDetails = "type"

@@ -13,9 +13,11 @@ Method
    (lag-1 correlation r1 > 0), the standard error and degrees of freedom use the effective sample
    size n_eff = n (1 - r1) / (1 + r1) (Santer et al., 2000, J. Geophys. Res. 105, 7337-7356),
    so persistent year-to-year swings do not produce overconfident results.
-3. Robustness check: the Mann-Kendall test with Sen's slope. When the residuals show significant
-   positive lag-1 autocorrelation, the Hamed-Rao modified Mann-Kendall test is used instead.
-   The app reports whether this check agrees with the headline result.
+3. Robustness check: the Mann-Kendall test with Sen's slope. It follows the same persistence rule
+   as the headline test: when r1 > 0, the variance of the Mann-Kendall statistic is inflated by
+   n / n_eff (its z-score is scaled by sqrt(n_eff / n)), an effective-sample-size correction in the
+   spirit of Yue and Wang (2004, Water Resources Management 18, 201-218). The app reports whether
+   this check agrees with the headline result.
 """
 from __future__ import annotations
 
@@ -31,6 +33,8 @@ from trend.variables import Variable
 MIN_YEARS = 10
 RECOMMENDED_YEARS = 20
 DEFAULT_ALPHA = 0.05
+MK_PLAIN = "Mann-Kendall"
+MK_ADJUSTED = "persistence-adjusted Mann-Kendall"
 
 
 def to_annual(monthly: pd.DataFrame, variable: Variable) -> tuple[pd.DataFrame, list[int]]:
@@ -151,7 +155,7 @@ def _constant_series_result(x: np.ndarray, y: np.ndarray, alpha: float, warning:
         n_years=int(x.size), n_effective=float(x.size), start_year=int(x[0]), end_year=int(x[-1]),
         alpha=alpha, slope_per_year=0.0, intercept=float(y[0]), ci_low_per_year=0.0,
         ci_high_per_year=0.0, p_value=1.0, significant=False, total_change=0.0,
-        lag1_autocorrelation=0.0, autocorrelated=False, mk_method="Mann-Kendall",
+        lag1_autocorrelation=0.0, autocorrelated=False, mk_method=MK_PLAIN,
         mk_trend="no trend", mk_p_value=1.0, sen_slope_per_year=0.0, agrees=True,
         warning=warning,
     )
@@ -189,26 +193,25 @@ def analyze_trend(years, values, alpha: float = DEFAULT_ALPHA) -> TrendResult:
     p_value = float(2 * stats.t.sf(abs(fit.slope / stderr), df=df)) if stderr > 0 else 0.0
 
     autocorrelated = r1 > stats.norm.ppf(1 - alpha / 2) / np.sqrt(n)
-    mk_result, mk_method = None, "Mann-Kendall"
-    if autocorrelated:
-        with np.errstate(invalid="ignore"):
-            corrected = mk.hamed_rao_modification_test(y, alpha=alpha)
-        if np.isfinite(corrected.p):
-            mk_result, mk_method = corrected, "Hamed-Rao modified Mann-Kendall"
-        else:
-            # The Hamed-Rao variance correction can turn negative on short or unusual series.
-            mk_method = "Mann-Kendall (Hamed-Rao correction not applicable to this series)"
-    if mk_result is None:
-        mk_result = mk.original_test(y, alpha=alpha)
+    # Second witness: the same persistence rule as the headline test, so that both tests count
+    # persistent years the same way (variance inflated by n / n_eff whenever r1 > 0).
+    original = mk.original_test(y, alpha=alpha)
+    if r1 > 0:
+        mk_z = float(original.z) * np.sqrt(n_eff / n)
+        mk_p = float(2 * stats.norm.sf(abs(mk_z)))
+        mk_trend = ("increasing" if mk_z > 0 else "decreasing") if mk_p < alpha else "no trend"
+        mk_method = MK_ADJUSTED
+    else:
+        mk_p, mk_trend, mk_method = float(original.p), str(original.trend), MK_PLAIN
     # Sen's slope against the actual years, so gaps from dropped years are handled correctly.
     sen_slope = float(stats.theilslopes(y, x).slope)
 
     significant = bool(p_value < alpha)
     if significant:
         headline_direction = "increasing" if fit.slope > 0 else "decreasing"
-        agrees = mk_result.trend == headline_direction
+        agrees = mk_trend == headline_direction
     else:
-        agrees = mk_result.trend == "no trend"
+        agrees = mk_trend == "no trend"
 
     return TrendResult(
         n_years=n,
@@ -226,8 +229,8 @@ def analyze_trend(years, values, alpha: float = DEFAULT_ALPHA) -> TrendResult:
         lag1_autocorrelation=r1,
         autocorrelated=bool(autocorrelated),
         mk_method=mk_method,
-        mk_trend=str(mk_result.trend),
-        mk_p_value=float(mk_result.p),
+        mk_trend=mk_trend,
+        mk_p_value=mk_p,
         sen_slope_per_year=sen_slope,
         agrees=bool(agrees),
         warning=warning,

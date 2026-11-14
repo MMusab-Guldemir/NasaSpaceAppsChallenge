@@ -15,7 +15,7 @@ TEXT: dict[str, dict[str, str]] = {
         "eyebrow": "NASA Earth data · Statistical investigation",
         "title": "Earth System Trend Detective",
         "subtitle": (
-            "Pick a clue and a period. The detective checks NASA's satellite records and tells you "
+            "Pick a clue and a period. The detective checks NASA Earth data and tells you "
             "whether the change is real or could just be chance."
         ),
         "language": "Language",
@@ -30,7 +30,7 @@ TEXT: dict[str, dict[str, str]] = {
             "- Claims about the climate and the environment are everywhere. This tool lets anyone "
             "check them against NASA's own measurements.\n"
             "- It shows how scientists decide whether a change is real: a trend, its uncertainty, a "
-            "significance test and a second, independent test.\n"
+            "significance test and a second test of a different kind.\n"
             "- Every number can be downloaded and checked, so students and teachers can use it in "
             "class projects."
         ),
@@ -48,8 +48,9 @@ TEXT: dict[str, dict[str, str]] = {
             "has {n}. Pick a longer period."
         ),
         "step_verdict": "Step 4 · Real or chance?",
-        "headline_up": "Unlikely to be chance: a real upward trend",
-        "headline_down": "Unlikely to be chance: a real downward trend",
+        "headline_up": "Unlikely to be chance: a significant upward trend",
+        "headline_down": "Unlikely to be chance: a significant downward trend",
+        "headline_disputed": "Borderline: the two tests disagree",
         "headline_chance": "Could be chance: no clear trend",
         "meter_question": (
             "If there were no real trend, how often would a trend this strong appear just by chance?"
@@ -58,6 +59,7 @@ TEXT: dict[str, dict[str, str]] = {
         "meter_right": "Could easily be chance",
         "meter_threshold": "5% line",
         "chance_tiny": "less than 0.1% of the time",
+        "chance_over": "more than 99.9% of the time",
         "chance_value": "about {pct}% of the time",
         "how_much": "HOW MUCH",
         "total_change": "TOTAL CHANGE",
@@ -83,6 +85,10 @@ TEXT: dict[str, dict[str, str]] = {
         "step_evidence": "Step 5 · The evidence",
         "based_on": "Based on {n} complete years ({start} to {end}).",
         "not_used": " Not used because incomplete: {years}.",
+        "neff_note": (
+            " Neighbouring years resemble each other, so these {n} years carry about as much "
+            "information as {n_eff} independent years."
+        ),
         "step_witness": "Step 6 · The second witness",
         "witness_agrees": (
             "✅ **The second witness agrees:** the {method} test, which does not assume a straight "
@@ -144,12 +150,14 @@ TEXT: dict[str, dict[str, str]] = {
             "delivers them through slower services."
         ),
         "map_help": (
-            "Draw a rectangle with the square tool on the left of the map, or use the edit tool "
-            "(pencil) to drag and resize the current one. Then press the button below the map."
+            "Draw a rectangle with the square tool on the left of the map, or move and resize the "
+            "current one with the edit tool (pencil) and click Save. A button then appears below "
+            "the map. Prepared regions and exact coordinates are in the left panel (on a phone, "
+            "open it with the » button at the top left)."
         ),
         "use_drawn": "Investigate the drawn rectangle ({bbox})",
         "custom_name": "Custom area ({bbox})",
-        "fetching": "Fetching NASA data for this area… (up to about 30 seconds per measurement)",
+        "fetching": "Fetching NASA data for this area… (usually a few seconds, at most about a minute)",
         "err_range": "Latitudes must be between -90 and 90, longitudes between -180 and 180.",
         "err_order": "West must be smaller than east, and south smaller than north.",
         "err_too_big": (
@@ -161,13 +169,18 @@ TEXT: dict[str, dict[str, str]] = {
             "POWER serves."
         ),
         "err_fetch": "NASA POWER did not answer for this area right now. Try again in a minute.",
+        "fetch_failed_all": (
+            "No evidence could be collected for this area because NASA POWER did not answer. "
+            "Try again, or pick a prepared region in the left panel."
+        ),
+        "retry": "Try again",
         "err_no_data": "There is no {variable} data over this area (for example, open sea).",
     },
     "tr": {
         "eyebrow": "NASA Dünya verisi · İstatistiksel soruşturma",
         "title": "Dünya Sistemi Trend Dedektifi",
         "subtitle": (
-            "Bir ipucu ve bir dönem seç. Dedektif NASA'nın uydu kayıtlarını inceler ve değişimin "
+            "Bir ipucu ve bir dönem seç. Dedektif NASA'nın Dünya verilerini inceler ve değişimin "
             "gerçek mi, yoksa tesadüf mü olduğunu söyler."
         ),
         "language": "Dil",
@@ -176,17 +189,17 @@ TEXT: dict[str, dict[str, str]] = {
         "step_where": "1. adım · Nerede?",
         "step_what": "2. adım · Neyi incelemek istiyorsun?",
         "step1_caption": "Her kart, NASA Dünya verisinden bir ölçümü tüm kayıt boyunca gösterir.",
-        "examples_title": "Ünlü vakalar: tek tıkla aç",
+        "examples_title": "Ünlü dosyalar: tek tıkla aç",
         "why_title": "Neden önemli?",
         "why_body": (
             "- İklim ve çevre hakkında her yerde iddialar var. Bu araç, herkesin bu iddiaları "
             "NASA'nın kendi ölçümleriyle kontrol etmesini sağlar.\n"
             "- Bilim insanlarının bir değişimin gerçek olup olmadığına nasıl karar verdiğini "
-            "gösterir: trend, belirsizliği, anlamlılık testi ve bağımsız ikinci bir test.\n"
+            "gösterir: trend, belirsizliği, anlamlılık testi ve farklı türde ikinci bir test.\n"
             "- Her sayı indirilip kontrol edilebilir; öğrenciler ve öğretmenler bunu sınıf "
             "projelerinde kullanabilir."
         ),
-        "per_decade": "on yılda",
+        "per_decade": "/ 10 yıl",
         "evidence_pending": "Delil bekleniyor",
         "investigate": "İncele",
         "selected": "Seçili",
@@ -200,8 +213,9 @@ TEXT: dict[str, dict[str, str]] = {
             "var. Daha uzun bir dönem seç."
         ),
         "step_verdict": "4. adım · Gerçek mi, tesadüf mü?",
-        "headline_up": "Tesadüf olması çok zor: gerçek bir artış trendi",
-        "headline_down": "Tesadüf olması çok zor: gerçek bir azalış trendi",
+        "headline_up": "Tesadüf olması zor: anlamlı bir artış trendi",
+        "headline_down": "Tesadüf olması zor: anlamlı bir azalış trendi",
+        "headline_disputed": "Sınırda: iki test aynı fikirde değil",
         "headline_chance": "Tesadüf olabilir: belirgin bir trend yok",
         "meter_question": (
             "Gerçek bir trend olmasaydı, bu kadar güçlü bir trend ne sıklıkla tesadüfen ortaya çıkardı?"
@@ -210,6 +224,7 @@ TEXT: dict[str, dict[str, str]] = {
         "meter_right": "Kolayca tesadüf olabilir",
         "meter_threshold": "%5 sınırı",
         "chance_tiny": "%0,1'den az",
+        "chance_over": "%99,9'dan fazla",
         "chance_value": "yaklaşık %{pct}",
         "how_much": "NE KADAR",
         "total_change": "TOPLAM DEĞİŞİM",
@@ -235,6 +250,10 @@ TEXT: dict[str, dict[str, str]] = {
         "step_evidence": "5. adım · Delil",
         "based_on": "{n} tam yıla dayanıyor ({start}–{end}).",
         "not_used": " Eksik olduğu için kullanılmadı: {years}.",
+        "neff_note": (
+            " Komşu yıllar birbirine benzediği için bu {n} yıl, yaklaşık {n_eff} bağımsız yıl kadar "
+            "bilgi taşıyor."
+        ),
         "step_witness": "6. adım · İkinci tanık",
         "witness_agrees": (
             "✅ **İkinci tanık doğruluyor:** düz bir çizgi varsaymayan {method} testinin sonucu: "
@@ -253,7 +272,7 @@ TEXT: dict[str, dict[str, str]] = {
         ),
         "significant": "anlamlı",
         "not_significant": "anlamlı değil",
-        "case_notes": "Dava notları",
+        "case_notes": "Dosya notları",
         "keep_in_mind": "Dikkat edilecekler",
         "monthly_title": "Aylık değerler (mevsim döngüsüyle)",
         "monthly_caption": "Aylık değerlerde mevsim döngüsü hâlâ var, bu yüzden her yıl inip çıkıyorlar.",
@@ -261,7 +280,7 @@ TEXT: dict[str, dict[str, str]] = {
         "months_used": "Kullanılan ay",
         "source_recorded": "Veri çekilirken kaydedilen kaynak: {source}",
         "dl_annual": "Yıllık seriyi indir (CSV)",
-        "dl_results": "Dava sonuçlarını indir (CSV)",
+        "dl_results": "Dosya sonuçlarını indir (CSV)",
         "methods_title": "Dedektif nasıl çalışır? (yöntem ve sınırlamalar)",
         "data_label": "Veri",
         "footer": (
@@ -294,12 +313,14 @@ TEXT: dict[str, dict[str, str]] = {
             "için sadece hazır bölgelerde var."
         ),
         "map_help": (
-            "Haritanın solundaki kare aracıyla bir dikdörtgen çiz ya da düzenleme aracıyla (kalem) "
-            "mevcut dikdörtgeni sürükleyip büyüt, küçült. Sonra haritanın altındaki düğmeye bas."
+            "Haritanın solundaki kare aracıyla bir dikdörtgen çiz ya da mevcut dikdörtgeni "
+            "düzenleme aracıyla (kalem) taşıyıp boyutlandır ve araç çubuğundaki Save düğmesine bas. "
+            "Ardından haritanın altında bir düğme çıkar. Hazır bölgeler ve tam koordinatlar sol "
+            "paneldedir (telefonda sol üstteki » düğmesiyle aç)."
         ),
         "use_drawn": "Çizilen dikdörtgeni incele ({bbox})",
         "custom_name": "Özel alan ({bbox})",
-        "fetching": "Bu alan için NASA verisi getiriliyor… (ölçüm başına yaklaşık 30 saniyeye kadar)",
+        "fetching": "Bu alan için NASA verisi getiriliyor… (genellikle birkaç saniye, en fazla yaklaşık bir dakika)",
         "err_range": "Enlemler -90 ile 90, boylamlar -180 ile 180 arasında olmalı.",
         "err_order": "Batı doğudan, güney de kuzeyden küçük olmalı.",
         "err_too_big": (
@@ -310,13 +331,18 @@ TEXT: dict[str, dict[str, str]] = {
             "Dikdörtgen, NASA POWER'ın verdiği en küçük alan olan her yönde en az 2°'ye genişletildi."
         ),
         "err_fetch": "NASA POWER şu an bu alan için cevap vermedi. Bir dakika sonra tekrar dene.",
+        "fetch_failed_all": (
+            "NASA POWER cevap vermediği için bu alan için delil toplanamadı. Tekrar dene ya da sol "
+            "panelden hazır bir bölge seç."
+        ),
+        "retry": "Tekrar dene",
         "err_no_data": "Bu alanın üzerinde {variable} verisi yok (örneğin açık deniz).",
     },
 }
 
 STATUS: dict[str, dict[str, tuple[str, str]]] = {
     "en": {
-        "confirmed": ("Confirmed", "A real trend: both tests agree."),
+        "confirmed": ("Confirmed", "A significant trend: both tests agree."),
         "disputed": ("Disputed", "The headline test sees a trend, the second witness does not."),
         "noevidence": ("No evidence", "No significant trend detected."),
         "weak": ("Weak clue", "Only the second witness sees a trend."),
@@ -327,7 +353,7 @@ STATUS: dict[str, dict[str, tuple[str, str]]] = {
         ),
     },
     "tr": {
-        "confirmed": ("Kanıtlandı", "Gerçek bir trend: iki test de aynı fikirde."),
+        "confirmed": ("Doğrulandı", "Anlamlı bir trend: iki test de aynı fikirde."),
         "disputed": ("Tartışmalı", "Ana test trend görüyor, ikinci tanık görmüyor."),
         "noevidence": ("Delil yok", "Anlamlı bir trend tespit edilmedi."),
         "weak": ("Zayıf ipucu", "Trendi sadece ikinci tanık görüyor."),
@@ -340,6 +366,14 @@ STATUS: dict[str, dict[str, tuple[str, str]]] = {
 }
 
 REGION_NAMES = {"tr": {"colorado": "Colorado, ABD", "marmara": "İstanbul–Marmara, Türkiye"}}
+
+# Display names of the second-witness test (the English names come from trend.stats).
+METHOD_NAMES = {
+    "tr": {
+        "Mann-Kendall": "Mann-Kendall",
+        "persistence-adjusted Mann-Kendall": "sürekliliğe göre düzeltilmiş Mann-Kendall",
+    }
+}
 
 VARIABLE_TEXT: dict[str, dict[str, dict]] = {
     "tr": {
@@ -384,8 +418,8 @@ VARIABLE_TEXT: dict[str, dict[str, dict]] = {
             "annual_unit": "10¹⁵ molekül/cm²",
             "year_axis_label": "Yıl",
             "caveats": [
-                "Eyalet genelindeki ortalama kırsal alanların etkisinde kalır, bu yüzden şehir "
-                "kirliliği seyrelir.",
+                "Değer tüm kutunun ortalamasıdır; kırsal alanlar ve kıyılarda deniz de dahil "
+                "olduğu için şehirlerdeki kirlilik seyrelir.",
                 "OMI aletindeki 'satır anomalisi' kullanılabilir ölçüm sayısını azaltır.",
                 "2020'de COVID-19 salgınındaki azalan faaliyetle bağlantılı bir düşüş var.",
                 "OMI aleti yaşlanıyor ve Aura uydusunun yörüngesi son yıllarda kayıyor; yaklaşık "
@@ -412,9 +446,11 @@ VARIABLE_TEXT: dict[str, dict[str, dict]] = {
 
 METHODS = {
     "en": """
-- **Area average:** the value for {region} is the average of all data grid cells whose centres lie
-  inside or on the edge of the region's box, weighted by the cosine of latitude. Cells centred on
-  the edge reach about a quarter of a degree beyond the box.
+- **Area average:** for temperature and snowfall, the value for {region} is the average of all NASA
+  POWER grid cells whose centres lie inside or on the edge of the region's box, weighted by the
+  cosine of latitude (cells centred on the edge reach about a quarter of a degree beyond the box).
+  For air pollution and vegetation, NASA Giovanni and AppEEARS compute the average over the same
+  box; for vegetation, pixels over the sea have no value and are left out.
 - **One value per year:** monthly values are combined into one value per year, which removes the
   seasonal cycle. A year is used only if all of its months are available.
 - **Headline test:** a straight line is fitted with ordinary least squares (OLS). We report its
@@ -425,12 +461,14 @@ METHODS = {
   a similar departure (positive autocorrelation), the uncertainty is widened using an effective
   sample size (Santer et al., 2000), so the result is not overconfident.
 - **Second witness:** the Mann-Kendall test checks for a steady rise or fall without assuming a
-  straight line; Sen's slope is a robust estimate of the rate. If the residuals are correlated from
-  one year to the next, the Hamed-Rao corrected version is used.
+  straight line; Sen's slope is a robust estimate of the rate. When neighbouring years are
+  positively correlated, its uncertainty is widened with the same effective sample size as the
+  headline test, so both tests count persistent years the same way.
 - **Stamps:** *Confirmed* = significant and the second witness agrees; *Disputed* = significant but
   the second witness disagrees; *No evidence* = no significant trend; *Weak clue* = only the second
   witness sees a trend.
-- **Total change** is the slope multiplied by the number of years, not the last value minus the first.
+- **Total change** is the slope multiplied by the time span (last year minus first year), not the
+  last value minus the first.
 - **Confidence band:** the shaded band is the 95% confidence band of the fitted line, not a range for
   individual years.
 - **Short periods:** at least {min_years} years are required; fewer than 20 years gives a warning.
@@ -439,9 +477,12 @@ METHODS = {
 - **No significant trend detected** does not mean "no change"; a longer record may reveal one.
 """,
     "tr": """
-- **Bölge ortalaması:** {region} değeri, merkezi bölge kutusunun içinde ya da kenarında kalan tüm
-  veri ızgara hücrelerinin enlemin kosinüsüyle ağırlıklandırılmış ortalamasıdır. Kenarda merkezlenen
-  hücreler kutunun yaklaşık çeyrek derece dışına uzanır.
+- **Bölge ortalaması:** sıcaklık ve kar yağışı için {region} değeri, merkezi bölge kutusunun
+  içinde ya da kenarında kalan tüm NASA POWER ızgara hücrelerinin enlemin kosinüsüyle
+  ağırlıklandırılmış ortalamasıdır (kenarda merkezlenen hücreler kutunun yaklaşık çeyrek derece
+  dışına uzanır). Hava kirliliği ve bitki yeşilliği için ortalamayı aynı kutu üzerinden NASA
+  Giovanni ve AppEEARS hesaplar; bitki yeşilliğinde deniz üzerindeki piksellerin değeri yoktur ve
+  hesaba katılmaz.
 - **Yılda tek değer:** aylık değerler her yıl için tek bir değerde birleştirilir; böylece mevsim
   döngüsü ortadan kalkar. Bir yıl yalnızca tüm ayları mevcutsa kullanılır.
 - **Ana test:** en küçük kareler yöntemiyle (OLS) düz bir çizgi oturtulur. Eğimi, eğimin %95 güven
@@ -452,12 +493,14 @@ METHODS = {
   sapmayla devam ediyorsa (pozitif otokorelasyon), belirsizlik etkin örneklem büyüklüğüyle büyütülür
   (Santer ve ark., 2000); böylece sonuç olduğundan iddialı çıkmaz.
 - **İkinci tanık:** Mann-Kendall testi, düz bir çizgi varsaymadan istikrarlı bir artış ya da azalış
-  olup olmadığına bakar; Sen eğimi, değişim hızının sağlam bir tahminidir. Artıklar yıldan yıla
-  ilişkiliyse Hamed-Rao düzeltmeli versiyonu kullanılır.
-- **Damgalar:** *Kanıtlandı* = anlamlı ve ikinci tanık doğruluyor; *Tartışmalı* = anlamlı ama ikinci
+  olup olmadığına bakar; Sen eğimi, değişim hızının sağlam bir tahminidir. Komşu yıllar birbiriyle
+  pozitif ilişkiliyse, bu testin belirsizliği de ana testteki aynı etkin örneklem büyüklüğüyle
+  büyütülür; böylece iki test de birbirine benzeyen yılları aynı şekilde sayar.
+- **Damgalar:** *Doğrulandı* = anlamlı ve ikinci tanık doğruluyor; *Tartışmalı* = anlamlı ama ikinci
   tanık doğrulamıyor; *Delil yok* = anlamlı trend yok; *Zayıf ipucu* = trendi sadece ikinci tanık
   görüyor.
-- **Toplam değişim**, eğimin yıl sayısıyla çarpımıdır; son değer eksi ilk değer değildir.
+- **Toplam değişim**, eğimin dönemin uzunluğuyla (son yıl eksi ilk yıl) çarpımıdır; son değer
+  eksi ilk değer değildir.
 - **Güven bandı:** gölgeli bant, oturtulan çizginin %95 güven bandıdır; tek tek yılların aralığı
   değildir.
 - **Kısa dönemler:** en az {min_years} yıl gerekir; 20 yıldan kısa dönemlerde uyarı verilir.
@@ -483,6 +526,10 @@ def region_name(lang: str, region_key: str, default: str) -> str:
     return REGION_NAMES.get(lang, {}).get(region_key, default)
 
 
+def method_name(lang: str, method: str) -> str:
+    return METHOD_NAMES.get(lang, {}).get(method, method)
+
+
 def variable_text(lang: str, variable: Variable) -> dict:
     """Display texts for a variable in the chosen language (English comes from the catalog)."""
     english = {
@@ -503,18 +550,30 @@ def num(value: float, lang: str, decimals: int = 2, signed: bool = False) -> str
     return text.replace(".", ",") if lang == "tr" else text
 
 
+def _digits_near(value: float, threshold: float, decimals: int) -> int:
+    """Add decimals while rounding would put a value next to the 5% line on the line itself."""
+    while decimals < 6 and value != threshold and round(value, decimals) == threshold:
+        decimals += 1
+    return decimals
+
+
 def p_phrase(p: float, lang: str) -> str:
-    """'p < 0.001' or 'p = 0.046', with a decimal comma in Turkish."""
+    """'p < 0.001', 'p = 0.046' or 'p > 0.999', with a decimal comma in Turkish."""
     if p < 0.001:
         return "p < 0,001" if lang == "tr" else "p < 0.001"
-    return f"p = {num(p, lang, 3)}"
+    if p > 0.999:
+        return "p > 0,999" if lang == "tr" else "p > 0.999"
+    return f"p = {num(p, lang, _digits_near(p, 0.05, 3))}"
 
 
 def chance_phrase(p: float, lang: str) -> str:
     """How often a trend this strong would appear by chance, in words."""
     if p < 0.001:
         return t(lang, "chance_tiny")
-    return t(lang, "chance_value", pct=num(p * 100, lang, 1))
+    if p > 0.999:
+        return t(lang, "chance_over")
+    pct = p * 100
+    return t(lang, "chance_value", pct=num(pct, lang, _digits_near(pct, 5.0, 1)))
 
 
 def lower_first(text: str) -> str:

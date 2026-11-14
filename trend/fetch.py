@@ -36,8 +36,11 @@ class DataSourceError(RuntimeError):
         self.status = status
 
 
+Timeout = float | tuple[float, float]
+
+
 def request_power_regional(
-    parameter: str, region: Region, start_year: int, end_year: int, timeout: int = 300
+    parameter: str, region: Region, start_year: int, end_year: int, timeout: Timeout = 300
 ) -> dict:
     """Call the POWER monthly regional API for one parameter (the API allows only one)."""
     params = {
@@ -123,24 +126,29 @@ def daily_rate_to_monthly_total(monthly: pd.DataFrame) -> pd.DataFrame:
 
 
 def fetch_power_variable(
-    variable: Variable, region: Region, start_year: int, end_year: int
+    variable: Variable, region: Region, start_year: int, end_year: int, timeout: Timeout = 300
 ) -> tuple[pd.DataFrame, str]:
     """Fetch one POWER variable for a region.
 
-    Returns the monthly series in the cached unit and the data sources POWER reports.
+    Returns the monthly series in the cached unit and the data sources POWER reports. ``timeout``
+    is passed to ``requests`` (the app uses a short one; the prefetch script keeps the default).
     """
     if variable.key not in POWER_VARIABLES:
         raise ValueError(f"'{variable.key}' is not served by the POWER API.")
     parameter, is_daily_rate = POWER_VARIABLES[variable.key]
     try:
-        payload = request_power_regional(parameter, region, start_year, end_year)
+        payload = request_power_regional(parameter, region, start_year, end_year, timeout)
     except DataSourceError as error:
-        if error.status is None or not 400 <= error.status < 500:
+        # Only an "end date out of range" answer means the newest year is not published yet;
+        # any other error (box size, rate limit, server trouble) is reported as it is.
+        if not (error.status == 422 and "end date" in str(error).lower()):
             raise
-        # A request error can mean the newest year is not published yet; retry once without it.
-        print(f"POWER rejected end year {end_year} ({error}); retrying with {end_year - 1}.")
-        payload = request_power_regional(parameter, region, start_year, end_year - 1)
-    monthly = parse_power_regional(payload, parameter)
+        print(f"POWER rejected end year {end_year}; retrying with {end_year - 1}.")
+        payload = request_power_regional(parameter, region, start_year, end_year - 1, timeout)
+    try:
+        monthly = parse_power_regional(payload, parameter)
+    except (KeyError, AttributeError, TypeError, ValueError, IndexError) as exc:
+        raise DataSourceError("POWER returned an unexpected response.") from exc
     if is_daily_rate:
         monthly = daily_rate_to_monthly_total(monthly)
     return monthly, power_sources(payload)

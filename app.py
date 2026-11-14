@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import html
 import math
+import time
 
 import pandas as pd
 import streamlit as st
@@ -20,7 +21,7 @@ import requests
 from folium.plugins import Draw
 from streamlit_folium import st_folium
 
-from trend.area import AreaError, bbox_from_drawing, custom_region, format_bbox, normalize_bbox
+from trend.area import AreaError, custom_region, format_bbox, normalize_bbox, pick_drawn_bbox
 from trend.charts import annual_trend_figure, monthly_figure, sparkline_figure
 from trend.fetch import (
     POWER_VARIABLES,
@@ -34,6 +35,7 @@ from trend.i18n import (
     METHODS,
     chance_phrase,
     lower_first,
+    method_name,
     num,
     p_phrase,
     region_name,
@@ -89,6 +91,8 @@ STYLE = """
   background: #2a78d6; border: 3px solid #fcfcfb; box-shadow: 0 0 0 1px #1c5cab;
 }
 .hero.chance .meter-marker { background: #898781; box-shadow: 0 0 0 1px #52514e; }
+.hero.disputed { border-left-color: #a8501b; }
+.hero.disputed .meter-marker { background: #a8501b; box-shadow: 0 0 0 1px #7a3a14; }
 .meter-labels { display: flex; justify-content: space-between; font-size: 0.8rem; color: #52514e; margin-top: 8px; }
 </style>
 """
@@ -99,11 +103,33 @@ def load_monthly(region_key: str, variable_key: str) -> pd.DataFrame | None:
     return load_processed(region_key, variable_key)
 
 
+TRANSIENT_STATUS = {429, 500, 502, 503, 504}
+
+
 @st.cache_data(show_spinner=False, ttl=24 * 3600, max_entries=64)
 def live_monthly(variable_key: str, bbox: tuple[float, float, float, float]) -> pd.DataFrame:
-    """Fetch a POWER variable live for any rectangle (cached for a day per rectangle)."""
+    """Fetch a POWER variable live for any rectangle (cached for a day per rectangle).
+
+    A quick failure (dropped connection or a temporary server error) is retried once; a timeout is
+    not, so a NASA POWER that hangs does not keep the page waiting twice.
+    """
     variable = VARIABLES[variable_key]
-    monthly, sources = fetch_power_variable(variable, Region("custom", "custom", *bbox), 1981, 2026)
+    region = Region("custom", "custom", *bbox)
+    for attempt in (1, 2):
+        try:
+            monthly, sources = fetch_power_variable(variable, region, 1981, 2026, timeout=(10, 45))
+            break
+        except requests.Timeout:
+            raise
+        except requests.ConnectionError as error:
+            if attempt == 2:
+                raise
+            print(f"NASA POWER connection problem ({variable_key}, {bbox}): {error!r}; retrying once.")
+        except DataSourceError as error:
+            if attempt == 2 or error.status not in TRANSIENT_STATUS:
+                raise
+            print(f"NASA POWER answered HTTP {error.status} ({variable_key}, {bbox}); retrying once.")
+        time.sleep(2)
     monthly = monthly.copy()
     monthly["source"] = f"{variable.product}; live NASA POWER request; POWER sources: {sources}"
     return monthly
@@ -140,9 +166,21 @@ def set_custom_bbox(bbox: tuple[float, float, float, float], widened: bool) -> N
         {
             "custom_bbox": bbox, "area_mode": "custom", "area_error": None, "area_widened": widened,
             "bbox_w": float(bbox[0]), "bbox_s": float(bbox[1]),
-            "bbox_e": float(bbox[2]), "bbox_n": float(bbox[3]),
+            "bbox_e": float(bbox[2]), "bbox_n": float(bbox[3]), "_custom_set": True,
         }
     )
+
+
+def clear_area_error() -> None:
+    st.session_state["area_error"] = None
+
+
+def on_mode_change() -> None:
+    """Start a custom rectangle from the region that was on screen, not from the default one."""
+    clear_area_error()
+    if st.session_state.get("area_mode") == "custom" and not st.session_state.get("_custom_set"):
+        region_key = st.session_state.get("region", next(iter(REGIONS)))
+        set_custom_bbox(REGIONS[region_key].bbox, False)
 
 
 def apply_coords() -> None:
@@ -206,27 +244,35 @@ def chance_meter(p: float, lang: str, real: bool) -> str:
     )
 
 
+def axis_title(name: str, unit: str) -> str:
+    """'Air temperature (°C)', but not 'Vegetation greenness (NDVI) (NDVI)'."""
+    return name if unit.split(" (")[0] in name else f"{name} ({unit})"
+
+
 def open_case(variable_key: str) -> None:
     st.session_state["case"] = variable_key
 
 
 # Demonstration cases suggested by the challenge statement: one click opens a case and period.
 EXAMPLE_CASES = [
-    {"case": "air_temperature", "start": None, "end": None,
+    {"region": "colorado", "case": "air_temperature", "start": None, "end": None,
      "label": {"en": "🔎 Is Colorado warming?", "tr": "🔎 Colorado ısınıyor mu?"}},
-    {"case": "no2", "start": 2005, "end": 2019,
+    {"region": "colorado", "case": "no2", "start": 2005, "end": 2019,
      "label": {"en": "🔎 Did NO₂ fall before 2020?", "tr": "🔎 NO₂ 2020'den önce düştü mü?"}},
-    {"case": "snowfall", "start": None, "end": None,
+    {"region": "colorado", "case": "snowfall", "start": None, "end": None,
      "label": {"en": "🔎 Is snowfall changing?", "tr": "🔎 Kar yağışı değişiyor mu?"}},
 ]
 
 
 def open_example(variable_key: str, start: int | None, end: int | None) -> None:
     st.session_state["case"] = variable_key
+    periods = st.session_state.setdefault("periods", {})
     if start is None:
         st.session_state.pop(f"period_{variable_key}", None)  # full record on the next run
+        periods.pop(variable_key, None)
     else:
         st.session_state[f"period_{variable_key}"] = (start, end)
+        periods[variable_key] = (start, end)
 
 
 # --- Language, shared links and area state -------------------------------------------------------
@@ -243,6 +289,7 @@ if "_url_loaded" not in st.session_state:
             shared_bbox, _ = normalize_bbox(params.get("w"), params.get("s"), params.get("e"), params.get("n"))
             st.session_state["area_mode"] = "custom"
             st.session_state["custom_bbox"] = shared_bbox
+            st.session_state["_custom_set"] = True
         except (AreaError, TypeError, ValueError):
             pass
     if params.get("case") in VARIABLES:
@@ -262,7 +309,7 @@ head_left, head_right = st.columns([6, 1], vertical_alignment="center")
 with head_right:
     st.segmented_control(
         "Language", options=list(LANGUAGES), format_func=lambda k: LANGUAGES[k], key="lang",
-        label_visibility="collapsed",
+        label_visibility="collapsed", required=True,
     )
 lang = st.session_state.get("lang") or "en"
 separators = ",." if lang == "tr" else ".,"
@@ -279,12 +326,12 @@ with st.expander(t(lang, "why_title")):
 with st.sidebar:
     st.header(t(lang, "sidebar_title"))
     st.radio(
-        t(lang, "mode_label"), ["prepared", "custom"], key="area_mode",
+        t(lang, "mode_label"), ["prepared", "custom"], key="area_mode", on_change=on_mode_change,
         format_func=lambda mode: t(lang, "mode_prepared" if mode == "prepared" else "mode_custom"),
     )
     if st.session_state["area_mode"] == "prepared":
         st.selectbox(
-            t(lang, "region_label"), list(REGIONS), key="region",
+            t(lang, "region_label"), list(REGIONS), key="region", on_change=clear_area_error,
             format_func=lambda key: region_name(lang, key, REGIONS[key].name),
         )
     else:
@@ -304,7 +351,7 @@ with st.sidebar:
 custom_mode = st.session_state["area_mode"] == "custom"
 if custom_mode:
     active_bbox = tuple(st.session_state["custom_bbox"])
-    region = custom_region(active_bbox, t(lang, "custom_name", bbox=format_bbox(active_bbox)))
+    region = custom_region(active_bbox, t(lang, "custom_name", bbox=format_bbox(active_bbox, lang)))
     region_key = "custom"
     region_label = region.name
 else:
@@ -317,15 +364,21 @@ st.markdown(f"<div class='step'>{html.escape(t(lang, 'step_where'))}</div>", uns
 st.caption(t(lang, "map_help"))
 map_state = st_folium(
     area_map(active_bbox), height=420, use_container_width=True,
-    returned_objects=["last_active_drawing"], key=f"area_map_{region_key}_{active_bbox}",
+    returned_objects=["last_active_drawing", "all_drawings"],
+    key=f"area_map_{region_key}_{active_bbox}",
 )
-drawn_bbox = bbox_from_drawing((map_state or {}).get("last_active_drawing"))
-if drawn_bbox and drawn_bbox != tuple(active_bbox):
-    st.session_state["drawn_bbox"] = drawn_bbox
-    st.button(
-        t(lang, "use_drawn", bbox=format_bbox(drawn_bbox)), on_click=use_drawn, type="primary",
-        key="use_drawn",
-    )
+drawn_bbox = pick_drawn_bbox(map_state, active_bbox)
+if drawn_bbox:
+    try:
+        normalize_bbox(*drawn_bbox)
+    except AreaError as error:
+        st.error(t(lang, f"err_{error.code}"))
+    else:
+        st.session_state["drawn_bbox"] = drawn_bbox
+        st.button(
+            t(lang, "use_drawn", bbox=format_bbox(drawn_bbox, lang)), on_click=use_drawn,
+            type="primary", key="use_drawn",
+        )
 if custom_mode and st.session_state.get("area_widened"):
     st.info(t(lang, "note_widened"))
 
@@ -333,7 +386,9 @@ if custom_mode and st.session_state.get("area_widened"):
 
 monthly_by_key: dict[str, pd.DataFrame] = {}
 unavailable_status: dict[str, str] = {}
+fetch_failed = False
 if custom_mode:
+    no_data_messages: list[str] = []
     with st.spinner(t(lang, "fetching")):
         for key in VARIABLES:
             if key not in POWER_VARIABLES:
@@ -346,12 +401,18 @@ if custom_mode:
                 message = str(error).lower()
                 if "fill" in message or "no grid cells" in message:
                     name = lower_first(variable_text(lang, VARIABLES[key])["name"])
-                    st.warning(t(lang, "err_no_data", variable=name))
+                    no_data_messages.append(t(lang, "err_no_data", variable=name))
                 else:
-                    st.error(t(lang, "err_fetch"))
-            except requests.RequestException:
+                    print(f"Live fetch failed for {key} {active_bbox}: {error!r}")
+                    fetch_failed = True
+            except requests.RequestException as error:
+                print(f"Live fetch failed for {key} {active_bbox}: {error!r}")
                 unavailable_status[key] = "open"
-                st.error(t(lang, "err_fetch"))
+                fetch_failed = True
+    for message in no_data_messages:
+        st.warning(message)
+    if fetch_failed and monthly_by_key:
+        st.error(t(lang, "err_fetch"))
 else:
     cached = set(available_variable_keys(region_key))
     for key in VARIABLES:
@@ -376,7 +437,11 @@ for key, variable in VARIABLES.items():
     board_results[key] = analyze_trend(annual["year"], annual["value"])
 
 if not annual_by_key:
-    st.warning(t(lang, "no_data_region"))
+    if custom_mode and fetch_failed:
+        st.error(t(lang, "fetch_failed_all"))
+        st.button(t(lang, "retry"), key="retry_fetch")  # any click reruns; failures are not cached
+    else:
+        st.warning(t(lang, "no_data_region"))
     st.stop()
 
 available = [key for key in VARIABLES if key in annual_by_key]
@@ -388,7 +453,7 @@ if st.session_state.get("case") not in available:
 st.markdown(f"<div class='step'>{html.escape(t(lang, 'step_what'))}</div>", unsafe_allow_html=True)
 examples = [
     example for example in EXAMPLE_CASES
-    if region_key == "colorado" and example["case"] in annual_by_key
+    if example["region"] == region_key and example["case"] in annual_by_key
 ]
 if examples:
     st.caption(t(lang, "examples_title"))
@@ -409,9 +474,12 @@ for column, (key, variable) in zip(st.columns(len(VARIABLES)), VARIABLES.items()
             unsafe_allow_html=True,
         )
         if result is not None:
-            arrow = "▲" if result.slope_per_year > 0 else "▼"
+            arrow = ""
+            if result.significant and result.slope_per_year != 0:
+                arrow = "▲ " if result.slope_per_year > 0 else "▼ "
+            rate_text = num(result.slope_per_decade, lang, variable.decimals, signed=True)
             st.markdown(
-                f"<div class='clue-value'>{arrow} {num(result.slope_per_decade, lang, signed=True)}</div>"
+                f"<div class='clue-value'>{arrow}{rate_text}</div>"
                 f"<div class='clue-unit'>{html.escape(texts['annual_unit'])} "
                 f"{html.escape(t(lang, 'per_decade'))}<br>{result.start_year}–{result.end_year}</div>",
                 unsafe_allow_html=True,
@@ -442,6 +510,7 @@ case_key = st.session_state["case"]
 variable = VARIABLES[case_key]
 texts = variable_text(lang, variable)
 unit = texts["annual_unit"]
+decimals = variable.decimals
 subject = lower_first(texts["annual_label"])
 annual_all = annual_by_key[case_key]
 monthly = monthly_by_key[case_key]
@@ -458,18 +527,20 @@ st.write(t(lang, "question_body", name=texts["name"], definition=texts["definiti
 st.markdown(f"<div class='step'>{html.escape(t(lang, 'step_when'))}</div>", unsafe_allow_html=True)
 first_year, last_year = int(annual_all["year"].min()), int(annual_all["year"].max())
 period_key = f"period_{case_key}"
+periods = st.session_state.setdefault("periods", {})
 url_period = st.session_state.pop("_url_period", None)
 if url_period is not None and url_period[0] == case_key:
     restored = parse_period(url_period[1], url_period[2], first_year, last_year)
     if restored is not None:
         st.session_state[period_key] = restored
-saved = st.session_state.get(period_key)
+saved = st.session_state.get(period_key) or periods.get(case_key)
 st.session_state[period_key] = (
     parse_period(saved[0], saved[1], first_year, last_year) if saved else None
 ) or (first_year, last_year)
 start_year, end_year = st.slider(
     t(lang, "period_label"), min_value=first_year, max_value=last_year, key=period_key,
 )
+periods[case_key] = (start_year, end_year)
 state = {"lang": lang, "region": region_key, "case": case_key, "start": str(start_year), "end": str(end_year)}
 for corner, value in zip(("w", "s", "e", "n"), active_bbox if custom_mode else ()):
     state[corner] = str(value)
@@ -482,15 +553,17 @@ if len(annual) < MIN_YEARS:
 result = analyze_trend(annual["year"], annual["value"])
 band = trend_line_band(annual["year"], annual["value"])
 status = case_status(result)
-rate = num(result.slope_per_decade, lang, signed=True)
+rate = num(result.slope_per_decade, lang, decimals, signed=True)
 
 # Step 3: real or chance?
 st.markdown(f"<div class='step'>{html.escape(t(lang, 'step_verdict'))}</div>", unsafe_allow_html=True)
-if result.significant:
+if status == "disputed":
+    headline, hero_class = t(lang, "headline_disputed"), "disputed"
+elif result.significant:
     headline = t(lang, "headline_up" if result.slope_per_year > 0 else "headline_down")
+    hero_class = "real"
 else:
-    headline = t(lang, "headline_chance")
-hero_class = "real" if result.significant else "chance"
+    headline, hero_class = t(lang, "headline_chance"), "chance"
 st.markdown(
     f"<div class='hero {hero_class}'>"
     f"<div class='hero-title'>{html.escape(headline)}</div>"
@@ -509,10 +582,12 @@ with tile_how.container(border=True):
     st.caption(t(lang, "how_much"))
     st.markdown(f"**{rate} {unit} {t(lang, 'per_decade')}**")
     low, high = result.ci_per_decade
-    st.caption(t(lang, "ci", low=num(low, lang, signed=True), high=num(high, lang, signed=True)))
+    st.caption(
+        t(lang, "ci", low=num(low, lang, decimals, signed=True), high=num(high, lang, decimals, signed=True))
+    )
 with tile_total.container(border=True):
     st.caption(t(lang, "total_change"))
-    st.markdown(f"**{num(result.total_change, lang, signed=True)} {unit}**")
+    st.markdown(f"**{num(result.total_change, lang, decimals, signed=True)} {unit}**")
     st.caption(t(lang, "along_trend"))
 with tile_used.container(border=True):
     st.caption(t(lang, "evidence_used"))
@@ -524,8 +599,9 @@ if result.significant:
         t(
             lang, "verdict_sig", region=region_label, subject=subject,
             verb=t(lang, "verb_up" if result.slope_per_year > 0 else "verb_down"),
-            rate=num(abs(result.slope_per_decade), lang), unit=unit, start=result.start_year,
-            end=result.end_year, total=num(abs(result.total_change), lang),
+            rate=num(abs(result.slope_per_decade), lang, decimals), unit=unit,
+            start=result.start_year, end=result.end_year,
+            total=num(abs(result.total_change), lang, decimals),
             chance=chance_phrase(result.p_value, lang),
         )
     )
@@ -557,9 +633,10 @@ st.plotly_chart(
         trend_name=t(lang, "trend_name", rate=f"{rate} {unit} {t(lang, 'per_decade')}"),
         band_name=t(lang, "band_name"),
         x_title=texts["year_axis_label"],
-        y_title=f"{texts['name']} ({unit})",
+        y_title=axis_title(texts["name"], unit),
         unit=unit,
         separators=separators,
+        decimals=decimals,
     ),
     width="stretch", theme=None, config={"displaylogo": False}, key="evidence_chart",
 )
@@ -567,6 +644,8 @@ dropped = [y for y in incomplete_by_key[case_key] if start_year - 1 <= y <= end_
 basis = t(lang, "based_on", n=result.n_years, start=result.start_year, end=result.end_year)
 if dropped:
     basis += t(lang, "not_used", years=", ".join(str(y) for y in dropped))
+if result.n_effective < 0.9 * result.n_years:
+    basis += t(lang, "neff_note", n=result.n_years, n_eff=num(result.n_effective, lang, 0))
 st.caption(basis)
 
 # Step 5: the second witness
@@ -575,9 +654,9 @@ found = t(lang, {"increasing": "found_increasing", "decreasing": "found_decreasi
     result.mk_trend, "found_none"))
 st.markdown(
     t(
-        lang, "witness_agrees" if result.agrees else "witness_disagrees", method=result.mk_method,
-        found=found, p=p_phrase(result.mk_p_value, lang),
-        sen=num(result.sen_slope_per_decade, lang, signed=True), unit=unit,
+        lang, "witness_agrees" if result.agrees else "witness_disagrees",
+        method=method_name(lang, result.mk_method), found=found, p=p_phrase(result.mk_p_value, lang),
+        sen=num(result.sen_slope_per_decade, lang, decimals, signed=True), unit=unit,
     )
 )
 if result.end_year == last_year and result.n_years - 1 >= MIN_YEARS:
@@ -585,7 +664,7 @@ if result.end_year == last_year and result.n_years - 1 >= MIN_YEARS:
     st.caption(
         t(
             lang, "cross_exam", year=last_year,
-            rate=num(without_last.slope_per_decade, lang, signed=True), unit=unit,
+            rate=num(without_last.slope_per_decade, lang, decimals, signed=True), unit=unit,
             p=p_phrase(without_last.p_value, lang),
             sig=t(lang, "significant" if without_last.significant else "not_significant"),
         )
@@ -602,8 +681,8 @@ with st.expander(t(lang, "monthly_title")):
     in_period = monthly[monthly["date"].dt.year.between(start_year - 1, end_year)]
     st.plotly_chart(
         monthly_figure(
-            in_period, x_title=t(lang, "month_axis"), y_title=f"{texts['name']} ({texts['unit']})",
-            unit=texts["unit"], separators=separators,
+            in_period, x_title=t(lang, "month_axis"), y_title=axis_title(texts["name"], texts["unit"]),
+            unit=texts["unit"], separators=separators, decimals=decimals,
         ),
         width="stretch", theme=None, config={"displaylogo": False}, key="monthly_chart",
     )
@@ -620,12 +699,17 @@ with st.expander(t(lang, "table_title")):
     if "source" in monthly.columns:
         st.caption(t(lang, "source_recorded", source=monthly["source"].iloc[0]))
     results_row = {
-        "region": region.name,
+        "region": t("en", "custom_name", bbox=format_bbox(active_bbox)) if custom_mode else region.name,
+        "west": active_bbox[0],
+        "south": active_bbox[1],
+        "east": active_bbox[2],
+        "north": active_bbox[3],
         "variable": variable.name,
         "unit": variable.annual_unit,
         "start_year": result.start_year,
         "end_year": result.end_year,
         "n_years": result.n_years,
+        "effective_sample_size": round(result.n_effective, 1),
         "ols_slope_per_decade": result.slope_per_decade,
         "ci95_low_per_decade": result.ci_per_decade[0],
         "ci95_high_per_decade": result.ci_per_decade[1],
@@ -639,14 +723,17 @@ with st.expander(t(lang, "table_title")):
         "lag1_autocorrelation": result.lag1_autocorrelation,
         "verdict": status_text("en", status)[0],
     }
+    file_stem = (
+        "custom_" + "_".join(f"{v:g}" for v in active_bbox) if custom_mode else region_key
+    ) + f"_{case_key}"
     col_a, col_b = st.columns(2)
     col_a.download_button(
         t(lang, "dl_annual"), annual.to_csv(index=False).encode("utf-8"),
-        file_name=f"{region_key}_{case_key}_annual.csv", mime="text/csv",
+        file_name=f"{file_stem}_annual.csv", mime="text/csv",
     )
     col_b.download_button(
         t(lang, "dl_results"), pd.DataFrame([results_row]).to_csv(index=False).encode("utf-8"),
-        file_name=f"{region_key}_{case_key}_case_results.csv", mime="text/csv",
+        file_name=f"{file_stem}_case_results.csv", mime="text/csv",
     )
 
 with st.expander(t(lang, "methods_title")):

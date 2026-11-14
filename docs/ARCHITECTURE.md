@@ -1,7 +1,7 @@
-# Architecture Plan: Earth System Trend Detective (Team Avni)
+# Architecture: Earth System Trend Detective (Team Avni)
 
-> v0.2, 2026-11-14. Written with AI assistance (Claude Opus 5.5), reviewed by Claude Fable.
-> The idea and all product decisions come from Team Avni.
+> v0.3, 2026-11-14. Written with AI assistance (Claude Opus 5.5), reviewed by Claude Fable 5.2.
+> The idea and the product decisions come from Team Avni (see "Decisions made by the team").
 
 ## Goal (from the challenge statement)
 
@@ -9,11 +9,14 @@ A user picks an Earth-science variable and a region. The tool builds a long time
 NASA data, plots it, and answers four questions: **what** is changing, **where**, **by how much**,
 and **is the change statistically significant?** Visualization plus analysis is the full scope.
 
-## Team decisions
+## Decisions made by the team
 
-- End users explore the data themselves.
-- Regions: start with one US region (**Colorado**), then add more regions.
+- End users explore the data themselves; the audience is the team, the judges and later the public.
 - Variables: **air temperature**, **air pollution (NO2)**, **snowfall**, **vegetation greenness (NDVI)**.
+- Regions: **Colorado** first, then **Istanbul–Marmara**; later regions reuse the same pipeline.
+- Any place on Earth: a rectangle the user draws, moves and resizes on a map or types in.
+- Theme and flow: a "secret expert detective"; investigation board plus case files; pick a clue,
+  choose the period, then a "real or chance?" verdict; English by default with a Turkish switch.
 
 ## Data sources (verified 2026-11-14)
 
@@ -21,26 +24,34 @@ and **is the change statistically significant?** Visualization plus analysis is 
 |---|---|---|---|---|
 | Air temperature at 2 m | NASA POWER monthly `T2M` (MERRA-2 based), 0.5 x 0.625 deg | POWER regional API, one parameter per request | none | 1981 to present |
 | Snowfall | NASA POWER monthly `PRECSNOLAND` (MERRA-2 based, mm/day) | POWER regional API | none | 1981 to present |
-| Tropospheric NO2 | OMI `OMNO2d` v004 `ColumnAmountNO2TropCloudScreened` (molecules/cm2), daily, 0.25 deg | Giovanni area-averaged time series CSV, requested in 5-year chunks | Earthdata Login | Oct 2004 to Nov 2026 |
+| Tropospheric NO2 | OMI `OMNO2d` v004 `ColumnAmountNO2TropCloudScreened` (molecules/cm2), daily, 0.25 deg; doi:10.5067/AURA/OMI/DATA3407 | Giovanni area-averaged time series CSV, requested in 5-year chunks | Earthdata Login | Oct 2004 to Nov 2026 |
 | NDVI | MODIS Terra `MOD13A3` v061, monthly, 1 km (AppEEARS does not offer MOD13C2) | AppEEARS area request (statistics CSV) | Earthdata Login | Feb 2000 to present |
 
 Verification notes:
-- POWER regional API returns 99 grid cells over the Colorado box; requesting two parameters at once returns HTTP 422, so we request one parameter at a time.
-- The POWER response has a 13th "month" key per year (the annual value). We drop it and compute annual values ourselves.
-- Giovanni lists `OMNO2d_004_ColumnAmountNO2TropCloudScreened` (data through 2026-11-11). Giovanni has **no NDVI** product, so NDVI goes through AppEEARS.
+- POWER returns 99 grid cells over the Colorado box and 25 over the Marmara box; requesting two
+  parameters at once returns HTTP 422, so we request one parameter at a time.
+- POWER regional requests need 2 to 10 degrees in each direction, checked on the plain
+  floating-point difference of the numbers sent; `trend/area.py` enforces this on the rounded values.
+- The POWER response has a 13th "month" key per year (the annual value). We drop it and compute
+  annual values ourselves. Land-only variables (snowfall) leave sea cells empty; those cells are
+  excluded.
+- Giovanni has **no NDVI** product, so NDVI goes through AppEEARS; open-sea pixels have no NDVI.
 
-Region: Colorado bounding box W -109.05, S 37.0, E -102.04, N 41.0 (the state is almost a rectangle).
+Regions (W, S, E, N): Colorado -109.05, 37.0, -102.04, 41.0; Istanbul–Marmara 27.0, 40.0, 30.0, 42.0.
 Area averages: cosine-latitude-weighted mean of POWER grid cells. Giovanni and AppEEARS compute their
-own area statistics; we do not claim cosine weighting for those paths.
+own area statistics over the same boxes; we do not claim cosine weighting for those paths.
 
 ## Data flow
 
-1. `scripts/prefetch.py` writes `data/processed/<region>_<variable>.csv`
-   (columns: `date, value, unit, source`). The files are small and committed, so the demo never
-   depends on NASA servers being up.
-2. Giovanni and AppEEARS downloads go to `data/raw/` (git-ignored) and are converted by loaders
+1. Prepared regions: `scripts/prefetch.py` writes `data/processed/<region>_<variable>.csv`
+   (columns: `date, value, unit, source` plus a count column). The files are small and committed,
+   so the prepared regions never depend on NASA servers being up.
+2. Giovanni and AppEEARS downloads go to `data/raw/` (git-ignored) as
+   `giovanni_no2_<region>_*.csv` and `appeears_ndvi_<region>_*.csv`, and are converted by loaders
    that handle metadata header rows, fill values and scale factors.
-3. The app reads only `data/processed/`.
+3. Custom rectangles: the app fetches temperature and snowfall live from the POWER API with a short
+   timeout, retries a dropped connection once, and caches each rectangle for 24 hours. NO2 and NDVI
+   are marked "Prepared regions only" there.
 
 ## Statistics (the core of the Validity score)
 
@@ -56,32 +67,41 @@ autocorrelation. A year enters the analysis only if it is complete for its aggre
 
 Tests on the annual series:
 - **Headline:** OLS linear trend with slope, 95% confidence interval and two-sided t-test p-value.
-- **Robustness check:** Mann-Kendall with Sen's slope, shown as "agrees" or "disagrees" with the headline.
-  Hamed-Rao modified Mann-Kendall only when lag-1 autocorrelation of the OLS residuals is significant.
+  When the lag-1 autocorrelation r1 of the residuals is positive, the standard error and degrees of
+  freedom use the effective sample size n_eff = n (1 - r1) / (1 + r1) (Santer et al., 2000).
+- **Second witness:** Mann-Kendall with Sen's slope, shown as "agrees" or "disagrees" with the
+  headline. It uses the same persistence rule: when r1 > 0 its z-score is scaled by sqrt(n_eff / n)
+  (an effective-sample-size correction in the spirit of Yue and Wang, 2004).
+- **Stamps:** Confirmed (significant, witness agrees), Disputed (significant, witness disagrees),
+  No evidence (not significant), Weak clue (only the witness sees a trend), Open case (no data).
 - **Rate:** per decade. **Total change:** slope x span of years, not last minus first.
 - **Guards:** block analysis below 10 years, warn below 20 years, always show n and the period.
   A non-significant result is worded "no significant trend detected", never "no change".
 - **Multiple testing:** one sentence in the methods explaining that many tests at alpha = 0.05 can
-  produce false positives; optional Holm adjustment in any summary table.
+  produce false positives.
 - **Chart band:** labelled as the 95% confidence band of the fitted line, not a prediction interval.
 
 ## Variable caveats shown in the app
 
 - Snowfall is **modelled** liquid-water-equivalent snowfall from the MERRA-2 reanalysis, not observed
   snow depth. Reanalysis trends can partly reflect changes in the observing system.
-- NO2 statewide means are dominated by rural background, so city signals (Denver) are diluted.
-  OMI has a row anomaly that reduces sampling. 2020 shows a COVID-related dip.
+- NO2 is an average over the whole box (rural areas and, near coasts, the sea), so city signals are
+  diluted. OMI has a row anomaly that reduces sampling; 2020 shows a COVID-related dip; the aging
+  instrument and Aura's orbit drift call for extra caution after about 2022.
 - NDVI: MODIS Terra orbit drift after about 2020. Sanity check that area means lie between -0.2 and 1.
 
 ## User interface (Streamlit)
 
-- Region and variable pickers; each variable shows a plain-language definition, unit and caveats.
-- Period selector, guarded by the length rules above.
-- Chart: monthly values (light), annual values (bold), trend line with the labelled confidence band.
-- Result card: What / Where / How much / Significant?
-- Data source with product short name, version and DOI under every chart.
-- "Methods and limitations" expander; CSV download of the series and results.
-- "Detective" experience details: to be defined by the participant.
+- Left panel: prepared region or custom rectangle (typed corners); world map with the rectangle,
+  drawable and editable with the Leaflet.draw tools.
+- Investigation board: one card per measurement with the rate per decade, a sparkline and a stamp.
+- Case file: question and plain-language definition, period slider, "Real or chance?" hero with a
+  chance meter (p-value on a log scale with the 5% line), rate / total change / years tiles,
+  verdict sentence, share link, evidence chart with the confidence band, second witness,
+  cross-examination without the newest year, case notes (caveats, monthly data, data table, CSV
+  downloads, methods), data source with DOI.
+- English by default, Turkish switch (decimal comma in Turkish); share links restore language,
+  region or rectangle, case and period.
 
 ## Project structure
 
@@ -89,62 +109,50 @@ Tests on the annual series:
 NasaSpaceAppsChallenge/
 ├── app.py                  # Streamlit entry point
 ├── trend/
-│   ├── __init__.py
-│   ├── regions.py          # region catalog (Colorado first)
+│   ├── regions.py          # region catalog
 │   ├── variables.py        # variable catalog: definition, unit, product, aggregation, caveats
-│   ├── fetch.py            # POWER API client; loaders for Giovanni and AppEEARS CSVs
+│   ├── fetch.py            # POWER API client; Giovanni loader; cached CSV storage
+│   ├── appeears.py         # AppEEARS API client
 │   ├── stats.py            # annual aggregation, OLS + CI + t-test, Mann-Kendall, Sen's slope
-│   └── charts.py           # Plotly figures
-├── scripts/
-│   └── prefetch.py         # fetch and cache region x variable CSVs
-├── data/
-│   ├── raw/                # manual downloads (git-ignored)
-│   └── processed/          # small cached CSVs (committed)
-├── tests/
-│   └── test_stats.py
-├── docs/ARCHITECTURE.md
+│   ├── area.py             # custom rectangles
+│   ├── charts.py           # Plotly figures
+│   ├── i18n.py             # English and Turkish texts
+│   └── share.py            # share links
+├── scripts/prefetch.py     # fetch and cache region x variable CSVs
+├── data/raw/               # manual downloads (git-ignored)
+├── data/processed/         # small cached CSVs (committed)
+├── tests/                  # test_stats, test_fetch, test_area, test_share, test_app
+├── docs/                   # ARCHITECTURE.md, SUBMISSION.md
 ├── requirements.txt        # app dependencies (Streamlit Cloud)
-├── requirements-dev.txt    # scripts and tests
-├── .env.example            # placeholder names only
-└── README.md               # overview, run instructions, citations, Use of AI
+└── requirements-dev.txt    # scripts and tests
 ```
 
 ## Testing
 
-- `tests/test_stats.py`: known-slope synthetic series (detected, slope within tolerance), white noise
-  (not significant in most seeds), completeness rules, water-year labelling, total-change formula.
-- Loader tests with small fixture CSVs: header rows, fill values, scale factors.
-- External cross-check: compare the Colorado temperature trend with NOAA's published statewide trend.
+80 automated tests (`python -m pytest -q`), all offline:
+- statistics: known-slope series, white and autocorrelated noise (false-positive rates of both
+  tests), completeness rules, water-year labelling, total change, constant series;
+- loaders: POWER payload parsing, fill values, land-only cells, Giovanni CSVs, retry rules;
+- rectangles: validation, the 2 to 10 degree limits in plain floats, drawn and edited shapes;
+- app: every case file in both languages and both regions, examples, periods, custom areas with
+  synthetic live data, an offline NASA POWER.
 
 ## Deployment
 
-Streamlit Community Cloud from the public GitHub repository, with the Python version set and
-trimmed `requirements.txt`. A skeleton is deployed early (Saturday midday). No secrets are needed.
+Streamlit Community Cloud from the public GitHub repository (Python 3.13, pinned
+`requirements.txt`); every push to `main` redeploys. No secrets are needed. Error details in the
+browser are limited to the error type.
 
 ## Scope
 
-Cut: seasonal Mann-Kendall, live refresh, the earthaccess download path.
-Extra regions use POWER variables first; NO2 and NDVI only if the manual downloads are quick to repeat.
+Cut: seasonal Mann-Kendall, NO2 and NDVI for custom rectangles, the earthaccess download path.
 Feature freeze: Sunday 12:00.
 
 ## Rules compliance
 
-- English UI and README.
+- English UI by default (Turkish is an optional switch) and English documentation.
 - AI use disclosed in the README "Use of AI" section, in file headers, in commit trailers and on the
   submission page.
-- Every dataset and library cited, with DOIs where available. No NASA logos or branding.
-- Apache-2.0 license (already in the repository).
-
-## Milestones
-
-1. Data requests first: Giovanni NO2 chunks and AppEEARS NDVI submitted by the participant.
-2. Temperature end to end (POWER, statistics, chart) and a deployed skeleton: Saturday midday.
-3. Snowfall (POWER): Saturday afternoon.
-4. NO2 and NDVI loaders once the downloads arrive: Saturday evening.
-5. First full version deployed, fallback 30-second demo recorded: Saturday night.
-6. Polish, more regions, README, demo, submission: Sunday.
-
-## Open questions for the participant
-
-- The "detective" experience: who uses it, what they see first, what makes it different.
-- Which regions come next.
+- Every dataset, library, font and map source cited, with DOIs where available. No NASA logos or
+  branding.
+- Apache-2.0 license.

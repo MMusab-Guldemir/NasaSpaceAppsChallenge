@@ -53,8 +53,12 @@ def list_tasks(token: str) -> list[dict]:
     return response.json()
 
 
-def download_statistics(token: str, task_id: str, out_dir: Path) -> list[Path]:
-    """Download the statistics CSV files of a finished area request."""
+def download_statistics(token: str, task_id: str, out_dir: Path, prefix: str = "") -> list[Path]:
+    """Download the statistics CSV files of a finished area request.
+
+    ``prefix`` is put in front of each file name, for example ``appeears_ndvi_marmara_``, which is
+    the name pattern scripts/prefetch.py looks for.
+    """
     headers = {"Authorization": f"Bearer {token}"}
     bundle = requests.get(f"{API}/bundle/{task_id}", headers=headers, timeout=60)
     bundle.raise_for_status()
@@ -69,7 +73,7 @@ def download_statistics(token: str, task_id: str, out_dir: Path) -> list[Path]:
             allow_redirects=True,
         )
         response.raise_for_status()
-        path = out_dir / Path(name).name
+        path = out_dir / f"{prefix}{Path(name).name}"
         path.write_bytes(response.content)
         saved.append(path)
     return saved

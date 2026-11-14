@@ -141,3 +141,69 @@ def test_daily_rate_to_monthly_total_uses_days_in_month():
     )
     totals = daily_rate_to_monthly_total(frame)
     assert totals["value"].tolist() == [28.0, 29.0, 62.0]
+
+
+class _Answer:
+    def __init__(self, status, body):
+        self.status_code = status
+        self._body = body
+        self.text = str(body)
+
+    def json(self):
+        return self._body
+
+
+def _power_payload(year):
+    return {
+        "header": {"fill_value": -999.0, "sources": ["MERRA2"]},
+        "features": [
+            {"geometry": {"coordinates": [28.0, 41.0, 0]},
+             "properties": {"parameter": {"T2M": {f"{year}{m:02d}": 10.0 + m for m in range(1, 13)}}}},
+        ],
+    }
+
+
+def _patched_get(monkeypatch, answers):
+    calls = []
+
+    def fake_get(url, params=None, timeout=None):
+        calls.append((params["end"], timeout))
+        return answers[len(calls) - 1]
+
+    monkeypatch.setattr("trend.fetch.requests.get", fake_get)
+    return calls
+
+
+def test_end_date_rejection_retries_once_without_the_newest_year(monkeypatch):
+    from trend.fetch import fetch_power_variable
+    from trend.regions import REGIONS
+    from trend.variables import get_variable
+
+    end_date = {"messages": ["Please provide a correct end date. Your end date out of range."]}
+    calls = _patched_get(monkeypatch, [_Answer(422, end_date), _Answer(200, _power_payload(2025))])
+    monthly, _ = fetch_power_variable(get_variable("air_temperature"), REGIONS["marmara"], 2025, 2026, timeout=(5, 20))
+    assert [c[0] for c in calls] == [2026, 2025]
+    assert all(c[1] == (5, 20) for c in calls)
+    assert len(monthly) == 12
+
+
+def test_other_request_errors_are_not_retried(monkeypatch):
+    from trend.fetch import DataSourceError, fetch_power_variable
+    from trend.regions import REGIONS
+    from trend.variables import get_variable
+
+    box = {"messages": ["Please provide at least a 2 degree range in latitude."]}
+    calls = _patched_get(monkeypatch, [_Answer(422, box)])
+    with pytest.raises(DataSourceError):
+        fetch_power_variable(get_variable("air_temperature"), REGIONS["marmara"], 2025, 2026)
+    assert len(calls) == 1
+
+
+def test_unexpected_payload_becomes_a_data_source_error(monkeypatch):
+    from trend.fetch import DataSourceError, fetch_power_variable
+    from trend.regions import REGIONS
+    from trend.variables import get_variable
+
+    _patched_get(monkeypatch, [_Answer(200, {"header": {}, "features": "oops"})])
+    with pytest.raises(DataSourceError):
+        fetch_power_variable(get_variable("air_temperature"), REGIONS["marmara"], 2025, 2026)

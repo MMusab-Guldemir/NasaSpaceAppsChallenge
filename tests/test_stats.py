@@ -9,6 +9,8 @@ import pytest
 
 from trend.stats import (
     MIN_YEARS,
+    MK_ADJUSTED,
+    MK_PLAIN,
     analyze_trend,
     format_p_value,
     to_annual,
@@ -148,11 +150,26 @@ def test_positive_autocorrelation_does_not_inflate_false_positives():
     assert hits / 300 < 0.13
 
 
-def test_positive_autocorrelation_switches_to_hamed_rao():
+def test_second_witness_uses_the_same_persistence_rule():
     rng = np.random.default_rng(5)
     years = np.arange(1981, 2026)
-    methods = {analyze_trend(years, ar1_series(rng, 0.7, years.size)).mk_method for _ in range(20)}
-    assert any(m.startswith("Hamed-Rao") for m in methods)
+    for _ in range(20):
+        result = analyze_trend(years, ar1_series(rng, 0.7, years.size))
+        if result.lag1_autocorrelation > 0:
+            assert result.mk_method == MK_ADJUSTED
+            assert result.n_effective < result.n_years
+
+
+def test_second_witness_is_not_more_liberal_under_persistence():
+    # Trendless AR(1) noise: without the shared persistence rule the Mann-Kendall test fired in
+    # about 20-26% of runs and produced many spurious "weak clue" stamps.
+    rng = np.random.default_rng(31)
+    years = np.arange(1996, 2026)
+    runs = [analyze_trend(years, ar1_series(rng, 0.5, years.size)) for _ in range(300)]
+    mk_hits = sum(r.mk_trend != "no trend" for r in runs) / len(runs)
+    weak = sum((not r.significant) and r.mk_trend != "no trend" for r in runs) / len(runs)
+    assert mk_hits < 0.16
+    assert weak < 0.06
 
 
 def test_negative_autocorrelation_keeps_the_original_test():
@@ -160,7 +177,7 @@ def test_negative_autocorrelation_keeps_the_original_test():
     years = np.arange(1981, 2026)
     for _ in range(20):
         result = analyze_trend(years, ar1_series(rng, -0.6, years.size))
-        assert result.mk_method == "Mann-Kendall"
+        assert result.mk_method == MK_PLAIN
         assert result.n_effective == result.n_years
 
 

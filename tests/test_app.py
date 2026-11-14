@@ -76,3 +76,70 @@ def test_turkish_numbers_use_a_decimal_comma():
     at = run_app("tr")
     markdown = " ".join(md.value for md in at.markdown)
     assert "+0,33" in markdown
+
+
+def test_marmara_ndvi_shows_three_decimals_and_a_borderline_headline():
+    at = AppTest.from_file(APP, default_timeout=60)
+    at.session_state["region"] = "marmara"
+    at.run()
+    at.button(key="open_ndvi").click().run()
+    assert not at.exception
+    markdown = " ".join(md.value for md in at.markdown)
+    assert "+0.014" in markdown
+    assert TEXT["en"]["headline_disputed"] in markdown
+
+
+def test_period_is_remembered_when_coming_back_to_a_case():
+    at = run_app("en")
+    at.slider(key="period_air_temperature").set_value((1990, 2010)).run()
+    at.button(key="open_snowfall").click().run()
+    at.button(key="open_air_temperature").click().run()
+    assert not at.exception
+    assert at.slider(key="period_air_temperature").value == (1990, 2010)
+
+
+def test_turkish_confirmed_stamp_wording():
+    at = run_app("tr")
+    markdown = " ".join(md.value for md in at.markdown)
+    assert "Doğrulandı" in markdown
+    assert "Kanıtlandı" not in markdown
+
+
+def _synthetic_fetch(variable, region, start_year, end_year, timeout=300):
+    import numpy as np
+    import pandas as pd
+
+    dates = pd.date_range("1981-01-01", "2025-12-01", freq="MS")
+    values = 10 + 0.03 * (dates.year - 1981) + np.random.default_rng(1).normal(0, 0.5, dates.size)
+    return pd.DataFrame({"date": dates, "value": values, "n_cells": 25}), "MERRA2"
+
+
+def test_switching_to_custom_starts_from_the_region_on_screen(monkeypatch):
+    import trend.fetch
+
+    monkeypatch.setattr(trend.fetch, "fetch_power_variable", _synthetic_fetch)
+    at = AppTest.from_file(APP, default_timeout=60)
+    at.session_state["region"] = "marmara"
+    at.run()
+    at.radio(key="area_mode").set_value("custom").run()
+    assert not at.exception
+    assert tuple(at.session_state["custom_bbox"]) == (27.0, 40.0, 30.0, 42.0)
+
+
+def test_offline_custom_area_shows_one_message_and_a_retry_button(monkeypatch):
+    import requests
+
+    import trend.fetch
+
+    def offline(*args, **kwargs):
+        raise requests.ConnectionError("offline")
+
+    monkeypatch.setattr(trend.fetch, "fetch_power_variable", offline)
+    at = AppTest.from_file(APP, default_timeout=60)
+    at.session_state["area_mode"] = "custom"
+    at.session_state["custom_bbox"] = (101.0, 11.0, 104.0, 14.0)  # not cached by other tests
+    at.run()
+    assert not at.exception
+    assert [error.value for error in at.error] == [TEXT["en"]["fetch_failed_all"]]
+    assert at.button(key="retry_fetch") is not None
+    assert not at.warning
