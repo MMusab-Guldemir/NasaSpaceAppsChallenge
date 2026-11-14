@@ -221,6 +221,7 @@ def _fake_fetch(variable_key, bbox, cache_dir=None, timeout=300, end_year=2025):
 @pytest.mark.parametrize("lang", ["en", "tr"])
 def test_app_shows_the_crime_scene_layer_with_its_summary(monkeypatch, lang):
     monkeypatch.setattr(tm, "fetch_cells", _fake_fetch)
+    monkeypatch.setattr("trend.timelapse.load_annual_cells", lambda *args, **kwargs: None)  # take the live path
     at = AppTest.from_file(APP, default_timeout=90)
     at.session_state["lang"] = lang
     at.session_state["map_layer"] = "scene"
@@ -322,6 +323,7 @@ def test_app_remembers_a_failed_grid_fetch(monkeypatch):
         raise requests.ConnectionError("no answer")
 
     monkeypatch.setattr(tm, "fetch_cells", failing_fetch)
+    monkeypatch.setattr("trend.timelapse.load_annual_cells", lambda *args, **kwargs: None)  # take the live path
     st.cache_data.clear()
     at = AppTest.from_file(APP, default_timeout=90)
     at.session_state["map_layer"] = "scene"
@@ -330,3 +332,33 @@ def test_app_remembers_a_failed_grid_fetch(monkeypatch):
     assert not at.exception
     assert len(calls) == 1
     assert any(tm.MAP_TEXT["en"]["fetch_failed"] in w.value for w in at.warning)
+
+
+def test_prepared_regions_test_their_cells_from_the_yearly_files_without_a_request(monkeypatch):
+    import streamlit as st
+
+    def no_request(*args, **kwargs):
+        raise AssertionError("a prepared region must not ask NASA POWER for its grid cells")
+
+    monkeypatch.setattr(tm, "fetch_cells", no_request)
+    st.cache_data.clear()
+    at = AppTest.from_file(APP, default_timeout=90)
+    at.session_state["map_layer"] = "scene"
+    at.run()
+    assert not at.exception
+    assert not any(tm.MAP_TEXT["en"]["fetch_failed"] in w.value for w in at.warning)
+    assert at.subheader  # the cell summary is shown
+
+
+def test_yearly_and_monthly_paths_give_the_same_cells():
+    from trend.timelapse import annual_cells
+    rng = np.random.default_rng(5)
+    monthly = []
+    for lat, lon in [(40.0, 27.5), (40.5, 27.5), (40.0, 28.125)]:
+        for year in range(1981, 2026):
+            for month in range(1, 13):
+                monthly.append((lat, lon, pd.Timestamp(year, month, 1), 10 + 0.03 * (year - 1981) + rng.normal(0, 0.5)))
+    cells = pd.DataFrame(monthly, columns=["lat", "lon", "date", "value"])
+    old = tm.cell_trends(cells, "air_temperature")
+    new = tm.cell_trends_from_annual(annual_cells(cells, "air_temperature"), "air_temperature")
+    pd.testing.assert_frame_equal(old.reset_index(drop=True), new.reset_index(drop=True))

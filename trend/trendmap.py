@@ -43,6 +43,7 @@ NO_SNOW_MAX_MM = 1.0  # same rule as the app: a cell where snowfall never reache
 FIRST_YEAR = {"aod": 2001}  # CERES SYN1deg aerosols start in 2001; the MERRA-2 values in 1981
 DEFAULT_FIRST_YEAR = 1981
 LAST_YEAR = 2026  # like the board; POWER's "end date out of range" answer is retried one year earlier
+YEARLY_DECIMALS = 6  # yearly cell values are compared at this precision (as stored in data/processed/grid)
 MAX_MAP_SPAN = 10.0  # degrees; a larger rectangle has too many cells for a readable map
 EDGE = 1e-6
 
@@ -336,13 +337,14 @@ def mark_dots(trends: pd.DataFrame) -> pd.DataFrame:
     return trends
 
 
-def cell_trends(cells: pd.DataFrame, variable_key: str, start_year: int | None = None,
-                end_year: int | None = None) -> pd.DataFrame:
-    """The app's trend test for every cell with enough complete years, plus the FDR dots."""
-    variable = VARIABLES[variable_key]
+def _trends_from_yearly(yearly, variable_key: str, start_year: int | None,
+                        end_year: int | None) -> pd.DataFrame:
+    """The trend test for each (lat, lon, yearly values) item, plus the FDR dots and the snow-free count."""
     records, no_snow = [], 0
-    for (lat, lon), monthly in cells.groupby(["lat", "lon"], sort=True):
-        annual, _ = to_annual(monthly.loc[:, ["date", "value"]], variable)
+    for lat, lon, annual in yearly:
+        # Six decimals, as in the prepared files: float noise from monthly sums (0.17 * 31) must not
+        # decide whether two years tie in the rank test.
+        annual = annual.assign(value=annual["value"].round(YEARLY_DECIMALS))
         if start_year is not None:
             annual = annual[annual["year"] >= start_year]
         if end_year is not None:
@@ -373,6 +375,37 @@ def cell_trends(cells: pd.DataFrame, variable_key: str, start_year: int | None =
         trends = mark_dots(trends).loc[:, TREND_COLUMNS]
     trends.attrs["no_snow_cells"] = no_snow
     return trends
+
+
+def cell_trends(cells: pd.DataFrame, variable_key: str, start_year: int | None = None,
+                end_year: int | None = None) -> pd.DataFrame:
+    """The app's trend test for every cell with enough complete years, plus the FDR dots.
+
+    ``cells`` are monthly values per cell (``fetch_cells``); each cell is turned into complete years
+    with the app's own yearly rule first.
+    """
+    variable = VARIABLES[variable_key]
+
+    def yearly():
+        for (lat, lon), monthly in cells.groupby(["lat", "lon"], sort=True):
+            annual, _ = to_annual(monthly.loc[:, ["date", "value"]], variable)
+            yield lat, lon, annual
+
+    return _trends_from_yearly(yearly(), variable_key, start_year, end_year)
+
+
+def cell_trends_from_annual(annual: pd.DataFrame, variable_key: str, start_year: int | None = None,
+                            end_year: int | None = None) -> pd.DataFrame:
+    """The same test from yearly values per cell (``lat, lon, year, value``), such as the prepared files.
+
+    The prepared files in data/processed/grid were built with the same yearly rule, so this skips the
+    slow monthly-to-yearly step for the prepared regions and needs no request to NASA POWER.
+    """
+    def yearly():
+        for (lat, lon), group in annual.groupby(["lat", "lon"], sort=True):
+            yield lat, lon, group.loc[:, ["year", "value"]].sort_values("year").reset_index(drop=True)
+
+    return _trends_from_yearly(yearly(), variable_key, start_year, end_year)
 
 
 def cell_size(cells: pd.DataFrame) -> tuple[float, float]:

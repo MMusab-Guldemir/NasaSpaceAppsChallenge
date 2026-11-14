@@ -97,6 +97,7 @@ from trend.trendmap import (
     add_overlay,
     cell_size,
     cell_trends,
+    cell_trends_from_annual,
     fetch_cells,
     legend_html,
     map_reasons,
@@ -252,27 +253,34 @@ def grid_cells(variable_key: str, bbox: tuple[float, float, float, float]) -> pd
 
 @st.cache_data(show_spinner=False, max_entries=32)
 def _grid_trends(variable_key: str, bbox: tuple[float, float, float, float], start: int | None,
-                 end: int | None) -> tuple[pd.DataFrame, int, tuple[float, float]]:
-    cells = grid_cells(variable_key, bbox)
-    trends = cell_trends(cells, variable_key, start, end)
-    size = cell_size(cells) if len(cells) else (0.5, 0.625)
+                 end: int | None, region_key: str | None = None) -> tuple[pd.DataFrame, int, tuple[float, float]]:
+    # A prepared region reads its yearly cell values from data/processed/grid: no NASA POWER request and
+    # no monthly-to-yearly step, about twice as fast; a drawn area still fetches its monthly cells.
+    annual = load_annual_cells(region_key, variable_key) if region_key else None
+    if annual is not None and len(annual):
+        trends = cell_trends_from_annual(annual, variable_key, start, end)
+        size = prepared_cell_size(annual)
+    else:
+        cells = grid_cells(variable_key, bbox)
+        trends = cell_trends(cells, variable_key, start, end)
+        size = cell_size(cells) if len(cells) else (0.5, 0.625)
     return trends, int(trends.attrs.get("no_snow_cells", 0)), size
 
 
 def grid_trends(variable_key: str, bbox: tuple[float, float, float, float], start: int | None,
-                end: int | None) -> tuple[pd.DataFrame, int, tuple[float, float]]:
+                end: int | None, region_key: str | None = None) -> tuple[pd.DataFrame, int, tuple[float, float]]:
     """The trend test for every grid cell, the number of cells without snow, and the cell size.
 
     A period that covers the whole record reuses the full-record result, so opening a case (which
     sets the period to the full record) does not test every cell a second time.
     """
-    full = _grid_trends(variable_key, bbox, None, None)
+    full = _grid_trends(variable_key, bbox, None, None, region_key)
     trends = full[0]
     if start is None or end is None or not len(trends):
         return full
     if start <= int(trends["start_year"].min()) and end >= int(trends["end_year"].max()):
         return full
-    return _grid_trends(variable_key, bbox, start, end)
+    return _grid_trends(variable_key, bbox, start, end, region_key)
 
 
 @st.cache_data(show_spinner=False, max_entries=24)
@@ -686,8 +694,8 @@ if st.session_state["map_layer"] == "scene":
         else:
             try:
                 with st.spinner(mtext["loading"]):
-                    scene_trends, no_snow_cells, scene_size = grid_trends(scene_variable, active_bbox, start_pick,
-                                                                          end_pick)
+                    scene_trends, no_snow_cells, scene_size = grid_trends(
+                        scene_variable, active_bbox, start_pick, end_pick, None if custom_mode else region_key)
             except (DataSourceError, requests.RequestException, ValueError, KeyError, TypeError, IndexError,
                     AttributeError) as error:
                 LOG.warning("Crime scene map failed for %s %s: %r", scene_variable, active_bbox, error)
