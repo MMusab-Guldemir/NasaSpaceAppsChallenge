@@ -165,9 +165,10 @@ TEXT: dict[str, dict[str, str]] = {
         "north": "North latitude",
         "apply_coords": "Investigate these coordinates",
         "custom_help": (
-            "Temperature, snowfall and dust and smoke come live from NASA POWER for any rectangle "
-            "up to 40° × 40°. Air pollution (NO₂) and vegetation are available for prepared regions "
-            "only, because NASA delivers them through slower services that need a login."
+            "Temperature, precipitation, snowfall and dust and smoke come live from NASA POWER for "
+            "any rectangle up to 40° × 40°. NO₂, carbon monoxide, soot, CO₂, vegetation greenness and "
+            "tree cover are available for prepared regions only, because NASA delivers them through "
+            "slower services that need a login."
         ),
         "map_help": (
             "Draw a rectangle with the square tool on the left of the map, or move and resize the "
@@ -351,9 +352,10 @@ TEXT: dict[str, dict[str, str]] = {
         "north": "Kuzey enlemi",
         "apply_coords": "Bu koordinatları incele",
         "custom_help": (
-            "Sıcaklık, kar yağışı ve toz-duman, 40° × 40°'ye kadar her dikdörtgen için NASA "
-            "POWER'dan canlı gelir. Hava kirliliği (NO₂) ve bitki yeşilliği ise NASA'nın giriş "
-            "gerektiren daha yavaş servislerinden geldiği için sadece hazır bölgelerde var."
+            "Sıcaklık, yağış, kar yağışı ve toz-duman, 40° × 40°'ye kadar her dikdörtgen için NASA "
+            "POWER'dan canlı gelir. NO₂, karbon monoksit, is, CO₂, bitki yeşilliği ve ağaç örtüsü ise "
+            "NASA'nın giriş gerektiren daha yavaş servislerinden geldiği için sadece hazır bölgelerde "
+            "var."
         ),
         "map_help": (
             "Haritanın solundaki kare aracıyla bir dikdörtgen çiz ya da mevcut dikdörtgeni "
@@ -733,7 +735,9 @@ REGION_CONTEXT: dict[str, dict[str, dict[str, str]]] = {
         },
         "los_angeles": {
             "no2": "California has some of the world's strictest vehicle exhaust rules, tightened "
-                   "step by step since the 1990s.",
+                   "step by step since the 1990s. NO₂ here fell fastest before 2010, so one straight "
+                   "line fits the whole record poorly and the cautious test cannot decide; from 2010 "
+                   "to 2025 alone the decline is confirmed.",
         },
         "alps": {
             "no2": "European exhaust standards (Euro 1 to Euro 6) have lowered emissions from cars "
@@ -787,7 +791,9 @@ REGION_CONTEXT: dict[str, dict[str, dict[str, str]]] = {
         },
         "los_angeles": {
             "no2": "Kaliforniya, 1990'lardan beri adım adım sıkılaştırılan, dünyanın en katı araç "
-                   "egzoz kurallarından bazılarına sahip.",
+                   "egzoz kurallarından bazılarına sahip. Burada NO₂ en hızlı 2010'dan önce düştü; bu "
+                   "yüzden tüm kayda tek bir düz çizgi iyi uymuyor ve temkinli test karar veremiyor. "
+                   "Yalnızca 2010–2025'e bakınca düşüş doğrulanıyor.",
         },
         "alps": {
             "no2": "Avrupa egzoz standartları (Euro 1'den Euro 6'ya) 1990'lardan beri araba ve "
@@ -1029,9 +1035,14 @@ METHODS = {
   sample size (Santer et al., 2000) with a small-sample adjustment (Nychka et al., 2000), because
   short records underestimate this persistence.
 - **How often can the detective be wrong?** In simulations of data with no trend at all, a false
-  *Confirmed* appears in about 3% of cases when years are independent, in about 4-8% when
-  neighbouring years resemble each other (25 years or more), and in about 10-15% for 10-15-year
-  periods or very persistent series such as soot. Short records therefore get a warning.
+  *Confirmed* appears in about 2-3% of cases when years are independent, in about 4-6% with moderate
+  persistence over 15 years or more (about 11% with only 10 years), and in about 9-19% for very
+  persistent series such as soot. Short records therefore get a warning.
+- **How often does it find a real trend?** A real trend as large as one typical year-to-year swing
+  per decade is confirmed in about 7% of cases with 10 years, 51% with 20, 81% with 25 and over 99%
+  with 35 years or more (independent years); persistent years need longer records (42% with 25 years,
+  95% with 45). So "no significant trend" often means "the record is too short", not "no change".
+  The numbers can be reproduced with scripts/accuracy_report.py.
 - **Second witness:** the Mann-Kendall test checks for a steady rise or fall without assuming a
   straight line; Sen's slope is a robust estimate of the rate. When neighbouring years are
   positively correlated, its uncertainty is widened with the same effective sample size as the
@@ -1071,9 +1082,15 @@ METHODS = {
   (Santer ve ark., 2000); kısa kayıtlar bu sürekliliği olduğundan az gösterdiği için küçük örneklem
   düzeltmesi de uygulanır (Nychka ve ark., 2000).
 - **Dedektif ne sıklıkla yanılabilir?** Hiç trend olmayan verilerle yapılan simülasyonlarda yanlış
-  bir *Doğrulandı*, yıllar bağımsızken vakaların yaklaşık %3'ünde, komşu yıllar birbirine benzediğinde
-  yaklaşık %4–8'inde (25 yıl ve üzeri), 10–15 yıllık dönemlerde ya da is gibi çok sürekli serilerde
-  yaklaşık %10–15'inde çıkıyor. Bu yüzden kısa kayıtlar uyarı alır.
+  bir *Doğrulandı*, yıllar bağımsızken vakaların yaklaşık %2–3'ünde, orta kalıcılıkta 15 yıl ve
+  üzerinde %4–6'sında (yalnızca 10 yılda yaklaşık %11), is gibi çok kalıcı serilerde %9–19'unda
+  çıkıyor. Bu yüzden kısa kayıtlar uyarı alır.
+- **Gerçek bir trendi ne sıklıkla bulur?** On yılda bir tipik yıllık dalgalanma kadar büyük gerçek
+  bir trend, yıllar bağımsızken 10 yıllık kayıtta vakaların yaklaşık %7'sinde, 20 yılda %51'inde,
+  25 yılda %81'inde, 35 yıl ve üzerinde %99'undan fazlasında doğrulanır; yıllar birbirine benziyorsa
+  daha uzun kayıt gerekir (25 yılda %42, 45 yılda %95). Bu yüzden "anlamlı trend yok" çoğu zaman
+  "kayıt kısa" demektir, "değişim yok" değil. Sayılar scripts/accuracy_report.py ile yeniden
+  üretilebilir.
 - **İkinci tanık:** Mann-Kendall testi, düz bir çizgi varsaymadan istikrarlı bir artış ya da azalış
   olup olmadığına bakar; Sen eğimi, değişim hızının sağlam bir tahminidir. Komşu yıllar birbiriyle
   pozitif ilişkiliyse, bu testin belirsizliği de ana testteki aynı etkin örneklem büyüklüğüyle
@@ -1140,8 +1157,15 @@ def variable_text(lang: str, variable: Variable) -> dict:
 
 
 def num(value: float, lang: str, decimals: int = 2, signed: bool = False) -> str:
-    """Format a number with a decimal comma in Turkish and a decimal point in English."""
-    text = f"{value:+.{decimals}f}" if signed else f"{value:.{decimals}f}"
+    """Format a number with a decimal comma in Turkish and a decimal point in English.
+
+    A value that rounds to zero is shown without a sign ("0.000", never "-0.000").
+    """
+    rounded = round(float(value), decimals)
+    if rounded == 0:
+        text = f"{0:.{decimals}f}"
+    else:
+        text = f"{rounded:+.{decimals}f}" if signed else f"{rounded:.{decimals}f}"
     return text.replace(".", ",") if lang == "tr" else text
 
 

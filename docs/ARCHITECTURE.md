@@ -1,6 +1,7 @@
 # Architecture: Earth System Trend Detective (Team Avni)
 
 > v0.3, 2026-11-14. Written with AI assistance (Claude Opus 5.5), reviewed by Claude Fable 5.2.
+> Design summary written during the hackathon; README.md describes the current app.
 > The idea and the product decisions come from Team Avni (see "Decisions made by the team").
 
 ## Goal (from the challenge statement)
@@ -12,8 +13,9 @@ and **is the change statistically significant?** Visualization plus analysis is 
 ## Decisions made by the team
 
 - End users explore the data themselves; the audience is the team, the judges and later the public.
-- Variables: **air temperature**, **air pollution (NO2)**, **snowfall**, **vegetation greenness (NDVI)**,
-  and **dust and smoke (aerosols)** so that air pollution is available for any rectangle.
+- Variables: **air temperature**, **precipitation**, **snowfall**, **air pollution (NO2)**,
+  **carbon monoxide**, **soot (black carbon)**, **dust and smoke (aerosols)** so that air pollution is
+  available for any rectangle, **CO2**, **vegetation greenness (NDVI)** and **tree cover**.
 - Regions: **Colorado**, **Istanbul–Marmara**, then eight world regions picked from options:
   Medina, Beijing, Los Angeles, Cairo and the Nile Delta, the Amazon, the Sahel, the Alps, Siberia.
 - Any place on Earth: a rectangle of any size (0.01° to 40°) the user draws, moves and resizes on a
@@ -62,7 +64,7 @@ own area statistics over the same boxes; we do not claim cosine weighting for th
 2. Giovanni and AppEEARS downloads go to `data/raw/` (git-ignored) as
    `giovanni_no2_<region>_*.csv` and `appeears_ndvi_<region>_*.csv`, and are converted by loaders
    that handle metadata header rows, fill values and scale factors.
-3. Custom rectangles: the app fetches temperature, snowfall and dust and smoke live from the POWER
+3. Custom rectangles: the app fetches temperature, precipitation, snowfall and dust and smoke live from the POWER
    API with a short timeout. POWER serves 2 to 10 degrees per request, so a small rectangle is
    requested inside a 2-degree box and a large one in overlapping pieces fetched in parallel; the
    average then uses the grid cells whose centres lie in the rectangle, or the nearest cell with
@@ -88,7 +90,19 @@ Tests on the annual series:
   (Santer et al., 2000, with the small-sample adjustment of Nychka et al., 2000). Simulations of
   trendless AR(1) noise during the hackathon showed false "Confirmed" rates of up to 9-13% without
   the adjustment and about 3-8% with it for 25 years or more (persistence up to about 0.7); 10-15-year
-  periods and very persistent series (soot) stay at about 10-15%.
+  periods and very persistent series (soot) stay higher. Measured with `scripts/accuracy_report.py`
+  (1000 simulated series per cell):
+
+  | False "Confirmed", trendless data | 10 years | 15 years | 25 years | 45 years |
+  |---|---|---|---|---|
+  | independent years | 2.2% | 2.1% | 2.7% | 3.0% |
+  | persistence 0.5 | 10.6% | 6.4% | 5.8% | 4.2% |
+  | persistence 0.9 | 18.6% | 18.0% | 11.6% | 8.7% |
+
+  | "Confirmed", real trend of 1 SD per decade | 10 y | 15 y | 20 y | 25 y | 35 y | 45 y |
+  |---|---|---|---|---|---|---|
+  | independent years | 6.8% | 20.9% | 50.7% | 80.9% | 99.5% | 100% |
+  | persistence 0.5 | 13.8% | 16.8% | 26.9% | 41.9% | 77.4% | 95.0% |
 - **Second witness:** Mann-Kendall with Sen's slope, shown as "agrees" or "disagrees" with the
   headline. It uses the same persistence rule: when r1 > 0 its z-score is scaled by sqrt(n_eff / n)
   (an effective-sample-size correction in the spirit of Yue and Wang, 2004).
@@ -159,7 +173,7 @@ NasaSpaceAppsChallenge/
 
 ## Testing
 
-165 automated tests (`python -m pytest -q`), all offline:
+168 automated tests (`python -m pytest -q`), all offline:
 - statistics: known-slope series, white and autocorrelated noise (false-positive rates of both
   tests), completeness rules, water-year labelling, total change, constant series;
 - loaders: POWER payload parsing, fill values, land-only cells, Giovanni CSVs, retry rules;
@@ -177,7 +191,8 @@ browser are limited to the error type.
 
 Cut: seasonal Mann-Kendall, NO2 and NDVI for custom rectangles (their NASA services need a login
 and take minutes per request), the earthaccess download path.
-Feature freeze: Sunday 12:00.
+Feature freeze: Saturday evening (team decision); after that only bug fixes and NASA data that was
+still arriving.
 
 ## Rules compliance
 

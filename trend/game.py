@@ -217,10 +217,13 @@ def _note_fits(note: str | None, truth: str, full_record_significant: bool) -> b
 def _rate_text(lang: str, variable_key: str, result, intercept: float) -> str:
     texts = variable_text(lang, VARIABLES[variable_key])
     start_value = intercept + result.slope_per_year * result.start_year
-    if variable_key == "air_temperature" or start_value <= 0:
-        text = f"{num(result.slope_per_decade, lang, 2, signed=True)} {texts['annual_unit']} {t(lang, 'per_decade')}"
+    pct = abs(result.total_change / start_value * 100) if start_value > 0 else None
+    # A percentage of a near-zero starting value (for example desert rain) is meaningless, so very
+    # large percentages fall back to the change per decade.
+    if variable_key == "air_temperature" or pct is None or pct > 300:
+        decimals = VARIABLES[variable_key].decimals
+        text = f"{num(result.slope_per_decade, lang, decimals, signed=True)} {texts['annual_unit']} {t(lang, 'per_decade')}"
     else:
-        pct = abs(result.total_change / start_value * 100)
         rising = result.slope_per_year > 0
         if lang == "tr":
             text = f"Trend çizgisine göre %{num(pct, lang, 0)} {'artış' if rising else 'düşüş'}"

@@ -209,3 +209,17 @@ def test_shared_exam_link_opens_the_exam():
     assert not at.exception
     assert at.session_state["view"] == "exam"
     assert at.session_state["lang"] == "tr"
+
+
+def test_huge_percentages_fall_back_to_the_change_per_decade():
+    from types import SimpleNamespace
+
+    from trend.game import _rate_text
+
+    # Medina rain: the trend line starts near 1.8 mm, so a percentage would read "2578%".
+    result = SimpleNamespace(
+        slope_per_year=1.07, slope_per_decade=10.7, start_year=1981, total_change=46.9, significant=False
+    )
+    intercept = 1.82 - 1.07 * 1981
+    text = _rate_text("en", "precipitation", result, intercept)
+    assert "%" not in text and "per decade" in text and "not significant" in text

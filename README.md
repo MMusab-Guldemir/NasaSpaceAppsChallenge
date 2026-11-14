@@ -3,6 +3,7 @@
 **Team Avni · NASA Space Apps Challenge 2026 · Challenge: "Be An Earth System Trend Detective!"**
 
 **Live app:** https://avni-trend-detective.streamlit.app
+(If the app shows a wake-up screen, click the button and wait about a minute.)
 
 Pick a place and a measurement from NASA Earth data, and find out **what** is changing,
 **where**, **by how much**, and **whether the change is statistically significant**.
@@ -13,8 +14,9 @@ Pick a place and a measurement from NASA Earth data, and find out **what** is ch
 
 1. **Where?** Pick one of ten prepared regions with up to ten measurements each (Colorado,
    Istanbul–Marmara, Medina, Beijing, Los Angeles, Cairo and the Nile Delta, the Amazon, the Sahel,
-   the Alps and Siberia; vegetation greenness for the world regions is added as NASA AppEEARS
-   delivers it, tree cover likewise), or investigate **anywhere on Earth**: draw a rectangle on the world map,
+   the Alps and Siberia; vegetation greenness is ready for Colorado, Istanbul–Marmara, Medina,
+   Beijing, Los Angeles and Cairo and the Nile Delta, and the other regions and tree cover are added
+   as NASA AppEEARS delivers them), or investigate **anywhere on Earth**: draw a rectangle on the world map,
    move or resize it with the edit tool (then click Save), or type its corners in the left panel.
    Any size from 0.01° to 40° per side works: a rectangle smaller than NASA's grid uses the nearest
    grid cell, and a large one is fetched in pieces. Temperature, precipitation, snowfall and dust and
@@ -31,8 +33,11 @@ Pick a place and a measurement from NASA Earth data, and find out **what** is ch
    - the **rate of change per decade** with its 95% confidence interval,
    - whether the trend is **significant** (two-sided t-test, adjusted for year-to-year persistence
      with an effective sample size and a small-sample correction; in simulations a false
-     "Confirmed" appears in about 3% of trendless cases with independent years, about 4-8% with
-     persistent years over 25+ years, and about 10-15% for 10-15-year periods),
+     "Confirmed" appears in about 2-3% of trendless cases with independent years, about 4-6% with
+     moderate persistence over 15+ years, and about 9-19% for very persistent series such as soot;
+     a real trend of one typical year-to-year swing per decade is confirmed about 7 times in 100
+     with 10 years, 51 with 20, 81 with 25 and over 99 with 35 years; reproduce with
+     `scripts/accuracy_report.py`),
    - a **second opinion** from the Mann-Kendall test with Sen's slope, adjusted for persistence in
      the same way,
    - a plain-language summary for students and the public.
@@ -57,7 +62,7 @@ Pick a place and a measurement from NASA Earth data, and find out **what** is ch
 | Tropospheric NO₂, annual mean (2005-2025) | no significant straight-line trend (p = 0.49); the 2005-2019 decline is not significant either once short-record persistence is accounted for (p = 0.11) | no significant trend (p = 0.90)¹ |
 | Vegetation greenness, May-Sep NDVI (2000-2025) | no significant trend (p = 0.39) | +0.014 per decade, no significant trend (p = 0.07) |
 | Carbon monoxide (2002-2024) | −0.06 × 10¹⁸ molecules/cm² per decade (p = 0.007), Confirmed | −0.10 × 10¹⁸ molecules/cm² per decade (p = 0.006), Confirmed |
-| CO₂ (2015-2021, 7 years) | +25 ppm per decade (p < 0.001), Confirmed | +25 ppm per decade (p < 0.001), Confirmed |
+| CO₂ (2015-2021, 7 years; 2022 is incomplete) | +25 ppm per decade (p < 0.001), Confirmed | +25 ppm per decade (p < 0.001), Confirmed |
 
 ¹ 2024 is left out because January 2024 has fewer than 10 valid OMI days.
 
@@ -69,6 +74,8 @@ Highlights from the world regions (full records unless stated):
   tests agree), after China's 2013 clean-air plan; over 2005-2025 the rise-then-fall shape is not a
   significant straight-line trend (p = 0.23).
 - NO₂ over the Alps fell by about 0.42 × 10¹⁵ molecules/cm² per decade (2005-2025, p = 0.002).
+- Beijing is getting greener: May-September NDVI rose by about +0.029 per decade (2000-2025,
+  p < 0.001, both tests agree).
 - Air temperature rose significantly in nine of the ten prepared regions, from +0.12 °C per decade
   in the Sahel to +0.55 °C per decade in Istanbul–Marmara (1981-2025); in Beijing the rise
   (+0.23 °C per decade) is borderline (p = 0.06).
@@ -188,7 +195,7 @@ trend/share.py         share links
 trend/game.py          Detective exam game: cases, answers, explanations and the game page
 scripts/prefetch.py    fetches and caches data for a region
 data/processed/        small cached monthly CSVs used by the app
-tests/                 unit and app tests (165)
+tests/                 unit and app tests (168)
 docs/ARCHITECTURE.md   design and methods
 docs/SUBMISSION.md     draft of the Space Apps project page
 ```
@@ -211,7 +218,8 @@ The code, tests, interface texts (English and Turkish) and documentation drafts 
 AI assistance: **Claude Opus 5.5** (Anthropic) wrote them, translated the team's own Turkish answers
 for the project page into English, and suggested the NASA data products and statistical methods
 that implement the team's choices. **Claude Fable 5.2** (Anthropic) reviewed
-the plan, the statistics and the whole project; Claude Opus 5.5 fixed the review findings. Every
+the plan, the statistics and the whole project and designed the pitch deck's visuals; the review
+findings were fixed with AI assistance (see the commit trailers). Every
 AI-assisted source file says so in its header, and AI-assisted commits carry a `Co-Authored-By`
 trailer. The pitch deck's design is AI-assisted and says so on every slide; no other AI-generated
 images, video or audio are used.
