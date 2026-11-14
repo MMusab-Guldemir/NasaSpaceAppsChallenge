@@ -88,7 +88,7 @@ VARIABLES: dict[str, Variable] = {
     "air_temperature": Variable(
         key="air_temperature",
         name="Air temperature",
-        definition="How warm the air is about 2 meters (6.5 feet) above the ground.",
+        definition="How warm the air is about 2 metres (6.5 feet) above the ground.",
         unit="°C",
         annual_label="Annual mean air temperature",
         annual_unit="°C",
@@ -163,7 +163,7 @@ VARIABLES: dict[str, Variable] = {
         key="hot_days",
         name="Hot days (above 30 °C)",
         definition=(
-            "How many days a year the day's highest air temperature, about 2 meters above the ground, "
+            "How many days a year the day's highest air temperature, about 2 metres above the ground, "
             "goes above 30 °C (86 °F)."
         ),
         unit="days per month",
@@ -214,7 +214,7 @@ VARIABLES: dict[str, Variable] = {
             "The OMI instrument has a 'row anomaly' that reduces the number of usable "
             "measurements.",
             "2020 shows a dip linked to reduced activity during the COVID-19 pandemic.",
-            "The OMI instrument is aging and its Aura satellite's orbit has been drifting in recent "
+            "The OMI instrument is ageing and its Aura satellite's orbit has been drifting in recent "
             "years, so treat changes after about 2022 with extra caution.",
         ),
         min_valid_days=10,

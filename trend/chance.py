@@ -16,8 +16,9 @@ imports from ``scripts/``. Every world is tested twice:
 
 In a persistent record neighbouring years resemble each other, so a run of high years looks like a trend
 to the naive test far more often than 5% of the time. The detective's effective sample size and its
-second witness keep its false alarms low. The page shows how often each was fooled and compares this with
-the real case's p-value. The worlds are random, so a new click gives slightly different numbers; the
+second witness keep its false alarms much lower than a naive test's, though not always under 5% in short,
+very persistent records (the page then says so). The page shows how often each was fooled and compares
+this with the real case's p-value. The worlds are random, so a new click gives slightly different numbers; the
 long-run rates, from thousands of worlds, are in the README (``scripts/accuracy_report.py``).
 """
 from __future__ import annotations
