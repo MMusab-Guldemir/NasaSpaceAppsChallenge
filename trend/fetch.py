@@ -29,6 +29,10 @@ PROCESSED_DIR = PROJECT_ROOT / "data" / "processed"
 RAW_DIR = PROJECT_ROOT / "data" / "raw"
 
 # Variables served by the POWER API: variable key -> (POWER parameter, value is a daily rate)
+# POWER reports exactly 0.0 (not the fill value) where CERES SYN1deg has no aerosol value, for
+# example over snow and ice or in the polar winter; such cells are treated as missing.
+ZERO_MEANS_MISSING = {"AOD_55"}
+
 POWER_VARIABLES: dict[str, tuple[str, bool]] = {
     "air_temperature": ("T2M", False),
     "snowfall": ("PRECSNOLAND", True),
@@ -110,6 +114,8 @@ def parse_power_regional(payload: dict, parameter: str) -> pd.DataFrame:
     cells = pd.DataFrame(rows, columns=["year", "month", "lat", "lon", "value"])
     cells["value"] = pd.to_numeric(cells["value"], errors="coerce")
     is_fill = np.isclose(cells["value"], fill_value) | (cells["value"] <= -998)
+    if parameter in ZERO_MEANS_MISSING:
+        is_fill |= cells["value"] == 0
     cells.loc[is_fill, "value"] = np.nan
     expected_cells = cells.dropna(subset=["value"])[["lat", "lon"]].drop_duplicates().shape[0]
 
@@ -203,8 +209,11 @@ def _has_data(feature: dict, parameter: str, fill_value: float) -> bool:
         if int(key[4:]) == 13 or value is None:
             continue
         value = float(value)
-        if not (np.isclose(value, fill_value) or value <= -998):
-            return True
+        if np.isclose(value, fill_value) or value <= -998:
+            continue
+        if parameter in ZERO_MEANS_MISSING and value == 0:
+            continue
+        return True
     return False
 
 

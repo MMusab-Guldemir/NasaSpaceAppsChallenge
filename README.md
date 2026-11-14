@@ -11,16 +11,17 @@ Pick a place and a measurement from NASA Earth data, and find out **what** is ch
 
 ## What it does
 
-1. **Where?** Pick one of ten prepared regions, each with all five measurements (Colorado,
+1. **Where?** Pick one of ten prepared regions with up to five measurements each (Colorado,
    Istanbul–Marmara, Medina, Beijing, Los Angeles, Cairo and the Nile Delta, the Amazon, the Sahel,
-   the Alps and Siberia), or investigate **anywhere on Earth**: draw a rectangle on the world map,
+   the Alps and Siberia; vegetation greenness for the world regions is added as NASA AppEEARS
+   delivers it), or investigate **anywhere on Earth**: draw a rectangle on the world map,
    move or resize it with the edit tool (then click Save), or type its corners in the left panel.
    Any size from 0.01° to 40° per side works: a rectangle smaller than NASA's grid uses the nearest
    grid cell, and a large one is fetched in pieces. Temperature, snowfall and dust and smoke come
    live from NASA POWER for any rectangle; air pollution (NO₂) and vegetation are prepared in
    advance for the prepared regions.
 2. An **investigation board** shows every clue for the area: one card per measurement with its
-   rate of change and a verdict stamp (Confirmed, Disputed, No evidence, Weak clue, Open case).
+   rate of change and a verdict stamp (Confirmed, Disputed, No evidence, Weak clue, Open case; plus No snow, Not enough data and No data where they apply).
 3. The user picks a clue, chooses the **period**, and immediately gets a large
    **"Real or chance?"** verdict with a chance meter, followed by the evidence (chart) and a
    second witness. An **EN / TR** switch (top right) shows the whole app in English or Turkish.
@@ -103,6 +104,22 @@ Methods references:
 - Hussain, M. M., & Mahmud, I. (2019). pyMannKendall: a python package for non parametric Mann
   Kendall family of trend tests. *Journal of Open Source Software*, 4(39), 1556.
 
+Background for the "possible reasons" step:
+- IPCC (2021). Summary for Policymakers. In: *Climate Change 2021: The Physical Science Basis*.
+  Cambridge University Press, 3-32. https://doi.org/10.1017/9781009157896.001
+- Duncan, B. N., Lamsal, L. N., Thompson, A. M., et al. (2016). A space-based, high-resolution view
+  of notable changes in urban NOx pollution around the world (2005-2014). *J. Geophys. Res.
+  Atmos.*, 121, 976-996. https://doi.org/10.1002/2015JD024121
+- Zheng, B., Tong, D., Li, M., et al. (2018). Trends in China's anthropogenic emissions since 2010
+  as the consequence of clean air actions. *Atmos. Chem. Phys.*, 18, 14095-14111.
+  https://doi.org/10.5194/acp-18-14095-2018
+- Herrmann, S. M., Anyamba, A., & Tucker, C. J. (2005). Recent trends in vegetation dynamics in the
+  African Sahel and their relationship to climate. *Global Environmental Change*, 15, 394-404.
+  https://doi.org/10.1016/j.gloenvcha.2005.08.004
+- Rantanen, M., Karpechko, A. Y., Lipponen, A., et al. (2022). The Arctic has warmed nearly four
+  times faster than the globe since 1979. *Communications Earth & Environment*, 3, 168.
+  https://doi.org/10.1038/s43247-022-00498-3
+
 Third-party software and map data:
 - Python libraries (see `requirements.txt`): Streamlit, Plotly, pandas, NumPy, SciPy,
   pymannkendall, requests, folium, streamlit-folium.
@@ -152,11 +169,13 @@ Turkish option, the any-place-on-Earth rectangle of any size and the "possible r
 example page layouts and candidate regions), the AI offered some and the team chose.
 
 The code, tests, interface texts (English and Turkish) and documentation drafts were written with
-AI assistance: **Claude Opus 5.5** (Anthropic) wrote them and suggested the NASA data products and
-statistical methods that implement the team's choices. **Claude Fable 5.2** (Anthropic) reviewed
+AI assistance: **Claude Opus 5.5** (Anthropic) wrote them, translated the team's own Turkish answers
+for the project page into English, and suggested the NASA data products and statistical methods
+that implement the team's choices. **Claude Fable 5.2** (Anthropic) reviewed
 the plan, the statistics and the whole project; Claude Opus 5.5 fixed the review findings. Every
 AI-assisted source file says so in its header, and AI-assisted commits carry a `Co-Authored-By`
-trailer. No AI-generated images, video or audio are used.
+trailer. The pitch deck's design is AI-assisted and says so on every slide; no other AI-generated
+images, video or audio are used.
 
 ## License
 

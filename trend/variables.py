@@ -159,8 +159,10 @@ VARIABLES: dict[str, Variable] = {
         caveats=(
             "Aerosol optical depth counts the particles in the whole column of air, not only the "
             "air we breathe at the ground, so it is not the same as PM2.5.",
-            "It comes from satellite-based estimates on a grid of about 100 km (1 degree), "
-            "starting in 2001.",
+            "It comes from an aerosol model corrected with MODIS satellite measurements (CERES "
+            "SYN1deg), on a grid of about 100 km (1 degree), starting in 2001.",
+            "There are no values over snow and ice or in the darkness of the polar winter, so such "
+            "months are left out.",
             "Desert dust storms and big wildfires can make single years stand out.",
             "The newest months in NASA POWER can come from a near-real-time product and may be "
             "revised later.",
@@ -175,7 +177,7 @@ VARIABLES: dict[str, Variable] = {
             "Higher values mean more green vegetation."
         ),
         unit="NDVI (no unit)",
-        annual_label="Growing-season (May to September) mean NDVI",
+        annual_label="Mean NDVI from May to September",
         annual_unit="NDVI",
         year_axis_label="Year",
         aggregation="mean",

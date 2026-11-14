@@ -96,6 +96,11 @@ TEXT: dict[str, dict[str, str]] = {
             "point to (checking them needs more evidence):"
         ),
         "reasons_intro_none": "**No clear trend.** Common reasons why a change may not show up:",
+        "reasons_intro_disputed": (
+            "**The two tests disagree, so this change is not certain.** If it is real, reasons "
+            "scientists often point to (checking them needs more evidence):"
+        ),
+        "reason_covid": "The 2020 COVID-19 lockdowns briefly cut traffic and industry.",
         "local_context": "Local context",
         "witness_agrees": (
             "✅ **The second witness agrees:** the {method} test, which does not assume a straight "
@@ -272,6 +277,11 @@ TEXT: dict[str, dict[str, str]] = {
             "insanlarının sık gösterdiği nedenler (doğrulamak için başka delil gerekir):"
         ),
         "reasons_intro_none": "**Belirgin bir trend yok.** Bir değişimin görünmemesinin yaygın nedenleri:",
+        "reasons_intro_disputed": (
+            "**İki test aynı fikirde değil, bu yüzden değişim kesin değil.** Gerçekse, bilim "
+            "insanlarının sık gösterdiği nedenler (doğrulamak için başka delil gerekir):"
+        ),
+        "reason_covid": "2020'deki COVID-19 kapanmaları trafiği ve sanayiyi kısa süre azalttı.",
         "local_context": "Yerel bilgi",
         "witness_agrees": (
             "✅ **İkinci tanık doğruluyor:** düz bir çizgi varsaymayan {method} testinin sonucu: "
@@ -373,6 +383,7 @@ STATUS: dict[str, dict[str, tuple[str, str]]] = {
             "polar winter.",
         ),
         "no_snow": ("No snow", "It practically never snows here."),
+        "no_data": ("No data", "NASA has no values for this measurement here, for example over open sea."),
         "prepared_only": (
             "Prepared regions only",
             "Needs slower NASA services, so it is prepared in advance for selected regions.",
@@ -389,6 +400,7 @@ STATUS: dict[str, dict[str, tuple[str, str]]] = {
             "Burada yeterince tam yıl yok; örneğin uydu kutup kışında ölçüm yapamıyor.",
         ),
         "no_snow": ("Kar yok", "Burada neredeyse hiç kar yağmıyor."),
+        "no_data": ("Veri yok", "NASA'nın burada bu ölçüm için değeri yok; örneğin açık deniz."),
         "prepared_only": (
             "Sadece hazır bölgeler",
             "Daha yavaş NASA servisleri gerektirdiği için seçili bölgelerde önceden hazırlanıyor.",
@@ -419,7 +431,8 @@ REASONS: dict[str, dict[str, dict[str, list[str]]]] = {
             "up": [
                 "Greenhouse gases from burning coal, oil and gas trap heat; this is warming almost "
                 "every region of the world.",
-                "Growing cities add extra local heat (the urban heat island).",
+                "Growing cities add extra local heat (the urban heat island), although this coarse "
+                "NASA dataset mostly shows regional warming, not single cities.",
             ],
             "down": [
                 "Cooling is rare in recent decades. It can come from natural cycles, more irrigation "
@@ -454,7 +467,7 @@ REASONS: dict[str, dict[str, dict[str, list[str]]]] = {
             "down": [
                 "Cleaner cars, power plants and factories after emission rules such as exhaust "
                 "standards.",
-                "Less economic activity, for example during the 2020 COVID-19 lockdowns.",
+                "Less economic activity, for example during an economic slowdown.",
             ],
             "none": [
                 "Growth (more traffic and industry) and cleaner technology can cancel each other "
@@ -495,7 +508,8 @@ REASONS: dict[str, dict[str, dict[str, list[str]]]] = {
             "up": [
                 "Kömür, petrol ve doğalgaz yakılınca çıkan sera gazları ısıyı tutar; bu, dünyanın "
                 "neredeyse her bölgesini ısıtıyor.",
-                "Büyüyen şehirler ek yerel ısı üretir (kentsel ısı adası).",
+                "Büyüyen şehirler ek yerel ısı üretir (kentsel ısı adası); ancak bu kaba çözünürlüklü "
+                "NASA verisi tek tek şehirleri değil, çoğunlukla bölgesel ısınmayı gösterir.",
             ],
             "down": [
                 "Son on yıllarda soğuma nadirdir; doğal döngülerden, artan sulamadan ya da güneş "
@@ -530,7 +544,7 @@ REASONS: dict[str, dict[str, dict[str, list[str]]]] = {
             "down": [
                 "Egzoz standartları gibi emisyon kurallarından sonra daha temiz arabalar, santraller "
                 "ve fabrikalar.",
-                "Azalan ekonomik faaliyet, örneğin 2020 COVID-19 kapanmaları.",
+                "Azalan ekonomik faaliyet, örneğin ekonomik durgunluk dönemleri.",
             ],
             "none": [
                 "Büyüme (daha çok trafik ve sanayi) ile daha temiz teknoloji birbirini dengeleyebilir; "
@@ -596,8 +610,9 @@ REGION_CONTEXT: dict[str, dict[str, dict[str, str]]] = {
             "aod": "Smoke from dry-season fires used to clear forest makes some years very hazy.",
         },
         "siberia": {
-            "air_temperature": "The Arctic and the lands around it are warming much faster than "
-                               "the world on average ('Arctic amplification').",
+            "air_temperature": "High northern latitudes are, on average, warming faster than the "
+                               "world as a whole ('Arctic amplification'); compare this region's "
+                               "rate with the other regions to see how strong it is here.",
             "aod": "Huge wildfires in Yakutia, for example in 2021, can make single years very "
                    "smoky.",
         },
@@ -636,8 +651,9 @@ REGION_CONTEXT: dict[str, dict[str, dict[str, str]]] = {
                    "puslu yapıyor.",
         },
         "siberia": {
-            "air_temperature": "Kuzey Kutbu ve çevresindeki karalar dünya ortalamasından çok daha "
-                               "hızlı ısınıyor ('Arktik güçlenmesi').",
+            "air_temperature": "Yüksek kuzey enlemleri ortalamada dünyanın geri kalanından daha "
+                               "hızlı ısınıyor ('Arktik güçlenmesi'); buradaki hızı diğer bölgelerle "
+                               "karşılaştır.",
             "aod": "Yakutistan'daki dev orman yangınları, örneğin 2021'de, bazı yılları çok dumanlı "
                    "yapabiliyor.",
         },
@@ -724,8 +740,10 @@ VARIABLE_TEXT: dict[str, dict[str, dict]] = {
             "caveats": [
                 "Aerosol optik derinliği yalnızca yerde soluduğumuz havayı değil, tüm hava "
                 "sütunundaki parçacıkları sayar; bu yüzden PM2,5 ile aynı şey değildir.",
-                "Yaklaşık 100 km'lik (1 derece) ızgarada uydu tabanlı tahminlerden gelir ve 2001'de "
-                "başlar.",
+                "MODIS uydu ölçümleriyle düzeltilen bir aerosol modelinden (CERES SYN1deg) gelir; "
+                "yaklaşık 100 km'lik (1 derece) ızgarada ve 2001'den itibaren.",
+                "Kar ve buz üzerinde ve kutup kışının karanlığında değer yoktur; bu aylar hesaba "
+                "katılmaz.",
                 "Çöl toz fırtınaları ve büyük orman yangınları bazı yılları öne çıkarabilir.",
                 "NASA POWER'daki en yeni aylar neredeyse gerçek zamanlı bir üründen gelebilir ve "
                 "sonradan düzeltilebilir.",
@@ -737,7 +755,7 @@ VARIABLE_TEXT: dict[str, dict[str, dict]] = {
                 "Bitkilerin ne kadar yeşil ve yoğun olduğu; -1 ile 1 arasında bir ölçek, yüksek değer "
                 "daha fazla yeşil bitki demek."
             ),
-            "annual_label": "Büyüme mevsimi (Mayıs–Eylül) ortalama NDVI",
+            "annual_label": "Mayıs–Eylül ortalama NDVI",
             "unit": "NDVI (birimsiz)",
             "annual_unit": "NDVI",
             "year_axis_label": "Yıl",
@@ -774,7 +792,8 @@ METHODS = {
   headline test, so both tests count persistent years the same way.
 - **Stamps:** *Confirmed* = significant and the second witness agrees; *Disputed* = significant but
   the second witness disagrees; *No evidence* = no significant trend; *Weak clue* = only the second
-  witness sees a trend.
+  witness sees a trend; *No snow* = it practically never snows there; *Not enough data* = fewer
+  than {min_years} complete years; *No data* = NASA has no values there.
 - **Total change** is the slope multiplied by the time span (last year minus first year), not the
   last value minus the first.
 - **Confidence band:** the shaded band is the 95% confidence band of the fitted line, not a range for
@@ -810,7 +829,8 @@ METHODS = {
   büyütülür; böylece iki test de birbirine benzeyen yılları aynı şekilde sayar.
 - **Damgalar:** *Doğrulandı* = anlamlı ve ikinci tanık doğruluyor; *Tartışmalı* = anlamlı ama ikinci
   tanık doğrulamıyor; *Delil yok* = anlamlı trend yok; *Zayıf ipucu* = trendi sadece ikinci tanık
-  görüyor.
+  görüyor; *Kar yok* = orada neredeyse hiç kar yağmıyor; *Yetersiz veri* = {min_years} tam yıldan
+  az; *Veri yok* = NASA'nın orada değeri yok.
 - **Toplam değişim**, eğimin dönemin uzunluğuyla (son yıl eksi ilk yıl) çarpımıdır; son değer
   eksi ilk değer değildir.
 - **Güven bandı:** gölgeli bant, oturtulan çizginin %95 güven bandıdır; tek tek yılların aralığı

@@ -136,12 +136,15 @@ COMPASS = {"en": ("E", "W", "N", "S"), "tr": ("D", "B", "K", "G")}
 
 
 def format_bbox(bbox: tuple[float, float, float, float], lang: str = "en") -> str:
-    """Readable rectangle, for example '27.0°E–30.0°E, 40.0°N–42.0°N' (Turkish: D/B/K/G, comma)."""
+    """Readable rectangle, for example '27°E–30.5°E, 40°N–42.25°N' (Turkish: D/B/K/G, comma).
+
+    Coordinates are rounded to 2 decimals elsewhere, so 2 decimals are shown, without trailing zeros.
+    """
     west, south, east, north = bbox
     east_letter, west_letter, north_letter, south_letter = COMPASS.get(lang, COMPASS["en"])
 
     def number(value: float) -> str:
-        text = f"{abs(value):.1f}"
+        text = f"{abs(value):.2f}".rstrip("0").rstrip(".")
         return text.replace(".", ",") if lang == "tr" else text
 
     def lon(value: float) -> str:

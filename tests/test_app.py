@@ -233,3 +233,21 @@ def test_reasons_cover_every_measurement_in_both_languages():
         r: set(v) for r, v in REGION_CONTEXT["tr"].items()
     }
     assert set(REGION_CONTEXT["en"]) <= set(REGIONS)
+
+
+def test_disputed_case_says_the_change_is_not_certain():
+    at = AppTest.from_file(APP, default_timeout=60)
+    at.session_state["region"] = "marmara"
+    at.run()
+    at.button(key="open_ndvi").click().run()
+    markdown = " ".join(md.value for md in at.markdown)
+    assert "not certain" in markdown
+    assert "The test shows that" not in markdown
+
+
+def test_covid_reason_only_when_the_period_includes_2020():
+    at = run_app("en")
+    at.button(key="example_no2").click().run()  # Colorado NO2 2005-2019: a significant fall
+    markdown = " ".join(md.value for md in at.markdown)
+    assert "COVID-19 lockdowns briefly" not in markdown
+    assert "economic slowdown" in markdown

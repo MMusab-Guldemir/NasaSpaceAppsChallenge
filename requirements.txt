@@ -1,6 +1,6 @@
 # Runtime dependencies for Streamlit Community Cloud (pinned). Editing this file makes the
 # Cloud rebuild the app from scratch, which also reloads every module in trend/.
-# Rebuild marker: world regions, dust and smoke, any-size rectangles (2026-11-14)
+# Rebuild marker: review fixes, form answers, Medina NDVI (2026-11-14)
 streamlit==1.67.0
 plotly==7.1.0
 pandas==3.1.1

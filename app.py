@@ -77,7 +77,7 @@ STYLE = """
 .stamp.confirmed { color: #1c5cab; }
 .stamp.noevidence { color: #52514e; }
 .stamp.disputed, .stamp.weak { color: #a8501b; }
-.stamp.open, .stamp.prepared_only, .stamp.insufficient, .stamp.no_snow {
+.stamp.open, .stamp.prepared_only, .stamp.insufficient, .stamp.no_snow, .stamp.no_data {
   color: #898781; border-style: dashed;
 }
 .clue-name { font-size: 0.78rem; letter-spacing: 0.06em; color: #52514e; min-height: 2.2em; }
@@ -411,6 +411,7 @@ if custom_mode:
                 unavailable_status[key] = "open"
                 message = str(error).lower()
                 if "fill" in message or "no grid cells" in message:
+                    unavailable_status[key] = "no_data"
                     name = lower_first(variable_text(lang, VARIABLES[key])["name"])
                     no_data_messages.append(t(lang, "err_no_data", variable=name))
                 else:
@@ -688,9 +689,17 @@ if result.end_year == last_year and result.n_years - 1 >= MIN_YEARS:
 # Step 7: possible reasons (the test shows that something changed, not why)
 st.markdown(f"<div class='step'>{html.escape(t(lang, 'step_reasons'))}</div>", unsafe_allow_html=True)
 direction = ("up" if result.slope_per_year > 0 else "down") if result.significant else "none"
-intro = "reasons_intro_change" if direction != "none" else "reasons_intro_none"
+if status == "disputed":
+    intro = "reasons_intro_disputed"
+elif direction != "none":
+    intro = "reasons_intro_change"
+else:
+    intro = "reasons_intro_none"
 st.markdown(t(lang, intro, subject=subject))
-st.markdown("\n".join(f"- {line}" for line in reasons(lang, case_key, direction)))
+reason_lines = list(reasons(lang, case_key, direction))
+if case_key == "no2" and direction == "down" and result.start_year <= 2020 <= result.end_year:
+    reason_lines.append(t(lang, "reason_covid"))  # only when the period includes 2020
+st.markdown("\n".join(f"- {line}" for line in reason_lines))
 context = region_context(lang, region_key, case_key)
 if context:
     st.info(f"**{t(lang, 'local_context')}:** {context}", icon="🔎")

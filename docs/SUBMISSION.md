@@ -1,13 +1,14 @@
-# Project Submission Draft (NASA Space Apps Challenge 2026)
+# Project Submission Text (NASA Space Apps Challenge 2026)
 
-> Working draft for the Space Apps project page. Written with AI assistance (Claude Opus 5.5).
-> Sections marked **[TEAM]** must be written or confirmed by Team Avni: the project concept and
-> the "detective" experience come from the team. Remove this note and every [TEAM] marker before
-> copying the text to the project page.
+> Text for the Space Apps project page. The ideas, decisions and the answers in "Why this challenge",
+> the tagline and "What we hope to achieve" come from Team Avni (translated from Turkish); the text
+> was drafted with AI assistance (Claude Opus 5.5). See "Use of Super Intelligence (SI)".
 
 ## Project Name
 
-Earth System Trend Detective **[TEAM: confirm the final name]**
+Earth System Trend Detective
+
+**Tagline:** Finding out whether the changes happening in our world are chance or have a reason.
 
 ## High-Level Project Summary
 
@@ -43,6 +44,9 @@ from the app's own NASA data and statistics code.
 
 ## Detailed Project Description
 
+**Why this challenge.** In Team Avni's own words: "I chose this challenge because it is much
+harder than the other topics, and it interested me more than any of the others."
+
 **Any place on Earth.** Besides ten prepared regions, users can draw, move and resize a rectangle
 on a world map, or type its corners, to investigate any area from 0.01° to 40° on each side. A
 rectangle smaller than NASA's grid uses the nearest grid cell; a large one is fetched in pieces of
@@ -52,8 +56,7 @@ vegetation, which come from slower NASA services that need a login, are prepared
 the prepared regions.
 
 **What it does.** The user opens an **investigation board** for a region: one clue card per
-measurement, each with its rate of change and a verdict stamp (Confirmed, Disputed, No evidence,
-Weak clue or Open case) and a small sparkline. After picking a clue, the user (1) chooses the
+measurement, each with its rate of change, a verdict stamp (Confirmed, Disputed, No evidence, Weak clue, Open case; plus No snow, Not enough data and No data where they apply) and a small sparkline. After picking a clue, the user (1) chooses the
 period, (2) immediately sees a large **"Real or chance?"** verdict with a chance meter that places
 the p-value against the 5% line, plus how much changed per decade and in total, (3) inspects the
 evidence: annual values with the fitted trend line and its 95% confidence band, (4) hears the
@@ -66,11 +69,11 @@ in English (default) or Turkish.
 
 **How it works.**
 1. *Data:* monthly area averages over the region, from NASA POWER (MERRA-2 based temperature and
-   snowfall), OMI tropospheric NO₂ (Giovanni area-averaged time series) and MODIS NDVI (AppEEARS
-   area statistics). Data for prepared regions are cached as small CSV files, so the app works even
+   snowfall; aerosol optical depth from CERES SYN1deg), OMI tropospheric NO₂ (Giovanni
+   area-averaged time series) and MODIS NDVI (AppEEARS area statistics). Data for prepared regions are cached as small CSV files, so the app works even
    when the source services are busy.
 2. *One value per year:* monthly values are aggregated per year (calendar-year means, water-year
-   snowfall totals from October to September, growing-season NDVI means from May to September),
+   snowfall totals from October to September, NDVI means from May to September),
    using only complete years.
 3. *Headline test:* ordinary least squares slope, 95% confidence interval and two-sided t-test. When
    consecutive years are positively correlated, the uncertainty is widened with an effective sample
@@ -101,11 +104,10 @@ decade in Istanbul–Marmara, 1981-2025).
 change is real, and download everything to check the result themselves. Every number comes with its
 uncertainty and its data source.
 
-**What we hope to achieve.** A tool that the team itself, the judges and later anyone can use to
-investigate environmental change the way a secret, expert detective would: following the evidence,
-calling a second witness, and only declaring a case "Confirmed" when the statistics support it.
-Colorado and Istanbul–Marmara are prepared with all four measurements, and the same pipeline can be
-repeated for more regions. **[TEAM: confirm or reword.]**
+**What we hope to achieve.** In Team Avni's own words: "In the future, the project should become a
+place where anyone who is really interested in NASA or in this topic can come to do research and
+learn." Ten regions are prepared today (vegetation greenness for the eight world regions is added as
+NASA AppEEARS delivers it), and the same pipeline can be repeated for more regions.
 
 **Tools.** Python, Streamlit, Plotly, pandas, NumPy, SciPy, pymannkendall, requests, folium and
 streamlit-folium (Leaflet, Leaflet.draw, OpenStreetMap map tiles); NASA POWER API, Giovanni and
@@ -114,17 +116,19 @@ loaders and the app.
 
 ## Use of Super Intelligence (SI)
 
-**[TEAM: confirm this text.]** Team Avni chose the challenge, the regions (Colorado,
+Team Avni chose the challenge, the regions (Colorado,
 Istanbul–Marmara and eight world regions picked from a list of options), the measurements
 (including dust and smoke for any rectangle), the "secret expert detective" theme, the pick a clue →
 choose the period → "real or chance?" flow, the Turkish option, the any-place-on-Earth rectangle of
 any size and the "possible reasons" step. Where the team asked for options (for example page layouts and candidate regions), the
 AI offered some and the team chose. Claude Opus 5.5 (Anthropic) wrote the code, the tests, the
-interface texts (English and Turkish) and the documentation drafts, and suggested the NASA data
-products and statistical methods that implement the team's choices. Claude Fable 5.2 (Anthropic)
+interface texts (English and Turkish) and the documentation drafts, translated the team's own
+Turkish answers for this page into English, and suggested the NASA data products and statistical
+methods that implement the team's choices. Claude Fable 5.2 (Anthropic)
 reviewed the plan, the statistics and the whole project; Claude Opus 5.5 fixed the review findings.
 Every AI-assisted source file says so in its header, AI-assisted commits carry a `Co-Authored-By`
-trailer, and the README has a "Use of AI" section. No AI-generated images, video or audio are used.
+trailer, and the README has a "Use of AI" section. The pitch deck's design is AI-assisted and says
+so on every slide; no other AI-generated images, video or audio are used.
 
 ## NASA Data
 
@@ -144,6 +148,20 @@ produced with AppEEARS (NASA EOSDIS LP DAAC and USGS EROS Center).
 ## Space Agency Partner Data and Other References
 
 - No Space Agency Partner data used.
+- IPCC (2021). Summary for Policymakers. In: *Climate Change 2021: The Physical Science Basis*.
+  Cambridge University Press, 3-32. doi:10.1017/9781009157896.001
+- Duncan, B. N., Lamsal, L. N., Thompson, A. M., et al. (2016). A space-based, high-resolution view
+  of notable changes in urban NOx pollution around the world (2005-2014). *J. Geophys. Res.
+  Atmos.*, 121, 976-996. doi:10.1002/2015JD024121
+- Zheng, B., Tong, D., Li, M., et al. (2018). Trends in China's anthropogenic emissions since 2010
+  as the consequence of clean air actions. *Atmos. Chem. Phys.*, 18, 14095-14111.
+  doi:10.5194/acp-18-14095-2018
+- Herrmann, S. M., Anyamba, A., & Tucker, C. J. (2005). Recent trends in vegetation dynamics in the
+  African Sahel and their relationship to climate. *Global Environmental Change*, 15, 394-404.
+  doi:10.1016/j.gloenvcha.2005.08.004
+- Rantanen, M., Karpechko, A. Y., Lipponen, A., et al. (2022). The Arctic has warmed nearly four
+  times faster than the globe since 1979. *Communications Earth & Environment*, 3, 168.
+  doi:10.1038/s43247-022-00498-3
 - Gelaro, R., et al. (2017). The Modern-Era Retrospective Analysis for Research and Applications,
   Version 2 (MERRA-2). *Journal of Climate*, 30, 5419-5454.
 - Krotkov, N. A., Lamsal, L. N., Marchenko, S. V., Fisher, B. L., Bucsela, E. J., Fasnacht, Z.,
@@ -172,14 +190,14 @@ produced with AppEEARS (NASA EOSDIS LP DAAC and USGS EROS Center).
 - Map tiles and map data © OpenStreetMap contributors (Open Database License).
 - "Special Elite" typewriter font by Astigmatic (Apache License 2.0), via Google Fonts.
 
-## 30-Second Demo Plan (draft)
+## 30-Second Video Plan (optional; the submitted demo is the 7-slide deck)
 
-Following the Space Apps template; the narration and visuals should be recorded by the team.
+Following the Space Apps template, in case the team also records a video.
 
 | Time | What to show | What to say (English, or Turkish with English subtitles) |
 |---|---|---|
 | 0:00-0:02 | Title card | Name and team name |
-| 0:02-0:05 | Challenge name | Which challenge and why you chose it **[TEAM]** |
-| 0:05-0:10 | App home screen | Project title and one-line tagline **[TEAM]** |
+| 0:02-0:05 | Challenge name | "Be An Earth System Trend Detective!": harder than the others, and the most interesting to me |
+| 0:05-0:10 | App home screen | Earth System Trend Detective: finding out whether the changes in our world are chance or have a reason |
 | 0:10-0:20 | Pick Colorado + air temperature, then NO₂ with the period slider | How it works, using free NASA data |
-| 0:20-0:30 | Result card and chart | What it can do for students and the world **[TEAM]** |
+| 0:20-0:30 | Result card and chart | A place where anyone interested in NASA or this topic can research and learn |

@@ -84,11 +84,13 @@ REGIONS: dict[str, Region] = {
     ),
     "sahel": Region(
         key="sahel", name="Sahel, West Africa", west=-2.0, south=12.0, east=8.0, north=16.0,
-        description="The Sahel belt south of the Sahara in Burkina Faso, Mali and Niger.",
+        description="The Sahel belt south of the Sahara in Burkina Faso, Mali, Niger and northern "
+        "Nigeria.",
     ),
     "alps": Region(
         key="alps", name="Alps, Switzerland and Austria", west=6.0, south=45.5, east=14.0, north=48.0,
-        description="The central Alps across Switzerland and Austria.",
+        description="The central and eastern Alps (Switzerland, Austria, northern Italy and "
+        "neighbours), including the northern edge of the Po Valley.",
     ),
     "siberia": Region(
         key="siberia", name="Siberia (Yakutia), Russia", west=125.0, south=60.0, east=135.0,

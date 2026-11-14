@@ -73,7 +73,7 @@ autocorrelation. A year enters the analysis only if it is complete for its aggre
 |---|---|---|
 | Temperature | calendar-year mean | all 12 months present |
 | NO2 | calendar-year mean of monthly means | 12 months, each with at least 10 valid days |
-| NDVI | growing-season mean, May to September | all 5 months present |
+| NDVI | mean of May to September (the northern growing season) | all 5 months present |
 | Snowfall | water-year total, October to September, labelled by its ending year | all 12 months present; mm/day x days in month |
 
 Tests on the annual series:
@@ -84,7 +84,10 @@ Tests on the annual series:
   headline. It uses the same persistence rule: when r1 > 0 its z-score is scaled by sqrt(n_eff / n)
   (an effective-sample-size correction in the spirit of Yue and Wang, 2004).
 - **Stamps:** Confirmed (significant, witness agrees), Disputed (significant, witness disagrees),
-  No evidence (not significant), Weak clue (only the witness sees a trend), Open case (no data).
+  No evidence (not significant), Weak clue (only the witness sees a trend), Open case (data not
+  available yet or the fetch failed), No snow (it practically never snows there), Not enough data
+  (fewer than 10 complete years, for example aerosols in the polar winter), No data (NASA has no
+  values there, for example over open sea).
 - **Rate:** per decade. **Total change:** slope x span of years, not last minus first.
 - **Guards:** block analysis below 10 years, warn below 20 years, always show n and the period.
   A non-significant result is worded "no significant trend detected", never "no change".
@@ -145,7 +148,7 @@ NasaSpaceAppsChallenge/
   tests), completeness rules, water-year labelling, total change, constant series;
 - loaders: POWER payload parsing, fill values, land-only cells, Giovanni CSVs, retry rules;
 - rectangles: validation, the 2 to 10 degree limits in plain floats, drawn and edited shapes;
-- app: every case file in both languages and both regions, examples, periods, custom areas with
+- app: every case file in both languages and the prepared regions, examples, periods, custom areas with
   synthetic live data, an offline NASA POWER.
 
 ## Deployment

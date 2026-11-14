@@ -96,7 +96,8 @@ def test_app_runs_a_custom_area_with_live_data(monkeypatch):
 
 
 def test_format_bbox_uses_compass_letters():
-    assert format_bbox((-109.05, 37.0, -102.04, 41.0)) == "109.0°W–102.0°W, 37.0°N–41.0°N"
+    assert format_bbox((-109.05, 37.0, -102.04, 41.0)) == "109.05°W–102.04°W, 37°N–41°N"
+    assert format_bbox((28.95, 41.0, 29.0, 41.05)) == "28.95°E–29°E, 41°N–41.05°N"
 
 
 def _covers(boxes, bbox, samples=20):
@@ -182,4 +183,4 @@ def test_unchanged_map_gives_no_drawn_rectangle():
 
 
 def test_format_bbox_in_turkish_uses_turkish_letters_and_comma():
-    assert format_bbox((-109.05, 37.0, -102.04, 41.0), "tr") == "109,0°B–102,0°B, 37,0°K–41,0°K"
+    assert format_bbox((-109.05, 37.0, -102.04, 41.0), "tr") == "109,05°B–102,04°B, 37°K–41°K"

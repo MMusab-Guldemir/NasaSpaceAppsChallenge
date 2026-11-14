@@ -372,3 +372,19 @@ def test_dust_and_smoke_is_served_by_power():
     from trend.fetch import POWER_VARIABLES
 
     assert POWER_VARIABLES["aod"] == ("AOD_55", False)
+
+
+def test_zero_aerosol_values_count_as_missing():
+    from trend.fetch import parse_power_regional
+
+    payload = {
+        "header": {"fill_value": -999.0},
+        "features": [
+            feature(28.0, 41.0, {"202001": 0.2, "202002": 0.0, "202003": 0.3}),
+            feature(29.0, 41.0, {"202001": 0.4, "202002": 0.1, "202003": 0.0}),
+        ],
+    }
+    for feature_ in payload["features"]:
+        feature_["properties"]["parameter"] = {"AOD_55": feature_["properties"]["parameter"]["T2M"]}
+    monthly = parse_power_regional(payload, "AOD_55")
+    assert monthly["value"].notna().tolist() == [True, False, False]  # a zero cell makes the month missing
