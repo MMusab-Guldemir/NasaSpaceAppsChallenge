@@ -144,9 +144,13 @@ WHY = {
 
 CHARACTERS = {
     "en": {"air_temperature": "Mr. Heat", "snowfall": "Ms. Snow", "no2": "Mr. Exhaust",
-           "aod": "Ms. Dust", "ndvi": "Auntie Green"},
+           "aod": "Ms. Dust", "ndvi": "Auntie Green", "precipitation": "Ms. Rain",
+           "hot_days": "Mr. Scorcher", "co": "Mr. Smoke", "black_carbon": "Mr. Soot",
+           "co2": "Grandpa Carbon", "tree_cover": "Sister Forest", "groundwater": "Grandpa Well"},
     "tr": {"air_temperature": "Bay Sıcaklık", "snowfall": "Kar Hanım", "no2": "Egzoz Bey",
-           "aod": "Toz Hanım", "ndvi": "Yeşil Teyze"},
+           "aod": "Toz Hanım", "ndvi": "Yeşil Teyze", "precipitation": "Yağmur Hanım",
+           "hot_days": "Kavurucu Bey", "co": "Duman Bey", "black_carbon": "Kurum Bey",
+           "co2": "Karbon Dede", "tree_cover": "Orman Abla", "groundwater": "Kuyu Dede"},
 }
 
 GAME_TEXT = {
