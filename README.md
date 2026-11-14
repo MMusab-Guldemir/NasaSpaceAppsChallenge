@@ -120,6 +120,10 @@ Highlights from the world regions (full records unless stated):
 - Air temperature rose significantly in nine of the ten prepared regions, from +0.12 °C per decade
   in the Sahel to +0.55 °C per decade in Istanbul–Marmara (1981-2025); in Beijing the rise
   (+0.23 °C per decade) is borderline (p = 0.06).
+- Independent check with NASA GISTEMP weather stations (1981-2025): Istanbul–Marmara +0.55 °C per
+  decade, almost exactly the app's +0.547, both Confirmed. Beijing +0.42 °C per decade (p < 0.001,
+  Confirmed): Beijing is probably warming too, and the app's record shows a slower rise that just
+  misses the 5% line.
 
 ## Data
 
