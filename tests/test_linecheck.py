@@ -70,7 +70,7 @@ def test_istanbul_air_temperature_gets_no_note():
 
 def test_curved_series_without_a_one_way_movement_gets_no_note():
     # Los Angeles aerosols: flat for twenty years, then a late rise. Curved, but not one-way, so the
-    # note's "move in one direction almost every year" would not be true.
+    # note's "mostly move one way" would not be true.
     verdict = board_verdict(load_processed("los_angeles", "aod"), "aod")
     check = line_check(verdict.annual["year"], verdict.annual["value"], verdict.result)
     assert check.curved and check.plain_mk_p > 0.05

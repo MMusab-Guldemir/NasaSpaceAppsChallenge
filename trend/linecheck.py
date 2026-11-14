@@ -30,7 +30,7 @@ EXACT_FIT = 1e-12  # leftovers this small (relative to the spread of the values)
 LINE_TEXT = {
     "en": {
         "note": (
-            "The values move in one direction almost every year (plain Mann-Kendall, {p}), but not "
+            "Over the period the values mostly move one way (plain Mann-Kendall, {p}), but not "
             "along a straight line. A straight line fits poorly, the leftover pattern looks like "
             "persistence, and our cautious rule then counts only about {n_eff} independent years. Try a "
             "shorter period where the change is closer to a line."
@@ -38,7 +38,7 @@ LINE_TEXT = {
     },
     "tr": {
         "note": (
-            "Değerler neredeyse her yıl aynı yöne gidiyor (düz Mann-Kendall, {p}), ama düz bir çizgi "
+            "Dönem boyunca değerler çoğunlukla tek yöne gidiyor (düz Mann-Kendall, {p}), ama düz bir çizgi "
             "boyunca değil. Düz çizgi iyi oturmuyor, geriye kalan desen kalıcılık gibi görünüyor ve "
             "temkinli kuralımız yalnızca yaklaşık {n_eff} bağımsız yıl sayıyor. Değişimin çizgiye daha "
             "yakın olduğu daha kısa bir dönem dene."

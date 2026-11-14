@@ -885,6 +885,7 @@ result = analyze_trend(annual["year"], annual["value"], min_years=min_years)
 band = trend_line_band(annual["year"], annual["value"])
 status = case_status(result)
 rate = num(result.slope_per_decade, lang, decimals, signed=True)
+line_note = line_check(annual["year"], annual["value"], result)  # shown under an undecided verdict
 with verdict_slot:
     mark = cell_symbol(Cell(region_key, case_key, status, result.slope_per_decade))
     mark = f"{mark} " if mark not in ("", "–") else ""
@@ -954,7 +955,6 @@ else:
         )
     )
     # A steady change that is not a straight line can look like chance (trend/linecheck.py)
-    line_note = line_check(annual["year"], annual["value"], result)
     if line_note.show:
         st.info(line_text(lang, p_phrase(line_note.plain_mk_p, lang), num(result.n_effective, lang, 0)))
 if result.n_years < RECOMMENDED_YEARS:
@@ -1011,7 +1011,8 @@ if len(timeline) >= 3:
     elif earlier:
         st.markdown(timeline_text(lang, "flipped", years=year_ranges(earlier)))
     else:
-        st.markdown(timeline_text(lang, "not_solid"))
+        # "A longer record may help" would contradict the straight-line note's "try a shorter period"
+        st.markdown(timeline_text(lang, "not_solid_curved" if line_note.show else "not_solid"))
     check = start_year_check(annual, min_years)
     if check:
         st.markdown(timeline_text(

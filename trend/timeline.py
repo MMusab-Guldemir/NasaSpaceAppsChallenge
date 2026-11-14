@@ -29,6 +29,7 @@ TIMELINE_TEXT = {
         ),
         "solid_since": "**Solid since {year}:** every record ending in {year} or later is Confirmed, with the same {direction}.",
         "not_solid": "**Not solid yet:** the chosen period does not get the Confirmed stamp. A longer record may change that.",
+        "not_solid_curved": "**Not solid yet:** the chosen period does not get the Confirmed stamp; see the note about the straight line above.",
         "flipped": (
             "**The evidence went back and forth:** records ending in {years} were Confirmed, but the "
             "chosen period is not."
@@ -49,6 +50,7 @@ TIMELINE_TEXT = {
         ),
         "solid_since": "**{year} yılından beri sağlam:** {year} veya sonrasında biten her kayıt aynı yönde ({direction}) Doğrulandı.",
         "not_solid": "**Henüz sağlam değil:** Seçilen dönem Doğrulandı damgası almıyor. Daha uzun bir kayıt bunu değiştirebilir.",
+        "not_solid_curved": "**Henüz sağlam değil:** Seçilen dönem Doğrulandı damgası almıyor; yukarıdaki düz çizgi notuna bak.",
         "flipped": (
             "**Delil gidip geldi:** {years} yıllarında biten kayıtlar doğrulanmıştı, seçilen dönem ise "
             "doğrulanmıyor."
