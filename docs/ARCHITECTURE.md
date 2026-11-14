@@ -146,6 +146,10 @@ Tests on the annual series:
   downloads, methods), data source with DOI.
 - English by default, Turkish switch (decimal comma in Turkish); share links restore language,
   region or rectangle, case and period.
+- Added on Saturday evening: a "Case on the desk" verdict strip and famous cases at the top, a jump
+  to the case file, the evidence timeline and start-year check, the animated replay, the seasons view,
+  the "not a straight line" note, the World board view (`?view=world`), and, from the partner session,
+  the crime scene map layer and the third witness.
 
 ## Project structure
 
@@ -161,7 +165,16 @@ NasaSpaceAppsChallenge/
 │   ├── area.py             # custom rectangles
 │   ├── charts.py           # Plotly figures
 │   ├── i18n.py             # English and Turkish texts
-│   └── share.py            # share links
+│   ├── share.py            # share links
+│   ├── world.py            # World board: every region and measurement, opposite trends
+│   ├── timeline.py         # evidence timeline and start-year check
+│   ├── replay.py           # animated replay of the verdict as years are added
+│   ├── seasons.py          # monthly values with the seasonal cycle removed
+│   ├── linecheck.py        # "not a straight line" note
+│   ├── examples.py         # famous cases (checked against the data by tests)
+│   ├── trendmap.py         # crime scene map: grid-cell trends with a Benjamini-Hochberg filter
+│   ├── verify.py           # third witness and "why is it not verified?"
+│   └── game.py             # Detective exam
 ├── scripts/prefetch.py     # fetch and cache region x variable CSVs
 ├── data/raw/               # manual downloads (git-ignored)
 ├── data/processed/         # small cached CSVs (committed)
@@ -173,7 +186,7 @@ NasaSpaceAppsChallenge/
 
 ## Testing
 
-168 automated tests (`python -m pytest -q`), all offline:
+323 automated tests (`python -m pytest -q`), all offline:
 - statistics: known-slope series, white and autocorrelated noise (false-positive rates of both
   tests), completeness rules, water-year labelling, total change, constant series;
 - loaders: POWER payload parsing, fill values, land-only cells, Giovanni CSVs, retry rules;

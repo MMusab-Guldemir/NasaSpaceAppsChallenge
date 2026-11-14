@@ -27,15 +27,23 @@ Pick a place and a measurement from NASA Earth data, and find out **what** is ch
 2. An **investigation board** shows every clue for the area: one card per measurement with its
    rate of change and a verdict stamp (Confirmed, Disputed, No evidence, Weak clue, Open case; plus No snow, Not enough data and No data where they apply).
    A "Case on the desk" strip at the top always shows the open case's stamp and rate, and opening a
-   case scrolls straight to its case file.
+   case scrolls straight to its case file. **Famous cases from around the world** sit right under it:
+   one click opens the Amazon drying, the opposite case of Beijing getting wetter, Beijing's air after
+   2013, Istanbul warming, the air over Cairo clearing, and a lesson on records that are too short
+   (each one is checked against the data by a test).
 3. The user picks a clue, chooses the **period**, and immediately gets a large
    **"Real or chance?"** verdict with a chance meter, followed by the evidence (chart) and a
    second witness. An **EN / TR** switch (top right) shows the whole app in English or Turkish.
    **How the evidence built up:** the same test is run as if the record had ended in each year, so
    students see when a trend became solid ("solid since 2012") or that the evidence went back and
    forth. A **start-year check** counts how many possible start years give the same verdict, so a
-   cherry-picked period is easy to spot.
+   cherry-picked period is easy to spot. **Replay the investigation** animates the same story: press
+   Play and watch the trend line and the stamp change as years are added. When a steady change does
+   not follow a straight line (Los Angeles NO₂ falls fast before 2010, then slowly), a note explains
+   why the cautious test cannot decide and suggests a shorter period.
 4. Behind the scenes, NASA monthly data become one value per year (removing the seasonal cycle).
+   The monthly chart can switch to "Seasonal cycle removed" (each month compared with its own usual
+   value) and says how much bigger the seasonal swing is than the trend.
 5. The app fits a linear trend and reports:
    - the **rate of change per decade** with its 95% confidence interval,
    - whether the trend is **significant** (two-sided t-test, adjusted for year-to-year persistence
@@ -253,7 +261,7 @@ scripts/prefetch.py    fetches and caches data for a region
 scripts/build_gistemp_witness.py  NASA GISTEMP area means for the temperature witness
 data/processed/        small cached monthly CSVs used by the app
 data/witness/          second-dataset series for the third witness (GISTEMP, GPCP, IMERG, MODIS, GLDAS)
-tests/                 unit and app tests (285)
+tests/                 unit and app tests (323)
 docs/ARCHITECTURE.md   design and methods
 docs/SUBMISSION.md     draft of the Space Apps project page
 ```
