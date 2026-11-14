@@ -104,6 +104,16 @@ from trend.trendmap import (
     summarize,
     why_text,
 )
+from trend.timelapse import (
+    LAYER_KEYS,
+    annual_cells,
+    build_payload,
+    layer_from_annual,
+    load_annual_cells,
+    prepared_cell_size,
+    render_timelapse_html,
+    time_text,
+)
 from trend.variables import VARIABLES
 from trend.world import (
     SHORT_NAMES,
@@ -248,6 +258,30 @@ def grid_trends(variable_key: str, bbox: tuple[float, float, float, float], star
     trends = cell_trends(cells, variable_key, start, end)
     size = cell_size(cells) if len(cells) else (0.5, 0.625)
     return trends, int(trends.attrs.get("no_snow_cells", 0)), size
+
+
+@st.cache_data(show_spinner=False, max_entries=24)
+def time_layers_prepared(region_key: str, lang: str) -> list[dict]:
+    """Yearly squares of every measurement prepared for a region (data/processed/grid)."""
+    layers = []
+    for key in LAYER_KEYS:
+        annual = load_annual_cells(region_key, key)
+        layer = layer_from_annual(annual, key, lang)
+        if layer is not None:
+            layer["cell"] = list(prepared_cell_size(annual))
+            layers.append(layer)
+    return layers
+
+
+@st.cache_data(show_spinner=False, max_entries=16)
+def time_layer_live(variable_key: str, bbox: tuple[float, float, float, float], lang: str) -> list[dict]:
+    """Yearly squares of one measurement for a drawn area, from the live grid cells."""
+    cells = grid_cells(variable_key, bbox)
+    layer = layer_from_annual(annual_cells(cells, variable_key), variable_key, lang)
+    if layer is None:
+        return []
+    layer["cell"] = list(cell_size(cells))
+    return [layer]
 
 
 def area_map(bbox: tuple[float, float, float, float], scene=None) -> folium.Map:
@@ -498,8 +532,8 @@ if "_url_loaded" not in st.session_state:
             pass
     if params.get("view") in ("exam", "world"):
         st.session_state["view"] = params.get("view")
-    if params.get("map") == "scene":
-        st.session_state["map_layer"] = "scene"
+    if params.get("map") in ("scene", "time"):
+        st.session_state["map_layer"] = params.get("map")
     st.session_state["_url_loaded"] = True
 
 default_region = next(iter(REGIONS))
@@ -605,9 +639,11 @@ else:
 
 st.markdown(f"<div class='step'>{html.escape(t(lang, 'step_where'))}</div>", unsafe_allow_html=True)
 mtext = map_text(lang)
+ttext = time_text(lang)
 st.session_state.setdefault("map_layer", "area")
 st.segmented_control(
-    "Map layer", options=["area", "scene"], format_func=lambda key: mtext[f"layer_{key}"],
+    "Map layer", options=["area", "scene", "time"],
+    format_func=lambda key: ttext["layer"] if key == "time" else mtext[f"layer_{key}"],
     key="map_layer", label_visibility="collapsed", required=True,
 )
 # Crime scene layer (idea chosen by Team Avni): a trend test for every grid cell of the area, for
@@ -652,12 +688,56 @@ if st.session_state["map_layer"] == "scene":
                 if len(scene_trends):
                     scene = (scene_trends, scene_size, lang, scene_variable)
                     scene_years = (int(scene_trends["start_year"].min()), int(scene_trends["end_year"].max()))
-st.caption(t(lang, "map_help"))
-map_state = st_folium(
-    area_map(active_bbox, scene), height=460 if scene else 420, use_container_width=True,
-    returned_objects=["last_active_drawing", "all_drawings"],
-    key=f"area_map_{region_key}_{active_bbox}_{st.session_state['map_layer']}_{scene_variable}_{scene_years}",
-)
+if st.session_state["map_layer"] == "time":
+    # Time travel map (idea chosen by Team Avni): zoom in and slide through the years.
+    picked = st.session_state.get("case")
+    if not custom_mode and picked not in available_variable_keys(region_key):
+        picked = None
+    time_layers: list[dict] = []
+    if custom_mode:
+        if max(active_bbox[2] - active_bbox[0], active_bbox[3] - active_bbox[1]) > MAX_MAP_SPAN:
+            st.info(ttext["too_big"].format(max=num(MAX_MAP_SPAN, lang, 0)))
+        else:
+            live_key = picked if picked in POWER_VARIABLES else "air_temperature"
+            time_failures = st.session_state.setdefault("_live_fail", {})
+            time_fail_key = ("time", live_key, active_bbox)
+            time_remembered = time_failures.get(time_fail_key)
+            if time_remembered and time.time() - time_remembered[1] < LIVE_RETRY_SECONDS:
+                st.warning(ttext["fetch_failed"])
+            else:
+                try:
+                    with st.spinner(ttext["loading"]):
+                        time_layers = time_layer_live(live_key, active_bbox, lang)
+                except (DataSourceError, requests.RequestException, ValueError, KeyError, TypeError,
+                        IndexError, AttributeError) as error:
+                    LOG.warning("Time map failed for %s %s: %r", live_key, active_bbox, error)
+                    time_failures[time_fail_key] = ("open", time.time())
+                    st.warning(ttext["fetch_failed"])
+                else:
+                    time_failures.pop(time_fail_key, None)
+            st.caption(ttext["custom_note"])
+    else:
+        with st.spinner(ttext["loading"]):
+            time_layers = time_layers_prepared(region_key, lang)
+    shown_keys = [layer["key"] for layer in time_layers]
+    if picked in VARIABLES and time_layers and picked not in shown_keys:
+        st.caption(ttext["fallback"].format(picked=variable_text(lang, VARIABLES[picked])["name"],
+                                            shown=time_layers[0]["name"]))
+    if not time_layers:
+        st.caption(ttext["nothing"])
+    time_payload = build_payload(time_layers, active_bbox, None if custom_mode else region_key, lang, picked,
+                                 cell=(0.5, 0.625))
+    components.html(render_timelapse_html(time_payload), height=670, scrolling=False)
+    st.caption(ttext["honesty"])
+    st.caption(ttext["gibs_ack"])
+    map_state = None
+else:
+    st.caption(t(lang, "map_help"))
+    map_state = st_folium(
+        area_map(active_bbox, scene), height=460 if scene else 420, use_container_width=True,
+        returned_objects=["last_active_drawing", "all_drawings"],
+        key=f"area_map_{region_key}_{active_bbox}_{st.session_state['map_layer']}_{scene_variable}_{scene_years}",
+    )
 if scene_summary is not None and (scene_years or no_snow_cells):
     # The place's results under the map: what the cells show, where, and possible reasons.
     if scene_years:
@@ -904,8 +984,8 @@ periods[case_key] = (start_year, end_year)
 state = {"lang": lang, "region": region_key, "case": case_key, "start": str(start_year), "end": str(end_year)}
 for corner, value in zip(("w", "s", "e", "n"), active_bbox if custom_mode else ()):
     state[corner] = str(value)
-if st.session_state.get("map_layer") == "scene":
-    state["map"] = "scene"
+if st.session_state.get("map_layer") in ("scene", "time"):
+    state["map"] = st.session_state["map_layer"]
 st.query_params.from_dict(state)
 annual = annual_all[annual_all["year"].between(start_year, end_year)].reset_index(drop=True)
 min_years = variable.min_years

@@ -104,6 +104,18 @@ one record has a break. Every case that is not Confirmed lists its reasons
 disagreeing) and a rough record length that would give a 90% chance of detecting the change if it
 continued (Weatherhead et al., 1998).
 
+**Time travel map.** Team Avni's own idea: zoom into a place like a web map and slide through the
+years at the bottom. Every NASA POWER grid cell is coloured by how far that year was from the
+cell's own 1981-2010 normal (the 2001-2010 average for dust and smoke): temperature, hot days and
+dust and smoke as plain differences, rain and snow in percent of normal (millimetres in deserts),
+on one fixed scale per place, so years compare. A play button runs the years; a stripe above the
+slider shows the yearly average of the squares, and the 3 highest or lowest years are named. In
+the Sahel the map turns from the brown drought years of the 1980s to green-blue recent years, and
+2024 comes out as the wettest of 45 years, the same answer as the case file. Optional NASA GIBS
+satellite images of the same year (true colour, vegetation greenness, snow cover, night lights,
+land cover, carbon monoxide) give context; the page says that one year can be unusual by chance
+and that the trend test, not the colours, decides.
+
 **How it works.**
 1. *Data:* monthly area averages over the region, from NASA POWER (MERRA-2 based temperature,
    precipitation and snowfall; aerosol optical depth from CERES SYN1deg), Giovanni area-averaged
@@ -157,8 +169,8 @@ learn." Ten regions are prepared today with vegetation greenness for all of them
 when NASA AppEEARS delivers it), and the same pipeline can be repeated for more regions.
 
 **Tools.** Python, Streamlit, Plotly, pandas, NumPy, SciPy, pymannkendall, requests, folium and
-streamlit-folium (Leaflet, Leaflet.draw, OpenStreetMap map tiles); NASA POWER API, Giovanni and
-AppEEARS; GitHub; Streamlit Community Cloud. 407 automated tests check the statistics, the data
+streamlit-folium (Leaflet, Leaflet.draw, OpenStreetMap map tiles); NASA POWER API, Giovanni,
+AppEEARS and NASA GIBS imagery tiles; GitHub; Streamlit Community Cloud. 432 automated tests check the statistics, the data
 loaders, the game, the map, the verification and the app.
 
 ## Use of Super Intelligence (SI)
@@ -173,8 +185,10 @@ any size and the "possible reasons" step. Where the team asked for options (for 
 AI offered some and the team chose. The Detective exam game was one of several feature ideas the
 AI offered when the team asked for creative additions; the team picked it, tested a preview and
 directed its changes. The crime scene map was another offered idea that the team chose and shaped;
-the verification step (a second NASA dataset as a third witness, and why a result is not verified)
-was the team's own request, with witness datasets and methods suggested by the AI and reviewed by
+the time travel map (zoom into a place and slide through the years) was the team's own idea,
+built by the AI and tested by the team as a preview before it was added; the verification step (a
+second NASA dataset as a third witness, and why a result is not verified) was the team's own
+request, with witness datasets and methods suggested by the AI and reviewed by
 Claude Fable before they were added. Claude Opus 5.5 (Anthropic) wrote the code, the tests, the
 interface texts (English and Turkish) and the documentation drafts, translated the team's own
 Turkish answers for this page into English, and suggested the NASA data products and statistical
@@ -214,6 +228,10 @@ V07 monthly (Huffman et al., 2023, doi:10.5067/GPM/IMERG/3B-MONTH/07); MODIS Ter
 aerosol optical depth (Platnick et al., 2017, doi:10.5067/MODIS/MOD08_M3.061); GLDAS-2.1 Noah monthly
 snowfall (Beaudoing & Rodell, 2020, doi:10.5067/SXAVCZFAQLNO). Area averages of the last four were
 produced with Giovanni.
+
+Imagery shown as context on the time travel map (not analysed): NASA GIBS tiles of MODIS Terra
+corrected reflectance, MODIS Terra NDVI and snow cover (monthly), MODIS land cover (yearly), VIIRS
+SNPP night lights and MOPITT carbon monoxide. We acknowledge the use of imagery provided by services from NASA's Global Imagery Browse Services (GIBS), part of NASA's Earth Science Data and Information System (ESDIS).
 
 ## Space Agency Partner Data and Other References
 

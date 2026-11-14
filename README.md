@@ -93,6 +93,17 @@ Pick a place and a measurement from NASA Earth data, and find out **what** is ch
     a change small next to the year-to-year swings, a curved shape, the two tests disagreeing, and a
     rough record length that would give a 90% chance of detecting the change (Weatherhead et al.,
     1998). Where the gap between two records jumps, the page says one of them has a break.
+12. **Time travel map:** the third switch above the "Where?" map, "Time travel (years)", opens a
+    zoomable map of the place with a year slider at the bottom and a play button. Every NASA POWER
+    grid cell is coloured by how far that year was from the cell's own normal (1981-2010; the
+    2001-2010 average for dust and smoke): temperature, hot days and dust and smoke as plain
+    differences, rain and snow in percent of normal (in millimetres in deserts), on one fixed scale
+    per place so that years compare. A stripe above the slider shows the yearly average of the
+    squares (weighted by latitude), and the 3 highest or lowest years are named: the Sahel's 2024
+    is the wettest of 45 years, as in the case file. Optional NASA GIBS satellite images of the same
+    year (true colour, vegetation greenness, snow cover, night lights, land cover, carbon monoxide)
+    give context. The page says that one year can be unusual by chance, that the trend test, not
+    the colours, decides, and that the images are context, not evidence. Link: `?map=time`.
 
 ## First results (full records)
 
@@ -190,6 +201,11 @@ Second datasets used only as the "third witness" (monthly area means in `data/wi
 - Beaudoing, H., & Rodell, M. (2020). GLDAS Noah Land Surface Model L4 monthly 0.25 x 0.25 degree
   V2.1. NASA GES DISC. https://doi.org/10.5067/SXAVCZFAQLNO
 
+Imagery shown as context on the time travel map (not analysed): NASA GIBS tiles of MODIS Terra
+corrected reflectance (true colour), MODIS Terra NDVI and snow cover (monthly), MODIS land cover
+(yearly), VIIRS SNPP night lights and MOPITT carbon monoxide. We acknowledge the use of imagery provided by services from NASA's Global Imagery Browse Services (GIBS), part of NASA's Earth Science Data and Information System (ESDIS). Base map
+© OpenStreetMap contributors.
+
 Methods for the map and the verification:
 - Benjamini, Y., & Hochberg, Y. (1995). Controlling the false discovery rate: a practical and
   powerful approach to multiple testing. *J. R. Stat. Soc. B*, 57, 289-300.
@@ -269,11 +285,12 @@ trend/share.py         share links
 trend/game.py          Detective exam game: cases, answers, explanations and the game page
 trend/trendmap.py      crime scene map: a trend test per grid cell, the many-cells correction, the map layer
 trend/verify.py        third witness (a second NASA dataset) and the reasons a result is not verified
+trend/timelapse.py     time travel map: yearly squares, differences from the normal, NASA imagery, the page
 scripts/prefetch.py    fetches and caches data for a region
 scripts/build_gistemp_witness.py  NASA GISTEMP area means for the temperature witness
 data/processed/        small cached monthly CSVs used by the app
 data/witness/          second-dataset series for the third witness (GISTEMP, GPCP, IMERG, MODIS, GLDAS)
-tests/                 unit and app tests (407)
+tests/                 unit and app tests (432)
 docs/ARCHITECTURE.md   design and methods
 docs/SUBMISSION.md     draft of the Space Apps project page
 ```
@@ -292,7 +309,10 @@ creative additions; the team picked it, tested a preview and asked for the self-
 faster play, a "why?" explanation after each answer instead of a guessing question, and a 20-case
 exam. The crime scene map was another of those offered ideas; the team chose it and asked to build
 it into the "Where?" map with a dots-on/dots-off switch and the place's results and reasons
-underneath. The verification step was the team's own request ("fetch more and more detailed NASA
+underneath. The time travel map was the team's own idea (zoom into a place like a web map and
+slide through the years at the bottom); the AI researched the NASA imagery and built it, the team
+tested a preview, and another AI session reviewed its statistics. The verification step was the
+team's own request ("fetch more and more detailed NASA
 data, verify, and explain why a result could not be verified"); the AI suggested the witness
 datasets and methods, and Claude Fable reviewed that code before it was added.
 
