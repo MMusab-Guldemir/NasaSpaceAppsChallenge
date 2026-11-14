@@ -257,6 +257,9 @@ VARIABLES: dict[str, Variable] = {
             "air we breathe at the ground, so it is not the same as PM2.5.",
             "It comes from an aerosol model corrected with MODIS satellite measurements (CERES "
             "SYN1deg), on a grid of about 100 km (1 degree), starting in 2001.",
+            "From April 2022 the model is corrected with a different satellite instrument (VIIRS "
+            "instead of MODIS), which can shift the last years a little. For a cautious check, also "
+            "try the period up to 2021.",
             "There are no values over snow and ice or in the darkness of the polar winter, so such "
             "months are left out.",
             "Desert dust storms and big wildfires can make single years stand out.",

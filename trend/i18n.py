@@ -982,6 +982,8 @@ VARIABLE_TEXT: dict[str, dict[str, dict]] = {
                 "sütunundaki parçacıkları sayar; bu yüzden PM2,5 ile aynı şey değildir.",
                 "MODIS uydu ölçümleriyle düzeltilen bir aerosol modelinden (CERES SYN1deg) gelir; "
                 "yaklaşık 100 km'lik (1 derece) ızgarada ve 2001'den itibaren.",
+                "Nisan 2022'den beri model başka bir uydu aletiyle (MODIS yerine VIIRS) düzeltiliyor; bu, "
+                "son yılları biraz kaydırabilir. Temkinli bir kontrol için 2021'e kadarki dönemi de dene.",
                 "Kar ve buz üzerinde ve kutup kışının karanlığında değer yoktur; bu aylar hesaba "
                 "katılmaz.",
                 "Çöl toz fırtınaları ve büyük orman yangınları bazı yılları öne çıkarabilir.",
