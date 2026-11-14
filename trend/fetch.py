@@ -8,6 +8,7 @@ from __future__ import annotations
 import io
 import logging
 import math
+import threading
 import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
@@ -273,16 +274,32 @@ def fetch_power_area(
         raise ValueError(f"'{variable.key}' is not served by the POWER API.")
     parameter, is_daily_rate = POWER_VARIABLES[variable.key]
     boxes = power_request_boxes(bbox)
+    failed = threading.Event()  # set by the first piece that fails
 
     def one(box):
+        # A worker that frees up when a piece fails can start another piece before the caller has
+        # cancelled it. That piece sends no request: the failed piece's error is raised anyway, so
+        # its result would never be used.
+        if failed.is_set():
+            return None
         region = Region("custom", "custom", *box)
-        return _request_retrying(parameter, region, start_year, end_year, timeout, pauses)
+        try:
+            return _request_retrying(parameter, region, start_year, end_year, timeout, pauses)
+        except Exception:
+            failed.set()
+            raise
 
     if len(boxes) == 1:
         payloads = [one(boxes[0])]
     else:
-        with ThreadPoolExecutor(max_workers=min(workers, len(boxes))) as pool:
+        # Not a with-block: leaving one waits for every piece still running, so with NASA POWER down
+        # a large rectangle would keep the page waiting for many timeout rounds after the first
+        # failure. Pieces not yet started are cancelled and the error is reported at once.
+        pool = ThreadPoolExecutor(max_workers=min(workers, len(boxes)))
+        try:
             payloads = list(pool.map(one, boxes))
+        finally:
+            pool.shutdown(wait=False, cancel_futures=True)
     try:
         header = payloads[0].get("header", {})
         fill_value = float(header.get("fill_value", -999.0))

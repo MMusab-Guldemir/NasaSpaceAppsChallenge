@@ -388,3 +388,58 @@ def test_zero_aerosol_values_count_as_missing():
         feature_["properties"]["parameter"] = {"AOD_55": feature_["properties"]["parameter"]["T2M"]}
     monthly = parse_power_regional(payload, "AOD_55")
     assert monthly["value"].notna().tolist() == [True, False, False]  # a zero cell makes the month missing
+
+
+LARGE_BBOX = (20.0, 30.0, 45.0, 40.0)  # six request pieces
+
+
+def test_first_failing_piece_stops_the_rest_of_a_large_rectangle(monkeypatch):
+    import time
+
+    import requests
+
+    from trend.fetch import fetch_power_area
+    from trend.variables import get_variable
+
+    def behaviour(n, parameter, box):
+        if n == 1:
+            time.sleep(0.05)  # a failure that takes a moment, like a timeout
+            raise requests.ReadTimeout("NASA POWER is down")
+        return _grid_payload(box, parameter=parameter)
+
+    calls, pauses = _patch_requests(monkeypatch, behaviour)
+    with pytest.raises(requests.ReadTimeout):
+        fetch_power_area(get_variable("air_temperature"), LARGE_BBOX, 2020, 2020, workers=1)
+    assert len(calls) == 1 and pauses == []  # the five later pieces are never requested
+
+
+def test_area_error_does_not_wait_for_a_piece_still_running(monkeypatch):
+    import threading
+
+    import requests
+
+    from trend.area import power_request_boxes
+    from trend.fetch import fetch_power_area
+    from trend.variables import get_variable
+
+    boxes = power_request_boxes(LARGE_BBOX)
+    running, release, finished = threading.Event(), threading.Event(), threading.Event()
+
+    def behaviour(n, parameter, box):
+        if box == boxes[0]:
+            running.wait(5)  # fail while the second piece is still being fetched
+            raise requests.ReadTimeout("NASA POWER is down")
+        if box == boxes[1]:
+            running.set()
+            release.wait(5)
+            finished.set()
+        return _grid_payload(box, parameter=parameter)
+
+    calls, _ = _patch_requests(monkeypatch, behaviour)
+    try:
+        with pytest.raises(requests.ReadTimeout):
+            fetch_power_area(get_variable("air_temperature"), LARGE_BBOX, 2020, 2020, workers=2)
+        assert not finished.is_set()  # the error came back while the second piece was still running
+    finally:
+        release.set()
+    assert sorted(boxes.index(call[1]) for call in calls) == [0, 1]
