@@ -31,7 +31,9 @@ MIN_BASELINE_SHARE = 2 / 3  # a cell needs at least two thirds of its baseline y
 SCALE_PERCENTILE = 95  # the colour scale ends here, so a few extreme cells do not wash out the map
 RANK_SHOWN = 3  # a year among the 3 highest or lowest of the record gets a rank label
 NICE_STEPS = (1, 1.2, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10)  # legend ends are rounded up to one of these
-SOURCE_CHANGE = {"aod": 2022}  # from April 2022 the app's aerosol data follow VIIRS instead of MODIS
+# From April 2022 the app's aerosol values follow VIIRS instead of MODIS and run higher, which would
+# paint every later year "hazier than 2001-2010"; the time map stops before the switch, as the witness does.
+LAYER_LAST_YEAR = {"aod": 2021}
 # Rain and snow are shown in percent of normal (coloured by log2 of the ratio, so half and double sit
 # symmetrically), unless the place's typical normal is below this many mm a year: then percent explodes
 # and the map falls back to millimetres (deserts such as Medina and the Nile delta).
@@ -61,24 +63,29 @@ GIBS_URL = ("https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/{layer}/default/
             "GoogleMapsCompatible_Level{level}/{{z}}/{{y}}/{{x}}.{ext}")
 IMAGERY = {
     "true_colour": {"layer": "MODIS_Terra_CorrectedReflectance_TrueColor", "level": 9, "ext": "jpg",
-                    "years": (2000, 2026), "date": "07-15", "daily": True},
+                    "years": (2000, 2026), "date": "07-15", "daily": True, "opacity": 1.0, "legend": None},
     "ndvi": {"layer": "MODIS_Terra_L3_NDVI_Monthly", "level": 7, "ext": "png", "years": (2000, 2026),
-             "date": "08-01", "daily": False},
+             "date": "08-01", "daily": False, "opacity": 0.85, "legend": "MODIS_L3_NDVI_H.svg"},
     "snow": {"layer": "MODIS_Terra_L3_Snow_Cover_Monthly_Average_Pct", "level": 6, "ext": "png",
-             "years": (2000, 2026), "date": "04-01", "daily": False},
+             "years": (2000, 2026), "date": "04-01", "daily": False, "opacity": 0.7,
+             "legend": "MODIS_NDSI_Snow_Cover_H.svg"},
     "night": {"layer": "VIIRS_SNPP_GapFilled_BRDF_Corrected_DayNightBand_Radiance", "level": 8, "ext": "png",
-              "years": (2012, 2026), "date": "10-15", "daily": True},
+              "years": (2012, 2026), "date": "10-15", "daily": True, "opacity": 1.0, "legend": None},
     "land_cover": {"layer": "MODIS_Combined_L3_IGBP_Land_Cover_Type_Annual", "level": 8, "ext": "png",
-                   "years": (2001, 2024), "date": "01-01", "daily": False},
+                   "years": (2001, 2024), "date": "01-01", "daily": False, "opacity": 0.8,
+                   "legend": "MODIS_IGBP_Land_Cover_Type_H.svg"},
     "co": {"layer": "MOPITT_CO_Monthly_Total_Column_Day", "level": 6, "ext": "png", "years": (2000, 2024),
-           "date": "09-01", "daily": False},
+           "date": "09-01", "daily": False, "opacity": 0.7, "legend": "MOPITT_CO_Total_Column_H.svg"},
 }
+GIBS_LEGEND_URL = "https://gibs.earthdata.nasa.gov/legends/{name}"  # official colour legends (checked: HTTP 200)
 # One day a year for the daily true-colour photo, picked per place from tile checks of 2005, 2015 and
 # 2023 for few clouds and no gaps between satellite passes (a single day can still be cloudy).
 TRUE_COLOUR_DATE = {"colorado": "06-20", "marmara": "08-15", "medina": "07-15", "beijing": "10-15",
                     "los_angeles": "06-20", "cairo_nile": "07-15", "amazon": "08-15", "sahel": "10-15",
                     "alps": "09-05", "siberia": "06-25"}
-IMAGERY_FOR_CASE = {"ndvi": "ndvi", "tree_cover": "land_cover", "snowfall": "snow", "co": "co"}
+# Cases without squares open with the satellite layer that shows them; cases with squares open without
+# imagery, so the map is instant and only one colour scale is on screen (imagery is one click away).
+IMAGERY_FOR_CASE = {"ndvi": "ndvi", "tree_cover": "true_colour", "co": "co"}
 
 TIME_TEXT = {
     "en": {
@@ -115,7 +122,10 @@ TIME_TEXT = {
         "no_leaflet": "The map library could not load. Check the internet connection and reload.",
         "credit": "Imagery: NASA GIBS/ESDIS",
         "provisional": "The newest year may still be revised by NASA",
-        "source_change": "From {year} the app's aerosol data follow another satellite (VIIRS)",
+        "aod_cut": ("Years after 2021 are left out: from April 2022 the app's aerosol data follow another "
+                    "satellite (VIIRS)"),
+        "tick_hint": "Tick “Squares” to see the data squares",
+        "image_colours": "Colours of the satellite layer (NASA GIBS):",
         "words": {
             "air_temperature": {"high1": "Warmest", "low1": "Coldest", "high": "warmest", "low": "coldest"},
             "hot_days": {"high1": "Most hot days", "low1": "Fewest hot days", "high": "most hot days",
@@ -184,7 +194,10 @@ TIME_TEXT = {
         "no_leaflet": "Harita kütüphanesi yüklenemedi. İnternet bağlantısını kontrol edip sayfayı yenile.",
         "credit": "Görüntü: NASA GIBS/ESDIS",
         "provisional": "En yeni yıl NASA tarafından hâlâ düzeltilebilir",
-        "source_change": "{year} itibarıyla uygulamanın aerosol verisi başka bir uyduyu (VIIRS) izliyor",
+        "aod_cut": ("2021 sonrası yıllar dışarıda bırakıldı: Nisan 2022'den itibaren uygulamanın aerosol verisi "
+                    "başka bir uyduyu (VIIRS) izliyor"),
+        "tick_hint": "Veri karelerini görmek için “Kareler” kutusunu işaretle",
+        "image_colours": "Uydu katmanının renkleri (NASA GIBS):",
         "words": {
             "air_temperature": {"high1": "en sıcağı", "low1": "en soğuğu", "high": "en sıcak", "low": "en soğuk"},
             "hot_days": {"high1": "en çok sıcak gün olan yılı", "low1": "en az sıcak gün olan yılı",
@@ -318,7 +331,8 @@ def layer_from_annual(annual: pd.DataFrame | None, variable_key: str, lang: str 
     base_start, base_end = BASELINE.get(variable_key, DEFAULT_BASELINE)
     needed = math.ceil((base_end - base_start + 1) * MIN_BASELINE_SHARE)
     table = annual.pivot_table(index=["lat", "lon"], columns="year", values="value", aggfunc="mean")
-    table = table.reindex(columns=sorted(table.columns))
+    last_year = LAYER_LAST_YEAR.get(variable_key)
+    table = table.reindex(columns=[year for year in sorted(table.columns) if last_year is None or year <= last_year])
     no_snow = 0
     if variable_key == "snowfall":
         snowy = table.max(axis=1) >= NO_SNOW_MAX_MM
@@ -384,7 +398,7 @@ def layer_from_annual(annual: pd.DataFrame | None, variable_key: str, lang: str 
         "ref": texts[f"ref_{kind}"].format(b0=base[0], b1=base[1]),
         "refShort": texts[f"short_{kind}"],
         "normalWord": texts[f"word_{kind}"],
-        "sourceChange": SOURCE_CHANGE.get(variable_key),
+        "cut": variable_key in LAYER_LAST_YEAR,
         "decimals": SHOW_DECIMALS[variable_key],
         "no_snow": no_snow,
         "palette": PALETTES[PALETTE_OF[variable_key]],
@@ -403,6 +417,8 @@ def imagery_list(region_key: str | None, lang: str) -> list[dict]:
             "key": key, "name": names[key], "daily": spec["daily"], "date": date,
             "url": GIBS_URL.format(layer=spec["layer"], level=spec["level"], ext=spec["ext"]),
             "maxNative": spec["level"], "first": spec["years"][0], "last": spec["years"][1],
+            "opacity": spec["opacity"],
+            "legend": GIBS_LEGEND_URL.format(name=spec["legend"]) if spec["legend"] else None,
         })
     return items
 
@@ -432,7 +448,8 @@ def build_payload(layers: list[dict], bbox, region_key: str | None, lang: str, p
         "layers": layers,
         "start": start,
         "imagery": images,
-        "imageryStart": IMAGERY_FOR_CASE.get(picked or "", "true_colour"),
+        "imageryStart": ("none" if start == picked or picked not in IMAGERY_FOR_CASE
+                         else IMAGERY_FOR_CASE[picked]),
         # A case shown only by its satellite image (NDVI, tree cover, CO) opens with the squares hidden.
         "cellsStart": not (picked in IMAGERY_FOR_CASE and picked not in [layer["key"] for layer in layers]),
         "years": [min(first_years), max(last_years)],
@@ -490,6 +507,8 @@ TEMPLATE = r"""<!doctype html>
   .tl-scale { display:flex; align-items:center; gap:6px; margin-top:3px; }
   .tl-scale .bar { flex:1; height:10px; border-radius:3px; border:1px solid var(--line); }
   .tl-note { padding:2px 10px 8px; font-size:12px; color:var(--muted); min-height:16px; }
+  .tl-imglegend { padding:0 10px 6px; font-size:12px; color:var(--muted); }
+  .tl-imglegend img { display:block; max-width:100%; height:auto; max-height:56px; margin-top:2px; }
   .tl-fail { padding:30px; text-align:center; color:var(--muted); }
   .leaflet-tooltip { font-size:12px; line-height:1.35; }
   @media (max-width: 560px) {
@@ -524,6 +543,7 @@ TEMPLATE = r"""<!doctype html>
   </div>
   <div class="tl-ends"><span id="tl-first"></span><span id="tl-stripes-label"></span><span id="tl-last"></span></div>
   <div class="tl-legend" id="tl-legend"></div>
+  <div class="tl-imglegend" id="tl-imglegend"></div>
   <div class="tl-note" id="tl-note"></div>
 </div>
 <script type="application/json" id="tl-data">__DATA__</script>
@@ -690,15 +710,20 @@ TEMPLATE = r"""<!doctype html>
     }
     if (layer && $("tl-cells").checked) {
       if (layer.no_snow) { parts.push(fill(T.no_snow, {n: layer.no_snow})); }
-      if (layer.sourceChange && year >= layer.sourceChange) { parts.push(fill(T.source_change, {year: layer.sourceChange})); }
-      if (year === layer.years[layer.years.length - 1]) { parts.push(T.provisional); }
-    }
+      if (layer.cut) { parts.push(T.aod_cut); }
+      else if (year === layer.years[layer.years.length - 1]) { parts.push(T.provisional); }
+    } else if (D.layers.length) { parts.push(T.tick_hint); }
     $("tl-note").textContent = parts.join(" · ");
   }
   function imagery(key) { for (var k = 0; k < D.imagery.length; k++) { if (D.imagery[k].key === key) { return D.imagery[k]; } } return null; }
+  function imageLegend() {
+    var m = imagery(imgKey), box = $("tl-imglegend");
+    if (!m || !m.legend) { box.innerHTML = ""; return; }
+    box.innerHTML = esc(T.image_colours) + '<img src="' + esc(m.legend) + '" alt="' + esc(m.name) + '" loading="lazy">';
+  }
   function swapIn(next) {
     if (next !== imgPending) { return; }
-    next.setOpacity(1);
+    next.setOpacity(next._tlOpacity);
     if (imgShown && imgShown !== next) { map.removeLayer(imgShown); }
     imgShown = next; imgPending = null;
   }
@@ -712,9 +737,12 @@ TEMPLATE = r"""<!doctype html>
     var url = m.url.replace("{time}", year + "-" + m.date);
     if (imgShown && imgShown._tlUrl === url && !imgPending) { return; }
     if (imgPending) { if (imgPending._tlUrl === url) { return; } map.removeLayer(imgPending); }
-    var next = L.tileLayer(url, {pane: "imagery", maxNativeZoom: m.maxNative, maxZoom: 11, opacity: 0,
-      errorTileUrl: BLANK, bounds: bounds.pad(0.6), attribution: esc(T.credit)});
-    next._tlUrl = url; imgPending = next;
+    var first_image = !imgShown;
+    var next = L.tileLayer(url, {pane: "imagery", maxNativeZoom: m.maxNative, maxZoom: 11,
+      opacity: first_image ? m.opacity : 0, errorTileUrl: BLANK, bounds: bounds.pad(0.6), attribution: esc(T.credit)});
+    next._tlUrl = url; next._tlOpacity = m.opacity; next._tlKey = m.key;
+    if (first_image) { imgShown = next; next.addTo(map); return; }  // nothing to fade from: show tiles as they come
+    imgPending = next;
     next.once("load", function () { swapIn(next); });
     setTimeout(function () { if (map.hasLayer(next)) { swapIn(next); } }, 5000);
     next.addTo(map);
@@ -751,12 +779,19 @@ TEMPLATE = r"""<!doctype html>
   speed.value = "normal";
   var slider = $("tl-slider"); slider.min = first; slider.max = last; slider.setAttribute("aria-label", T.year);
 
-  layerSelect.addEventListener("change", function () { chooseLayer(layerSelect.value); });
+  layerSelect.addEventListener("change", function () {
+    if (!$("tl-cells").checked) { $("tl-cells").checked = true; cellsGroup.addTo(map); }  // a chosen measurement shows at once
+    chooseLayer(layerSelect.value);
+  });
   $("tl-cells").addEventListener("change", function () {
     if ($("tl-cells").checked) { cellsGroup.addTo(map); } else { map.removeLayer(cellsGroup); }
     applyRange(); legend(); update();
   });
-  imgSelect.addEventListener("change", function () { imgKey = imgSelect.value; applyRange(); update(); });
+  imgSelect.addEventListener("change", function () {
+    imgKey = imgSelect.value;
+    if (imgShown && (!imagery(imgKey) || imgShown._tlKey !== imgKey)) { map.removeLayer(imgShown); imgShown = null; }
+    applyRange(); update(); imageLegend();
+  });
   $("tl-op").addEventListener("input", function () { opacity = +$("tl-op").value; paint(); });
   slider.addEventListener("input", function () { year = +slider.value; update(); });
   $("tl-play").addEventListener("click", function () { if (timer) { stop(); } else { play(); } });
@@ -765,6 +800,7 @@ TEMPLATE = r"""<!doctype html>
   if (D.start) { layerSelect.value = D.start; }
   if (D.cellsStart === false) { $("tl-cells").checked = false; map.removeLayer(cellsGroup); }
   stop();
+  imageLegend();
   chooseLayer(D.start);
 })();
 </script>

@@ -94,7 +94,27 @@ def test_aerosols_speak_of_an_average_not_a_normal():
     years = list(range(2001, 2026))
     layer = tl.layer_from_annual(annual_frame({(40.0, 28.0): [0.2] * 10 + [0.15] * 15}, years), "aod", "tr")
     assert layer["baseline"] == [2001, 2010] and layer["ref"] == "2001–2010 ortalamasına"
-    assert layer["normalWord"] == "ortalama" and layer["sourceChange"] == 2022
+    assert layer["normalWord"] == "ortalama"
+    assert layer["cut"] is True and layer["years"][-1] == 2021  # the 2022 satellite switch is left out
+    assert tl.layer_from_annual(tl.load_annual_cells("colorado", "aod"), "aod")["years"][-1] == 2021
+
+
+def test_the_map_opens_instantly_with_one_colour_scale():
+    layers = [{"key": "air_temperature", "years": [1981, 2025]}, {"key": "snowfall", "years": [1982, 2026]}]
+    for picked in ("snowfall", "air_temperature", "no2", None):
+        payload = tl.build_payload(layers, (27, 40, 30, 42), "marmara", "tr", picked, (0.5, 0.625))
+        assert payload["imageryStart"] == "none" and payload["cellsStart"] is True, picked
+    for picked, image in (("ndvi", "ndvi"), ("co", "co"), ("tree_cover", "true_colour")):
+        payload = tl.build_payload(layers, (27, 40, 30, 42), "marmara", "tr", picked, (0.5, 0.625))
+        assert payload["imageryStart"] == image and payload["cellsStart"] is False, picked
+
+
+def test_coloured_satellite_layers_come_with_nasas_own_legend():
+    images = {item["key"]: item for item in tl.imagery_list("alps", "tr")}
+    for key in ("ndvi", "snow", "land_cover", "co"):
+        assert images[key]["legend"].startswith("https://gibs.earthdata.nasa.gov/legends/"), key
+        assert 0 < images[key]["opacity"] < 1, key
+    assert images["true_colour"]["legend"] is None and images["true_colour"]["opacity"] == 1.0
 
 
 def test_a_cell_without_enough_baseline_years_gets_no_colour():
