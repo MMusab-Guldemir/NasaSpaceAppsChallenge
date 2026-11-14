@@ -35,6 +35,7 @@ from trend.area import (
     power_request_boxes,
 )
 from trend.charts import annual_trend_figure, monthly_figure, sparkline_figure
+from trend.examples import EXAMPLES, example_key, example_label, examples_title
 from trend.fetch import (
     POWER_VARIABLES,
     DataSourceError,
@@ -58,7 +59,18 @@ from trend.i18n import (
     t,
     variable_text,
 )
+from trend.linecheck import line_check, line_text
 from trend.regions import REGIONS, Region
+from trend.replay import growing_record, replay_figure, replay_sentence, replay_summary, replay_text, replay_title
+from trend.seasons import (
+    anomaly_figure,
+    deseasonalize,
+    monthly_rate_per_decade,
+    months_in_period,
+    season_sentence,
+    season_text,
+    seasonal_swing,
+)
 from trend.share import build_share_link, parse_period
 from trend.stats import MIN_YEARS, RECOMMENDED_YEARS, TrendResult, analyze_trend, trend_line_band
 from trend.timeline import (
@@ -378,17 +390,6 @@ def open_case(variable_key: str) -> None:
     st.session_state["_jump"] = True  # scroll to the case file after this click
 
 
-# Demonstration cases suggested by the challenge statement: one click opens a case and period.
-EXAMPLE_CASES = [
-    {"region": "colorado", "case": "air_temperature", "start": None, "end": None,
-     "label": {"en": "🔎 Is Colorado warming?", "tr": "🔎 Colorado ısınıyor mu?"}},
-    {"region": "colorado", "case": "no2", "start": 2005, "end": 2019,
-     "label": {"en": "🔎 Did NO₂ fall before 2020?", "tr": "🔎 NO₂ 2020'den önce düştü mü?"}},
-    {"region": "colorado", "case": "snowfall", "start": None, "end": None,
-     "label": {"en": "🔎 Is snowfall changing?", "tr": "🔎 Kar yağışı değişiyor mu?"}},
-]
-
-
 def open_example(variable_key: str, start: int | None, end: int | None) -> None:
     st.session_state["case"] = variable_key
     st.session_state["_jump"] = True
@@ -410,6 +411,13 @@ def open_world_case(region_key: str, variable_key: str) -> None:
     reset_periods()  # a new place: full records
     st.session_state["view"] = "case"
     st.session_state["_jump"] = True
+
+
+def open_famous_case(example) -> None:
+    """Famous cases: open this prepared region, measurement and period in the investigation view."""
+    open_world_case(example.region, example.case)  # prepared region, full record, investigation view
+    if example.start is not None:
+        open_example(example.case, example.start, example.end)  # the example's period
 
 
 def show_world_board(lang: str) -> None:
@@ -534,6 +542,16 @@ if st.session_state["view"] == "exam":
     st.stop()
 
 verdict_slot = st.container()  # filled with the current case's verdict once it is known
+
+# Famous cases from around the world (the challenge asks for demonstration examples): one click
+# opens a region, a measurement and a period (trend/examples.py, each checked by a test).
+st.caption(examples_title(lang))
+for row in range(0, len(EXAMPLES), 3):
+    for column, example in zip(st.columns(3), EXAMPLES[row:row + 3]):
+        column.button(
+            example_label(example, lang), key=example_key(example), on_click=open_famous_case,
+            args=(example,), width="stretch",
+        )
 
 # --- Left sidebar: choose the area -------------------------------------------------------------
 
@@ -740,17 +758,6 @@ if st.session_state.get("case") not in available:
 # --- Step 2: what? -----------------------------------------------------------------------------
 
 st.markdown(f"<div class='step'>{html.escape(t(lang, 'step_what'))}</div>", unsafe_allow_html=True)
-examples = [
-    example for example in EXAMPLE_CASES
-    if example["region"] == region_key and example["case"] in annual_by_key
-]
-if examples:
-    st.caption(t(lang, "examples_title"))
-    for column, example in zip(st.columns(4), examples):
-        column.button(
-            example["label"][lang], key=f"example_{example['case']}", on_click=open_example,
-            args=(example["case"], example["start"], example["end"]), width="stretch",
-        )
 st.caption(t(lang, "step1_caption"))
 BOARD_GROUPS = (
     ("group_climate", ("air_temperature", "precipitation", "snowfall")),
@@ -946,6 +953,10 @@ else:
             end=result.end_year, p=p_phrase(result.p_value, lang),
         )
     )
+    # A steady change that is not a straight line can look like chance (trend/linecheck.py)
+    line_note = line_check(annual["year"], annual["value"], result)
+    if line_note.show:
+        st.info(line_text(lang, p_phrase(line_note.plain_mk_p, lang), num(result.n_effective, lang, 0)))
 if result.n_years < RECOMMENDED_YEARS:
     st.warning(t(lang, "warn_short", n=result.n_years, rec=RECOMMENDED_YEARS))
 with st.expander(t(lang, "share_title")):
@@ -1007,6 +1018,22 @@ if len(timeline) >= 3:
             lang, "robust", n=check["n"], first=check["first"], last=check["last"], min=min_years,
             k=check["same"], status=status_text(lang, check["status"])[0],
         ))
+
+# Replay the investigation: the verdict as years are added (trend/replay.py)
+replay_table = growing_record(annual, min_years)
+if len(replay_table) >= 2:
+    with st.expander(replay_title(lang)):
+        st.caption(replay_text(lang, "intro"))
+        st.plotly_chart(
+            replay_figure(
+                annual, replay_table, lang,
+                x_title=texts["year_axis_label"], y_title=axis_title(texts["name"], unit),
+                unit=unit, separators=separators, decimals=decimals,
+            ),
+            width="stretch", theme=None, config={"displaylogo": False, "displayModeBar": False},
+            key="replay_chart",
+        )
+        st.markdown(replay_sentence(lang, replay_summary(replay_table)))
 
 # Step 5: the second witness
 st.markdown(f"<div class='step'>{html.escape(t(lang, 'step_witness'))}</div>", unsafe_allow_html=True)
@@ -1079,16 +1106,41 @@ if texts["caveats"]:
     with st.expander(t(lang, "keep_in_mind")):
         st.markdown("\n".join(f"- {c}" for c in texts["caveats"]))
 
-with st.expander(t(lang, "monthly_title")):
-    st.caption(t(lang, "monthly_caption"))
-    in_period = monthly[monthly["date"].dt.year.between(start_year - 1, end_year)]
-    st.plotly_chart(
-        monthly_figure(
-            in_period, x_title=t(lang, "month_axis"), y_title=axis_title(texts["name"], texts["unit"]),
-            unit=texts["unit"], separators=separators, decimals=decimals,
-        ),
-        width="stretch", theme=None, config={"displaylogo": False}, key="monthly_chart",
-    )
+# Monthly values with the seasonal cycle, or with it removed (trend/seasons.py)
+with st.expander(season_text(lang, "title")):
+    in_period = months_in_period(monthly, start_year, end_year, variable.year_starts_month)
+    swing = seasonal_swing(in_period)
+    season_view = "with"
+    if swing > 0:  # a yearly product (one value per year) has no seasons to remove
+        season_view = st.segmented_control(
+            season_text(lang, "title"), options=["with", "removed"], default="with", required=True,
+            format_func=lambda key: season_text(lang, "option_with" if key == "with" else "option_removed"),
+            key="season_view", label_visibility="collapsed",
+        )
+    if season_view == "removed":
+        st.caption(season_text(lang, "caption"))
+        st.plotly_chart(
+            anomaly_figure(
+                deseasonalize(in_period), lang, x_title=t(lang, "month_axis"),
+                y_title=season_text(lang, "y_title", unit=texts["unit"].split(" (")[0]),
+                unit=texts["unit"], separators=separators, decimals=decimals,
+            ),
+            width="stretch", theme=None, config={"displaylogo": False}, key="anomaly_chart",
+        )
+        sentence = season_sentence(
+            lang, swing, monthly_rate_per_decade(result.slope_per_decade, variable), texts["unit"], decimals,
+        )
+        if sentence:
+            st.markdown(sentence)
+    else:
+        st.caption(t(lang, "monthly_caption"))
+        st.plotly_chart(
+            monthly_figure(
+                in_period, x_title=t(lang, "month_axis"), y_title=axis_title(texts["name"], texts["unit"]),
+                unit=texts["unit"], separators=separators, decimals=decimals,
+            ),
+            width="stretch", theme=None, config={"displaylogo": False}, key="monthly_chart",
+        )
 
 with st.expander(t(lang, "table_title")):
     table = annual.rename(

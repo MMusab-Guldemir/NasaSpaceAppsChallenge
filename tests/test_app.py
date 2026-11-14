@@ -50,10 +50,11 @@ def test_each_marmara_case_file_opens(variable_key):
 
 def test_example_case_opens_case_and_period():
     at = run_app("en")
-    at.button(key="example_no2").click().run()
+    at.button(key="example_beijing_no2").click().run()  # a famous case in another region
     assert not at.exception
+    assert at.session_state["region"] == "beijing"
     assert at.session_state["case"] == "no2"
-    assert at.slider(key="period_no2").value == (2005, 2019)
+    assert at.slider(key="period_no2").value == (2013, 2025)
 
 
 @pytest.mark.parametrize("lang", ["en", "tr"])

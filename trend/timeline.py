@@ -27,11 +27,11 @@ TIMELINE_TEXT = {
             "Each point is the same test, run as if the record had ended in that year. Points below the "
             "5% line were unlikely to be chance."
         ),
-        "solid_since": "**Solid since {year}:** every record ending in {year} or later shows the same significant {direction}.",
-        "not_solid": "**Not solid yet:** with the chosen period the test is not significant. A longer record may change that.",
+        "solid_since": "**Solid since {year}:** every record ending in {year} or later is Confirmed, with the same {direction}.",
+        "not_solid": "**Not solid yet:** the chosen period does not get the Confirmed stamp. A longer record may change that.",
         "flipped": (
-            "**The evidence went back and forth:** the trend was significant for records ending in "
-            "{years}, but not for the chosen period."
+            "**The evidence went back and forth:** records ending in {years} were Confirmed, but the "
+            "chosen period is not."
         ),
         "robust": (
             "**Start-year check:** of the {n} possible start years ({first}–{last}, each keeping at least "
@@ -47,11 +47,11 @@ TIMELINE_TEXT = {
             "Her nokta aynı testtir; kayıt o yılda bitmiş gibi yapılır. %5 çizgisinin altındaki "
             "noktalar şansa zor bağlanır."
         ),
-        "solid_since": "**{year} yılından beri sağlam:** {year} veya sonrasında biten her kayıt aynı anlamlı {direction} gösteriyor.",
-        "not_solid": "**Henüz sağlam değil:** Seçilen dönemde test anlamlı değil. Daha uzun bir kayıt bunu değiştirebilir.",
+        "solid_since": "**{year} yılından beri sağlam:** {year} veya sonrasında biten her kayıt aynı yönde ({direction}) Doğrulandı.",
+        "not_solid": "**Henüz sağlam değil:** Seçilen dönem Doğrulandı damgası almıyor. Daha uzun bir kayıt bunu değiştirebilir.",
         "flipped": (
-            "**Delil gidip geldi:** {years} yıllarında biten kayıtlarda trend anlamlıydı, seçilen dönemde "
-            "değil."
+            "**Delil gidip geldi:** {years} yıllarında biten kayıtlar doğrulanmıştı, seçilen dönem ise "
+            "doğrulanmıyor."
         ),
         "robust": (
             "**Başlangıç yılı kontrolü:** {first}–{last} arasındaki {n} olası başlangıç yılının (her biri en "
@@ -86,12 +86,16 @@ def evidence_timeline(annual: pd.DataFrame, min_years: int) -> pd.DataFrame:
     return pd.DataFrame(rows, columns=["end_year", "p_value", "significant", "agrees", "slope_per_decade"])
 
 
+def _confirmed(timeline: pd.DataFrame) -> pd.Series:
+    return timeline["significant"] & timeline["agrees"]
+
+
 def solid_since(timeline: pd.DataFrame) -> int | None:
-    """First end year from which every longer record is significant in the final direction."""
-    if timeline.empty or not timeline["significant"].iloc[-1]:
+    """First end year from which every longer record is Confirmed in the final direction."""
+    if timeline.empty or not _confirmed(timeline).iloc[-1]:
         return None
     sign = np.sign(timeline["slope_per_decade"].iloc[-1])
-    ok = (timeline["significant"] & (np.sign(timeline["slope_per_decade"]) == sign)).to_numpy()
+    ok = (_confirmed(timeline) & (np.sign(timeline["slope_per_decade"]) == sign)).to_numpy()
     i = len(ok) - 1
     while i > 0 and ok[i - 1]:
         i -= 1
@@ -99,10 +103,10 @@ def solid_since(timeline: pd.DataFrame) -> int | None:
 
 
 def earlier_significant_years(timeline: pd.DataFrame) -> list[int]:
-    """End years with a significant trend, when the full record is not significant."""
-    if timeline.empty or timeline["significant"].iloc[-1]:
+    """End years whose record was Confirmed, when the chosen period is not Confirmed."""
+    if timeline.empty or _confirmed(timeline).iloc[-1]:
         return []
-    return [int(y) for y in timeline.loc[timeline["significant"], "end_year"]]
+    return [int(y) for y in timeline.loc[_confirmed(timeline), "end_year"]]
 
 
 def year_ranges(years: list[int]) -> str:
