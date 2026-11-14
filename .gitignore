@@ -227,3 +227,6 @@ data/raw/
 
 # Earthdata/OPeNDAP client config written by earthaccess (local paths only)
 .dodsrc
+
+# Turkish summary for the participant (kept out of the repo)
+Proje_Ozeti.pdf
