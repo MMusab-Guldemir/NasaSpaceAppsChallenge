@@ -120,6 +120,21 @@ def test_build_no2_merges_chunks_without_duplicate_days(tmp_path):
     assert monthly.loc[0, "n_days"] == 31
 
 
+def test_load_ndvi_statistics_reads_monthly_means(tmp_path):
+    from trend.appeears import load_ndvi_statistics
+
+    path = tmp_path / "stats.csv"
+    path.write_text(
+        "File Name,Dataset,aid,Date,Count,Minimum,Maximum,Range,Mean,Standard Deviation\n"
+        "a,_1_km_monthly_NDVI,aid0001,2000-02-01,404153.0,-0.199,0.82,\"(-0.199,0.82)\",0.18,0.11\n"
+        "b,_1_km_monthly_NDVI,aid0001,2000-03-01,404161.0,-0.19,0.83,\"(-0.19,0.83)\",0.20,0.11\n",
+        encoding="utf-8",
+    )
+    monthly = load_ndvi_statistics(path)
+    assert monthly["date"].tolist() == [pd.Timestamp("2000-02-01"), pd.Timestamp("2000-03-01")]
+    assert monthly["value"].tolist() == pytest.approx([0.18, 0.20])
+
+
 def test_daily_rate_to_monthly_total_uses_days_in_month():
     frame = pd.DataFrame(
         {"date": pd.to_datetime(["2001-02-01", "2004-02-01", "2001-01-01"]), "value": [1.0, 1.0, 2.0]}

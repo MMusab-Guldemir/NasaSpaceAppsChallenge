@@ -8,7 +8,8 @@ Usage, from the project root:
     python scripts/prefetch.py --region colorado --variables air_temperature no2
 
 Air temperature and snowfall come straight from the NASA POWER API. NO2 is built from Giovanni
-area-averaged CSV downloads placed in data/raw (giovanni_no2_*.csv).
+area-averaged CSV downloads placed in data/raw (giovanni_no2_<region>_*.csv), and NDVI from the
+AppEEARS area statistics CSV (appeears_ndvi_<region>*.csv).
 """
 from __future__ import annotations
 
@@ -25,6 +26,7 @@ from trend.fetch import (  # noqa: E402
     fetch_power_variable,
     save_processed,
 )
+from trend.appeears import load_ndvi_statistics  # noqa: E402
 from trend.regions import get_region  # noqa: E402
 from trend.variables import VARIABLES, get_variable  # noqa: E402
 
@@ -44,13 +46,23 @@ def main(argv: list[str] | None = None) -> int:
             monthly, power_sources = fetch_power_variable(variable, region, args.start, args.end)
             source = f"{variable.product}; {variable.provider}; POWER sources: {power_sources}"
         elif key == "no2":
-            files = sorted(RAW_DIR.glob(f"giovanni_no2_*.csv"))
+            files = sorted(RAW_DIR.glob(f"giovanni_no2_{region.key}_*.csv"))
             if not files:
-                print("skip no2: no giovanni_no2_*.csv files in data/raw")
+                print(f"skip no2: no giovanni_no2_{region.key}_*.csv files in data/raw")
                 continue
             monthly = build_no2_from_giovanni(files, variable.min_valid_days or 1)
             names = ", ".join(f.name for f in files)
             source = f"{variable.product}; {variable.provider}; files: {names}"
+        elif key == "ndvi":
+            files = sorted(RAW_DIR.glob(f"appeears_ndvi_{region.key}*.csv"))
+            if not files:
+                print(f"skip ndvi: no appeears_ndvi_{region.key}*.csv file in data/raw")
+                continue
+            monthly = load_ndvi_statistics(files[0])
+            valid = monthly["value"].dropna()
+            if not valid.between(-0.2, 1.0).all():
+                raise ValueError("NDVI area means outside -0.2..1: check scale factors.")
+            source = f"{variable.product}; {variable.provider}; file: {files[0].name}"
         else:
             print(f"skip {key}: no loader yet")
             continue
