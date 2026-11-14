@@ -89,11 +89,15 @@ gives possible reasons.
 **Third witness and "Why is it not verified?".** For the prepared regions, each case is compared
 with a second NASA dataset over exactly the years both have, and the page says how independent that
 dataset is: NASA GISTEMP v4 weather-station records for temperature (independent of the MERRA-2
-reanalysis), GPCP for precipitation (partly independent; GPM IMERG is shown as a high-resolution
-check, not as an extra witness), MODIS for dust and smoke, and GLDAS for snowfall. The GISTEMP
+reanalysis), GPCP for precipitation (partly independent, and related to the app's rain over Africa;
+GPM IMERG is shown as a high-resolution check, not as an extra witness), MODIS for dust and smoke
+(not independent: the app's aerosol values are held close to MODIS, so this is a consistency check,
+run up to 2021 because the app's aerosol data switch satellites in 2022), and GLDAS-2.1 for snowfall
+(a model cross-check, not a measurement). The GISTEMP
 stations show significant warming in every prepared region (the speeds match closely in five; in
 four only the direction does), including Beijing, where the main record falls just short of the
-evidence line. GPCP backs the direction of Amazon drying and Sahel wetting, at different speeds.
+evidence line. GPCP backs the direction of Amazon drying, at a different speed; over the Sahel the
+two rain records are related, so their agreement is expected rather than independent support.
 Where the two records disagree, the page says so and why; where the gap between them jumps, it says
 one record has a break. Every case that is not Confirmed lists its reasons
 (short record, a change small next to the year-to-year swings, a curved shape, the two tests
@@ -155,7 +159,7 @@ NASA AppEEARS delivers them, and the same pipeline can be repeated for more regi
 
 **Tools.** Python, Streamlit, Plotly, pandas, NumPy, SciPy, pymannkendall, requests, folium and
 streamlit-folium (Leaflet, Leaflet.draw, OpenStreetMap map tiles); NASA POWER API, Giovanni and
-AppEEARS; GitHub; Streamlit Community Cloud. 327 automated tests check the statistics, the data
+AppEEARS; GitHub; Streamlit Community Cloud. 328 automated tests check the statistics, the data
 loaders, the game, the map, the verification and the app.
 
 ## Use of Super Intelligence (SI)

@@ -308,12 +308,32 @@ def test_every_witness_says_how_independent_it_is_and_missing_ones_say_why():
     assert set(vf.NO_WITNESS["en"]) == set(vf.NO_WITNESS["tr"])
     assert "Independent" in vf.witness_kind("en", "air_temperature")
     assert vf.witness_kind("en", "precipitation", "colorado").startswith("Partly")
-    assert vf.witness_kind("tr", "precipitation", "sahel").startswith("Kısmen")
-    assert "not fully independent" in vf.witness_kind("en", "aod")
+    assert vf.witness_kind("tr", "precipitation", "sahel").startswith("Bağımsız değil")
+    assert vf.witness_kind("en", "precipitation", "siberia").startswith("Largely independent")
+    assert vf.witness_kind("en", "aod").startswith("Not independent")
+    assert vf.witness_kind("en", "snowfall").startswith("A model cross-check")
     assert "OMI" in vf.no_witness_reason("tr", "no2")
     assert vf.no_witness_reason("en", "no2", custom=True) == vf.NO_WITNESS["en"]["custom"]
     for key in ("no2", "black_carbon", "co2", "tree_cover"):
         assert key in VARIABLES, key
+
+
+def test_fact_checked_witness_rules_on_the_real_records():
+    # Aerosol: compared only up to 2021, because the app's aerosol data switch satellites in 2022.
+    marmara = compare_real("marmara", "aod")
+    assert marmara["witness"].end_year == 2021 and vf.VERIFY_TEXT["en"]["cut_aod"] in marmara["overlap"]
+    assert marmara["verdict"] == "confirmed"
+    assert compare_real("sahel", "aod")["verdict"] == "neither"
+    assert compare_real("los_angeles", "aod")["verdict"] == "disagree"  # the witness's own rank test disagrees
+    # Snowfall: a model cross-check can disagree, but it never contradicts or proves.
+    for region in ("alps", "marmara"):
+        assert compare_real(region, "snowfall")["verdict"] == "disagree"
+    # Related rain records over Africa: their agreement is expected, not independent support.
+    sahel = compare_real("sahel", "precipitation")
+    assert sahel["verdict"] == "same_family" and "not independent support" in sahel["lines"][0]
+    # A witness that points the same way without reaching the line is weak support, not a warning.
+    beijing = compare_real("beijing", "precipitation")
+    assert beijing["verdict"] == "same_way_weak" and "⚠️" not in beijing["lines"][0]
 
 
 def test_texts_have_the_same_keys_in_both_languages():

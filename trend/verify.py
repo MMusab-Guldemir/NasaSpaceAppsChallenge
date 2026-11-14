@@ -41,6 +41,9 @@ BREAK_MIN_SIDE = 6  # years on each side of a jump
 JUMP_NOT_DRIFT = 0.85  # two flat levels must leave under 85% of a straight line's squared error
 AFRICA_RAIN_REGIONS = {"sahel", "cairo_nile"}  # MERRA-2 corrects rain with CMAP there, not CPC gauges
 DESERT_REGIONS = {"medina", "cairo_nile"}  # rain records disagree a lot where it hardly rains
+WITNESS_LAST_YEAR = {"aod": 2021}  # the app's aerosol data follow another satellite from April 2022
+MODEL_WITNESSES = {"snowfall"}  # a model cross-check, not a measurement: never a contradiction
+WEAK_SUPPORT_P = 0.20  # a witness that points the same way this clearly counts as weak support
 
 # High-resolution checks that are close cousins of the witness (shown, not counted as a witness).
 EXTRA_CHECKS = {
@@ -51,13 +54,21 @@ WITNESS_KIND = {
     "en": {
         "air_temperature": "Independent: weather-station records, while the app uses the MERRA-2 "
                            "reanalysis, which does not use station air temperatures over land.",
-        "precipitation": "Partly independent: satellite and rain-gauge records; the app's MERRA-2 rain is "
-                         "also corrected with rain gauges, partly from the same stations.",
-        "precipitation_africa": "Partly independent: over Africa the app's MERRA-2 rain is corrected with "
-                                "CMAP, a close cousin of this satellite-and-gauge record.",
-        "snowfall": "Partly independent: a different model (GLDAS) that shares part of its rain input.",
-        "aod": "A direct satellite measurement (MODIS); not fully independent, because the app's aerosol "
-               "data (CERES SYN1deg) also use MODIS.",
+        "precipitation": "Partly independent: satellites plus rain gauges. The app's MERRA-2 rain is "
+                         "corrected with NOAA CPC rain gauges, which share some station reports with this "
+                         "record's GPCC gauges (how many is unknown).",
+        "precipitation_africa": "Not independent (same family): over Africa the app's MERRA-2 rain is "
+                                "corrected to GPCP version 2.1, an older version of this record, until "
+                                "September 2009, and after that to CMAP rescaled to GPCP 2.1's average. "
+                                "Agreement here is expected.",
+        "precipitation_siberia": "Largely independent: north of 62.5° the app's MERRA-2 rain gets no gauge "
+                                 "correction (very little at 60–62.5°), so it is model rain. Both records "
+                                 "are least accurate this far north.",
+        "snowfall": "A model cross-check, not a measurement: GLDAS-2.1 counts all precipitation as snow "
+                    "whenever a weather model's air temperature is below 0 °C.",
+        "aod": "Not independent: the app's aerosol values (CERES SYN1deg) are a model held close to MODIS "
+               "Terra and Aqua readings until March 2022; from April 2022 they follow VIIRS on NOAA-20. "
+               "Agreement checks consistency, not truth.",
         "ndvi": "A second satellite (Aqua) with the same kind of instrument as the app's Terra data.",
         "co": "A different satellite instrument (AIRS).",
         "default": "Another NASA dataset for the same place.",
@@ -65,13 +76,21 @@ WITNESS_KIND = {
     "tr": {
         "air_temperature": "Bağımsız: meteoroloji istasyonlarının ölçümleri; uygulama ise karada istasyon "
                            "sıcaklıklarını kullanmayan MERRA-2 reanalizini kullanıyor.",
-        "precipitation": "Kısmen bağımsız: uydu ve yağmur ölçer kayıtları; uygulamadaki MERRA-2 yağışı da "
-                         "kısmen aynı istasyonlardan gelen yağmur ölçerlerle düzeltiliyor.",
-        "precipitation_africa": "Kısmen bağımsız: Afrika'da uygulamadaki MERRA-2 yağışı, bu uydu ve yağmur "
-                                "ölçer kaydının yakın bir akrabası olan CMAP ile düzeltiliyor.",
-        "snowfall": "Kısmen bağımsız: yağış girdisinin bir kısmı ortak olan farklı bir model (GLDAS).",
-        "aod": "Doğrudan bir uydu ölçümü (MODIS); tam bağımsız değil, çünkü uygulamanın aerosol verisi "
-               "(CERES SYN1deg) de MODIS'i kullanıyor.",
+        "precipitation": "Kısmen bağımsız: uydular ve yağmur ölçerler. Uygulamadaki MERRA-2 yağışı NOAA CPC "
+                         "yağmur ölçerleriyle düzeltiliyor; bunlar bu kaydın GPCC yağmur ölçerleriyle bazı "
+                         "istasyon raporlarını paylaşıyor (kaç tane olduğu bilinmiyor).",
+        "precipitation_africa": "Bağımsız değil (aynı aile): Afrika'da uygulamadaki MERRA-2 yağışı Eylül 2009'a "
+                                "kadar bu kaydın eski bir sürümü olan GPCP 2.1'e, sonrasında ise GPCP 2.1'in "
+                                "ortalamasına göre ölçeklenmiş CMAP'e göre düzeltiliyor. Burada uyum "
+                                "beklenen bir şey.",
+        "precipitation_siberia": "Büyük ölçüde bağımsız: 62,5°'nin kuzeyinde uygulamadaki MERRA-2 yağışı hiç "
+                                 "yağmur ölçer düzeltmesi almıyor (60–62,5° arasında çok az), yani model "
+                                 "yağışı. Bu kadar kuzeyde iki kayıt da en az isabetli hâlinde.",
+        "snowfall": "Ölçüm değil, bir model karşılaştırması: GLDAS-2.1, bir hava modelinin hava sıcaklığı "
+                    "0 °C'nin altındayken düşen bütün yağışı kar sayıyor.",
+        "aod": "Bağımsız değil: uygulamanın aerosol değerleri (CERES SYN1deg), Mart 2022'ye kadar MODIS Terra "
+               "ve Aqua ölçümlerine yakın tutulan bir model; Nisan 2022'den itibaren NOAA-20 üzerindeki "
+               "VIIRS'i izliyor. Uyum doğruluğu değil, tutarlılığı sınar.",
         "ndvi": "Uygulamanın Terra verisiyle aynı tür alete sahip ikinci bir uydu (Aqua).",
         "co": "Farklı bir uydu aleti (AIRS).",
         "default": "Aynı yer için başka bir NASA verisi.",
@@ -131,6 +150,14 @@ VERIFY_TEXT = {
                         "decade), but the main data do not reach the evidence line there. The change may be "
                         "real; see below why the main data could not prove it.",
         "neither": "Over the compared years neither dataset shows a clear trend.",
+        "same_way_weak": "Over the compared years the second dataset points the same way ({rate} per decade) "
+                         "but does not reach the evidence line: weak support, not a contradiction.",
+        "same_family": "The two records point the same way ({a} and {b} per decade), but they are related "
+                       "(see above), so this agreement is expected and is not independent support.",
+        "disagree": "↔️ The records disagree over the compared years ({a} per decade in the app's data, {b} "
+                    "in the second dataset), so the second dataset neither backs nor overturns this result.",
+        "cut_aod": "Years after 2021 are left out: from April 2022 the app's aerosol data follow another "
+                   "satellite (VIIRS), and Terra's orbit drifts.",
         "too_little": "There is too little snow here (a few millimetres a year in both records) to judge "
                       "a trend.",
         "corr": "With each record's own trend removed, their year-to-year ups and downs match closely "
@@ -144,8 +171,8 @@ VERIFY_TEXT = {
                       "jumps by about {size} {unit} a year. One of the two records has a break there (we "
                       "cannot tell which), so treat this trend with care.",
         "extra_check": "High-resolution check: {source_short} ({detail}), {start}–{end}: {rate} per decade "
-                       "({sig}, {p}). It is a close cousin of the second dataset, not an extra independent "
-                       "one.",
+                       "({sig}, {p}). It is a close cousin of the second dataset (they share GPCC rain gauges "
+                       "and come from the same NASA Goddard team), not an extra independent one.",
         "differ_air_temperature": "Why can they differ? MERRA-2 blends a weather model with observations "
                                   "on a grid of about 50 km; GISTEMP comes from weather stations. Where "
                                   "stations are few, or sit in growing cities (urban heat), the two can "
@@ -158,7 +185,9 @@ VERIFY_TEXT = {
                                        "several times over). A disagreement means the records disagree, "
                                        "not that the detective is wrong.",
         "differ_snowfall": "Why can they differ? MERRA-2 and GLDAS compute snow with different models, "
-                           "and snow is very sensitive to temperature, so small differences grow.",
+                           "and snow is very sensitive to temperature, so small differences grow. NASA calls "
+                           "only GLDAS-2.0 consistent over time (2.1 is provisional), and published tests "
+                           "found false, temperature-driven snow trends in it.",
         "differ_aod": "Why can they differ? CERES blends MODIS aerosol with a model, while MODIS is the "
                       "direct satellite retrieval; clouds and bright desert or snow surfaces make aerosol "
                       "hard to measure from space.",
@@ -208,6 +237,14 @@ VERIFY_TEXT = {
                         "ama ana veri bu yıllarda kanıt eşiğine ulaşmıyor. Değişim gerçek olabilir; ana "
                         "verinin neden kanıtlayamadığı aşağıda.",
         "neither": "Karşılaştırılan yıllarda iki veri de belirgin bir trend görmüyor.",
+        "same_way_weak": "Karşılaştırılan yıllarda ikinci veri aynı yönü gösteriyor (on yılda {rate}) ama kanıt "
+                         "eşiğine ulaşmıyor: zayıf destek, çelişki değil.",
+        "same_family": "İki kayıt aynı yönü gösteriyor (on yılda {a} ve {b}), ama akraba kayıtlar (yukarıya "
+                       "bak); bu yüzden bu uyum beklenen bir şey ve bağımsız destek sayılmaz.",
+        "disagree": "↔️ Karşılaştırılan yıllarda kayıtlar uyuşmuyor (uygulamanın verisinde on yılda {a}, ikinci "
+                    "veride {b}); yani ikinci veri bu sonucu ne destekliyor ne de çürütüyor.",
+        "cut_aod": "2021 sonrası yıllar dışarıda bırakıldı: Nisan 2022'den itibaren uygulamanın aerosol verisi "
+                   "başka bir uyduyu (VIIRS) izliyor ve Terra'nın yörüngesi kayıyor.",
         "too_little": "Burada bir trendi yargılamak için kar çok az (iki kayıtta da yılda birkaç milimetre).",
         "corr": "Her kaydın kendi trendi çıkarıldığında, yıldan yıla iniş çıkışları büyük ölçüde örtüşüyor "
                 "(korelasyon r = {r}).",
@@ -220,7 +257,8 @@ VERIFY_TEXT = {
                       "yaklaşık {size} {unit} birden değişiyor. İki kayıttan birinde o yıl bir kopukluk var "
                       "(hangisi olduğunu bilemiyoruz); bu yüzden bu trende temkinli bak.",
         "extra_check": "Yüksek çözünürlüklü kontrol: {source_short} ({detail}), {start}–{end}: on yılda {rate} "
-                       "({sig}, {p}). İkinci verinin yakın akrabası; ayrı bir bağımsız tanık sayılmaz.",
+                       "({sig}, {p}). İkinci verinin yakın akrabası (aynı GPCC yağmur ölçerlerini kullanıyorlar ve aynı "
+                       "NASA Goddard ekibinden geliyorlar); ayrı bir bağımsız tanık sayılmaz.",
         "differ_air_temperature": "Neden farklı olabilir? MERRA-2 bir hava modelini gözlemlerle birleştiren "
                                   "yaklaşık 50 km'lik bir ızgara; GISTEMP ise meteoroloji istasyonlarının "
                                   "ölçümleri. İstasyonların az olduğu ya da büyüyen şehirlerde durduğu "
@@ -233,7 +271,9 @@ VERIFY_TEXT = {
                                        "farklı olabiliyor). Uyuşmazlık, kayıtların anlaşmadığı anlamına "
                                        "geliyor; dedektifin yanıldığı değil.",
         "differ_snowfall": "Neden farklı olabilir? MERRA-2 ve GLDAS karı farklı modellerle hesaplıyor; kar "
-                           "sıcaklığa çok duyarlı olduğu için küçük farklar büyüyor.",
+                           "sıcaklığa çok duyarlı olduğu için küçük farklar büyüyor. NASA yalnızca GLDAS-2.0'ı "
+                           "zaman içinde tutarlı sayıyor (2.1 geçici sürüm) ve yayımlanmış testler onda "
+                           "sıcaklıktan kaynaklanan yanlış kar trendleri buldu.",
         "differ_aod": "Neden farklı olabilir? CERES, MODIS aerosol ölçümünü bir modelle birleştiriyor; MODIS "
                       "ise doğrudan uydu ölçümü. Bulutlar ve parlak çöl ya da kar yüzeyleri aerosolü uzaydan "
                       "ölçmeyi zorlaştırıyor.",
@@ -271,6 +311,8 @@ def witness_kind(lang: str, variable_key: str, region_key: str | None = None) ->
     kinds = WITNESS_KIND.get(lang, WITNESS_KIND["en"])
     if variable_key == "precipitation" and region_key in AFRICA_RAIN_REGIONS:
         return kinds["precipitation_africa"]
+    if variable_key == "precipitation" and region_key == "siberia":
+        return kinds["precipitation_siberia"]
     return kinds.get(variable_key, kinds["default"])
 
 
@@ -485,6 +527,11 @@ def compare_witness(result, witness_monthly: pd.DataFrame, lang: str, variable_k
     decimals = getattr(variable, "decimals", 2)
     witness_annual, _ = to_annual(witness_monthly, variable)
     witness_annual = witness_annual[witness_annual["year"].between(start_year, end_year)].reset_index(drop=True)
+    cut = WITNESS_LAST_YEAR.get(variable_key)
+    cut_note = None
+    if cut is not None and end_year > cut:
+        witness_annual = witness_annual[witness_annual["year"] <= cut].reset_index(drop=True)
+        cut_note = text[f"cut_{variable_key}"]
     overlap_line, main_years = None, None
     if main_annual is not None:
         main_in = main_annual[main_annual["year"].between(start_year, end_year)]
@@ -505,6 +552,8 @@ def compare_witness(result, witness_monthly: pd.DataFrame, lang: str, variable_k
             )
             if result.significant != full.significant:
                 overlap_line += text["flip_sig"] if result.significant else text["flip_nosig"]
+    if cut_note:
+        overlap_line = f"{overlap_line} {cut_note}" if overlap_line else cut_note
     if len(witness_annual) < WITNESS_MIN_YEARS:
         return None
     witness = analyze_trend(witness_annual["year"], witness_annual["value"])
@@ -525,11 +574,20 @@ def compare_witness(result, witness_monthly: pd.DataFrame, lang: str, variable_k
     elif result.significant and witness.significant:
         verdict = "opposite"
     elif result.significant:
-        verdict = "not_seen"
+        verdict = "same_way_weak" if same_sign and witness.p_value < WEAK_SUPPORT_P else "not_seen"
     elif witness.significant:
         verdict = "witness_sees"
     else:
         verdict = "neither"
+    if verdict == "opposite" and not (result.agrees and witness.agrees):
+        verdict = "disagree"  # one side's own rank test disagrees: not a clear contradiction
+    if verdict == "witness_sees" and not witness.agrees:
+        verdict = "disagree"  # the witness's own rank test does not back its change
+    if variable_key in MODEL_WITNESSES and verdict in ("opposite", "witness_sees"):
+        verdict = "disagree"  # a model cross-check can disagree, but it cannot prove or overturn
+    if (variable_key == "precipitation" and region_key in AFRICA_RAIN_REGIONS
+            and verdict in ("confirmed", "confirmed_direction", "confirmed_weak")):
+        verdict = "same_family"  # related records: their agreement is expected, not independent support
     lines = [text[verdict].format(
         rate=rate,
         a=num(result.slope_per_decade, lang, decimals, signed=True),
@@ -558,7 +616,8 @@ def compare_witness(result, witness_monthly: pd.DataFrame, lang: str, variable_k
         if corr is not None:
             tier = "corr" if corr >= 0.8 else "corr_low" if corr >= 0.3 else "corr_none"
             lines.append(text[tier].format(r=num(corr, lang, 2)))
-    disagree = verdict in ("confirmed_direction", "confirmed_weak", "opposite", "not_seen", "witness_sees")
+    disagree = verdict in ("confirmed_direction", "confirmed_weak", "opposite", "not_seen", "witness_sees",
+                           "disagree", "same_way_weak")
     if verdict != "too_little" and (disagree or (corr is not None and corr < 0.8)):
         desert = variable_key == "precipitation" and region_key in DESERT_REGIONS
         lines.append(text["differ_precipitation_desert"] if desert else text.get(f"differ_{variable_key}", text["differ"]))

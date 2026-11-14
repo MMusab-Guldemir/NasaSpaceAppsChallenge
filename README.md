@@ -84,9 +84,12 @@ Pick a place and a measurement from NASA Earth data, and find out **what** is ch
     falls in others. Link: `?map=scene`.
 11. **Third witness and "Why is it not verified?":** for the prepared regions, the case file
     compares the result with a second NASA dataset over exactly the years both have, and says how
-    independent that dataset is: NASA GISTEMP v4 weather stations for temperature, GPCP for
-    precipitation (with GPM IMERG as a high-resolution check, not an extra witness), MODIS for dust
-    and smoke, GLDAS for snowfall. Every case that is not Confirmed lists the reasons: a short record,
+    independent that dataset is: NASA GISTEMP v4 weather stations for temperature (independent), GPCP
+    for precipitation (partly independent; over the Sahel and the Nile delta the two rain records are
+    related, so their agreement is not counted as support; GPM IMERG is a high-resolution check, not
+    an extra witness), MODIS for dust and smoke (not independent, so only a consistency check, run up
+    to 2021 because the app's aerosol data switch satellites in 2022) and GLDAS-2.1 for snowfall (a
+    model cross-check, not a measurement). Every case that is not Confirmed lists the reasons: a short record,
     a change small next to the year-to-year swings, a curved shape, the two tests disagreeing, and a
     rough record length that would give a 90% chance of detecting the change (Weatherhead et al.,
     1998). Where the gap between two records jumps, the page says one of them has a break.
@@ -261,7 +264,7 @@ scripts/prefetch.py    fetches and caches data for a region
 scripts/build_gistemp_witness.py  NASA GISTEMP area means for the temperature witness
 data/processed/        small cached monthly CSVs used by the app
 data/witness/          second-dataset series for the third witness (GISTEMP, GPCP, IMERG, MODIS, GLDAS)
-tests/                 unit and app tests (327)
+tests/                 unit and app tests (328)
 docs/ARCHITECTURE.md   design and methods
 docs/SUBMISSION.md     draft of the Space Apps project page
 ```
