@@ -89,8 +89,9 @@ NASA data.
    consecutive years are positively correlated, the uncertainty is widened with an effective sample
    size (Santer et al., 2000) with the small-sample adjustment of Nychka et al. (2000), because short
    records underestimate persistence. In simulations of trendless data, a false "Confirmed" appears
-   in about 3% of cases for independent years and about 5-8% for strongly persistent ones (25 years
-   or more), instead of up to 9-13% before the adjustment.
+   in about 3% of cases for independent years, about 4-8% for persistent ones over 25 years or more
+   (instead of up to 9-13% before the adjustment), and about 10-15% for 10-15-year periods, which
+   therefore get a warning.
 4. *Second witness:* Mann-Kendall test with Sen's slope, widened with the same effective sample size
    (in the spirit of Yue and Wang, 2004); the app says whether it agrees with the headline result.
 5. *Guards:* fewer than 10 years is blocked (7 for CO₂, whose NASA record is short, with a visible
@@ -166,9 +167,11 @@ so on every slide; no other AI-generated images, video or audio are used.
 | Tree cover | MODIS Terra `MOD44B` v061, yearly 250 m | AppEEARS (NASA LP DAAC) | DiMiceli, Sohlberg & Townshend (2022), doi:10.5067/MODIS/MOD44B.061 |
 
 These data were obtained from the NASA Langley Research Center (LaRC) POWER Project funded through the
-NASA Earth Science/Applied Science Program. Area averages of NO₂ were produced with the Giovanni
-online data system, developed and maintained by the NASA GES DISC. NDVI area statistics were
-produced with AppEEARS (NASA EOSDIS LP DAAC and USGS EROS Center).
+NASA Earth Science/Applied Science Program. Area averages of NO₂, carbon monoxide, black carbon and
+CO₂ were produced with the Giovanni online data system, developed and maintained by the NASA GES
+DISC. NDVI and tree-cover area statistics were produced with AppEEARS (NASA EOSDIS LP DAAC and USGS
+EROS Center). Precipitation trends for the Amazon, the Sahel and Beijing were checked against NASA's
+GPCP V3.3 satellite-gauge record (Huffman, G. J., Behrangi, A., Bolvin, D. T., & Nelkin, E. J. (2025). GPCP Precipitation Level 3 Monthly 0.5-Degree V3.3. NASA GES DISC. doi:10.5067/MEASURES/GPCP/DATA306).
 
 ## Space Agency Partner Data and Other References
 

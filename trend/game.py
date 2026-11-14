@@ -89,7 +89,7 @@ WHY = {
         "no2_rules": "US emission rules for cars and power plants cut NO₂: cleaner engines, filters and "
                      "a shift from coal to gas. NASA's OMI satellite saw this decline across much of the "
                      "US.",
-        "no2_vshape": "Clean-car rules pushed NO₂ down until 2019, COVID lockdowns made 2020 the lowest "
+        "no2_vshape": "NO₂ drifted down until 2019 (cleaner cars are a likely reason), COVID lockdowns made 2020 the lowest "
                       "point, and it rose again afterwards, probably as traffic and industry came back. "
                       "A straight line can't fit something that falls and then rises. The OMI satellite "
                       "is also aging, so recent years need extra caution.",
@@ -122,7 +122,7 @@ WHY = {
         "no2_rules": "ABD'de araçlar ve elektrik santralleri için konan emisyon kuralları NO₂'yi "
                      "azalttı: daha temiz motorlar, filtreler ve kömürden doğalgaza geçiş. NASA'nın OMI "
                      "uydusu bu düşüşü ABD'nin birçok yerinde gördü.",
-        "no2_vshape": "Temiz araç kuralları NO₂'yi 2019'a kadar düşürdü, 2020'de COVID kapanmalarıyla "
+        "no2_vshape": "NO₂ 2019'a kadar yavaşça düştü (temiz araçlar olası bir neden), 2020'de COVID kapanmalarıyla "
                       "en dibe indi, sonra muhtemelen trafik ve sanayi geri dönünce tekrar yükseldi. "
                       "Önce düşüp sonra yükselen bir şeye düz çizgi uymaz. Ayrıca OMI uydusu yaşlandığı "
                       "için son yıllara temkinli bakmak gerekiyor.",

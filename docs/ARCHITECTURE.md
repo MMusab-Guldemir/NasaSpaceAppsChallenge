@@ -31,6 +31,11 @@ and **is the change statistically significant?** Visualization plus analysis is 
 | Tropospheric NO2 | OMI `OMNO2d` v004 `ColumnAmountNO2TropCloudScreened` (molecules/cm2), daily, 0.25 deg; doi:10.5067/AURA/OMI/DATA3407 | Giovanni area-averaged time series CSV, requested in 5-year chunks | Earthdata Login | Oct 2004 to Nov 2026 |
 | NDVI | MODIS Terra `MOD13A3` v061, monthly, 1 km (AppEEARS does not offer MOD13C2) | AppEEARS area request (statistics CSV) | Earthdata Login | Feb 2000 to present |
 | Dust and smoke | NASA POWER monthly `AOD_55` (CERES SYN1deg, 1 deg) | POWER regional API | none | 2001 to present |
+| Precipitation | NASA POWER monthly `PRECTOTCORR` (MERRA-2, corrected with observations; mm/day x days) | POWER regional API | none | 1981 to present |
+| Carbon monoxide | MOPITT `MOP03JM` v010 total column, daytime (molecules/cm2 x 1e-18) | Giovanni area-averaged time series | Earthdata Login | Mar 2000 to Dec 2024 |
+| Soot (black carbon) | MERRA-2 `M2TMNXAER` v5.12.4 `BCSMASS` (kg/m3 x 1e9 = ug/m3) | Giovanni area-averaged time series | Earthdata Login | 1980 to present |
+| CO2 | OCO-2 GEOS L3 monthly V10r `XCO2` (mol/mol x 1e6 = ppm); min_years = 7 | Giovanni area-averaged time series | Earthdata Login | 2015 to Feb 2022 |
+| Tree cover | MODIS Terra `MOD44B` v061 `Percent_Tree_Cover`, yearly, 250 m | AppEEARS area request (statistics CSV) | Earthdata Login | 2000 to present |
 
 Verification notes:
 - POWER returns 99 grid cells over the Colorado box and 25 over the Marmara box; requesting two
@@ -82,7 +87,8 @@ Tests on the annual series:
   freedom use the effective sample size n_eff = n (1 - r1 - 0.68/sqrt(n)) / (1 + r1 + 0.68/sqrt(n))
   (Santer et al., 2000, with the small-sample adjustment of Nychka et al., 2000). Simulations of
   trendless AR(1) noise during the hackathon showed false "Confirmed" rates of up to 9-13% without
-  the adjustment and about 3-8% with it for 25 years or more.
+  the adjustment and about 3-8% with it for 25 years or more (persistence up to about 0.7); 10-15-year
+  periods and very persistent series (soot) stay at about 10-15%.
 - **Second witness:** Mann-Kendall with Sen's slope, shown as "agrees" or "disagrees" with the
   headline. It uses the same persistence rule: when r1 > 0 its z-score is scaled by sqrt(n_eff / n)
   (an effective-sample-size correction in the spirit of Yue and Wang, 2004).
@@ -106,6 +112,13 @@ Tests on the annual series:
   diluted. OMI has a row anomaly that reduces sampling; 2020 shows a COVID-related dip; the aging
   instrument and Aura's orbit drift call for extra caution after about 2022.
 - NDVI: MODIS Terra orbit drift after about 2020. Sanity check that area means lie between -0.2 and 1.
+- Precipitation: the MERRA-2 correction uses rain-gauge data whose station network changes over time,
+  which can create steps (the Amazon box drops suddenly around 2005); local notes compare the
+  Amazon, the Sahel and Beijing with NASA GPCP V3.3.
+- Carbon monoxide: whole-column values; no daytime retrievals in the polar winter (Siberia).
+- Soot: MERRA-2 aerosol reanalysis; very persistent from year to year.
+- CO2: only 7 complete years; mixes globally, so regional values rise at almost the same pace.
+- Tree cover: yearly map; plantations count as trees.
 
 ## User interface (Streamlit)
 

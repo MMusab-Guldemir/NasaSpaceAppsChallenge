@@ -727,6 +727,9 @@ REGION_CONTEXT: dict[str, dict[str, dict[str, str]]] = {
             "aod": "China's 2013 clean-air plan also targeted soot and dust (PM2.5).",
             "black_carbon": "China's 2013 clean-air plan cut coal burning and targeted soot. Try the "
                             "period 2013 to 2025.",
+            "precipitation": "Check with a second record: NASA's GPCP satellite-gauge data show a "
+                             "smaller rise here that is not significant (+38 mm per decade, p = 0.12, "
+                             "1983-2025), so treat this result with caution.",
         },
         "los_angeles": {
             "no2": "California has some of the world's strictest vehicle exhaust rules, tightened "
@@ -741,8 +744,15 @@ REGION_CONTEXT: dict[str, dict[str, dict[str, str]]] = {
         "sahel": {
             "ndvi": "After severe droughts in the 1970s and 1980s, rains partly returned and "
                     "satellites saw the Sahel 'greening'.",
+            "precipitation": "NASA's GPCP satellite-gauge record shows a rise here too (+29 mm per "
+                             "decade, 1983-2025), in line with the rainfall recovery after the "
+                             "1970s-80s droughts.",
         },
         "amazon": {
+            "precipitation": "Suspicious clue: this record drops suddenly around 2005. NASA's GPCP "
+                             "satellite-gauge record also shows drying here, but about half as strong "
+                             "(-125 mm per decade, 1983-2025), so part of the drop probably comes from "
+                             "a change in the rain-gauge data, not the weather.",
             "tree_cover": "Rondônia is part of the 'arc of deforestation', where forest has been "
                           "cleared for farms and pasture.",
             "ndvi": "Rondônia is part of the 'arc of deforestation', where forest has been cleared "
@@ -771,6 +781,9 @@ REGION_CONTEXT: dict[str, dict[str, dict[str, str]]] = {
             "aod": "Çin'in 2013 temiz hava planı is ve tozu (PM2,5) da hedefliyordu.",
             "black_carbon": "Çin'in 2013 temiz hava planı kömür yakımını azalttı ve isi hedefledi. "
                             "2013–2025 dönemini dene.",
+            "precipitation": "İkinci bir kayıtla kontrol: NASA'nın GPCP uydu-yağmur ölçer verisi burada "
+                             "daha küçük ve anlamlı olmayan bir artış gösteriyor (1983–2025, 10 yılda "
+                             "+38 mm, p = 0,12); bu sonuca temkinli yaklaş.",
         },
         "los_angeles": {
             "no2": "Kaliforniya, 1990'lardan beri adım adım sıkılaştırılan, dünyanın en katı araç "
@@ -785,8 +798,15 @@ REGION_CONTEXT: dict[str, dict[str, dict[str, str]]] = {
         "sahel": {
             "ndvi": "1970'ler ve 1980'lerdeki büyük kuraklıklardan sonra yağışlar kısmen geri döndü "
                     "ve uydular Sahel'in 'yeşillendiğini' gördü.",
+            "precipitation": "NASA'nın GPCP uydu-yağmur ölçer kaydı da burada artış gösteriyor "
+                             "(1983–2025, 10 yılda +29 mm); bu, 1970'ler-80'lerdeki kuraklıklardan "
+                             "sonraki yağış toparlanmasıyla uyumlu.",
         },
         "amazon": {
+            "precipitation": "Şüpheli ipucu: bu kayıt 2005 civarında aniden düşüyor. NASA'nın GPCP "
+                             "uydu-yağmur ölçer kaydı da burada kuruma gösteriyor ama yaklaşık yarısı "
+                             "kadar (1983–2025, 10 yılda −125 mm); bu yüzden düşüşün bir kısmı büyük "
+                             "ihtimalle havadan değil yağmur ölçer verisindeki değişimden geliyor.",
             "tree_cover": "Rondônia, ormanın tarla ve mera için kesildiği 'ormansızlaşma yayının' "
                           "bir parçası.",
             "ndvi": "Rondônia, ormanın tarla ve mera için kesildiği 'ormansızlaşma yayının' bir "
@@ -882,6 +902,10 @@ VARIABLE_TEXT: dict[str, dict[str, dict]] = {
                 "MERRA-2 reanalizinden gelir; mümkün olan yerlerde ölçülen yağışla düzeltilmiştir; "
                 "yaklaşık 50 km'lik ızgara.",
                 "Yağış yıldan yıla çok değişir; bir trendin görünmesi için uzun kayıt gerekir.",
+                "Düzeltmede kullanılan yağmur ölçer verileri on yıllar içinde değişir (bazı bölgelerde "
+                "2000'lerin ortasından sonra çok daha az istasyon var); bu yüzden trendin bir kısmı "
+                "havadan değil veriden gelebilir. NASA'nın GPCP uydu-yağmur ölçer kaydı iyi bir ikinci "
+                "kontroldür.",
                 "NASA POWER'daki en yeni aylar neredeyse gerçek zamanlı bir üründen gelebilir ve "
                 "sonradan düzeltilebilir.",
             ],
@@ -895,7 +919,8 @@ VARIABLE_TEXT: dict[str, dict[str, dict]] = {
             "year_axis_label": "Yıl",
             "caveats": [
                 "Değer, yalnızca yerdeki değil tüm hava sütunundaki karbon monoksidi sayar.",
-                "Amazon ya da Sibirya'daki gibi büyük yangın yılları öne çıkabilir.",
+                "Amazon'daki gibi büyük yangın yılları öne çıkabilir; Sibirya gibi en kuzey "
+                "bölgelerde kış ortasında gündüz ölçümü olmadığı için tam yıllık değer oluşturulamaz.",
                 "Giovanni'deki MOPITT verisi şu an Aralık 2024'te bitiyor.",
             ],
         },
@@ -986,13 +1011,13 @@ VARIABLE_TEXT: dict[str, dict[str, dict]] = {
 
 METHODS = {
     "en": """
-- **Area average:** for temperature, snowfall and dust and smoke, the value for {region} is the
+- **Area average:** for temperature, precipitation, snowfall and dust and smoke, the value for {region} is the
   average of all NASA POWER grid cells whose centres lie inside or on the edge of the box, weighted
   by the cosine of latitude (cells centred on the edge reach half a cell beyond the box). A
   rectangle smaller than one grid cell uses the nearest cell with data, and a rectangle larger than
-  10° is fetched in pieces that are averaged together. For air pollution (NO₂) and vegetation, NASA
-  Giovanni and AppEEARS compute the average over the same box; for vegetation, pixels over the sea
-  have no value and are left out.
+  10° is fetched in pieces that are averaged together. For NO₂, carbon monoxide, soot and CO₂, NASA
+  Giovanni computes the average over the same box, and for vegetation greenness and tree cover,
+  NASA AppEEARS does; there, pixels over the sea have no value and are left out.
 - **One value per year:** monthly values are combined into one value per year, which removes the
   seasonal cycle. A year is used only if all of its months are available.
 - **Headline test:** a straight line is fitted with ordinary least squares (OLS). We report its
@@ -1004,8 +1029,9 @@ METHODS = {
   sample size (Santer et al., 2000) with a small-sample adjustment (Nychka et al., 2000), because
   short records underestimate this persistence.
 - **How often can the detective be wrong?** In simulations of data with no trend at all, a false
-  *Confirmed* appears in about 3% of cases when years are independent and in about 5-8% when
-  neighbouring years strongly resemble each other (25 years or more; more for shorter records).
+  *Confirmed* appears in about 3% of cases when years are independent, in about 4-8% when
+  neighbouring years resemble each other (25 years or more), and in about 10-15% for 10-15-year
+  periods or very persistent series such as soot. Short records therefore get a warning.
 - **Second witness:** the Mann-Kendall test checks for a steady rise or fall without assuming a
   straight line; Sen's slope is a robust estimate of the rate. When neighbouring years are
   positively correlated, its uncertainty is widened with the same effective sample size as the
@@ -1027,13 +1053,13 @@ METHODS = {
 - **No significant trend detected** does not mean "no change"; a longer record may reveal one.
 """,
     "tr": """
-- **Bölge ortalaması:** sıcaklık, kar yağışı ve toz-duman için {region} değeri, merkezi kutunun
+- **Bölge ortalaması:** sıcaklık, yağış, kar yağışı ve toz-duman için {region} değeri, merkezi kutunun
   içinde ya da kenarında kalan tüm NASA POWER ızgara hücrelerinin enlemin kosinüsüyle
   ağırlıklandırılmış ortalamasıdır (kenarda merkezlenen hücreler kutunun yarım hücre dışına uzanır).
   Bir hücreden küçük dikdörtgenlerde veri olan en yakın hücre kullanılır; 10°'den büyük
-  dikdörtgenler parça parça getirilip birlikte ortalanır. Hava kirliliği (NO₂) ve bitki yeşilliği
-  için ortalamayı aynı kutu üzerinden NASA Giovanni ve AppEEARS hesaplar; bitki yeşilliğinde deniz
-  üzerindeki piksellerin değeri yoktur ve hesaba katılmaz.
+  dikdörtgenler parça parça getirilip birlikte ortalanır. NO₂, karbon monoksit, is ve CO₂ için
+  ortalamayı aynı kutu üzerinden NASA Giovanni, bitki yeşilliği ve ağaç örtüsü için NASA AppEEARS
+  hesaplar; orada deniz üzerindeki piksellerin değeri yoktur ve hesaba katılmaz.
 - **Yılda tek değer:** aylık değerler her yıl için tek bir değerde birleştirilir; böylece mevsim
   döngüsü ortadan kalkar. Bir yıl yalnızca tüm ayları mevcutsa kullanılır.
 - **Ana test:** en küçük kareler yöntemiyle (OLS) düz bir çizgi oturtulur. Eğimi, eğimin %95 güven
@@ -1045,8 +1071,9 @@ METHODS = {
   (Santer ve ark., 2000); kısa kayıtlar bu sürekliliği olduğundan az gösterdiği için küçük örneklem
   düzeltmesi de uygulanır (Nychka ve ark., 2000).
 - **Dedektif ne sıklıkla yanılabilir?** Hiç trend olmayan verilerle yapılan simülasyonlarda yanlış
-  bir *Doğrulandı*, yıllar bağımsızken vakaların yaklaşık %3'ünde, komşu yıllar birbirine çok
-  benzediğinde yaklaşık %5–8'inde çıkıyor (25 yıl ve üzeri; daha kısa kayıtlarda daha sık).
+  bir *Doğrulandı*, yıllar bağımsızken vakaların yaklaşık %3'ünde, komşu yıllar birbirine benzediğinde
+  yaklaşık %4–8'inde (25 yıl ve üzeri), 10–15 yıllık dönemlerde ya da is gibi çok sürekli serilerde
+  yaklaşık %10–15'inde çıkıyor. Bu yüzden kısa kayıtlar uyarı alır.
 - **İkinci tanık:** Mann-Kendall testi, düz bir çizgi varsaymadan istikrarlı bir artış ya da azalış
   olup olmadığına bakar; Sen eğimi, değişim hızının sağlam bir tahminidir. Komşu yıllar birbiriyle
   pozitif ilişkiliyse, bu testin belirsizliği de ana testteki aynı etkin örneklem büyüklüğüyle

@@ -30,8 +30,9 @@ Pick a place and a measurement from NASA Earth data, and find out **what** is ch
 5. The app fits a linear trend and reports:
    - the **rate of change per decade** with its 95% confidence interval,
    - whether the trend is **significant** (two-sided t-test, adjusted for year-to-year persistence
-     with an effective sample size and a small-sample correction that keeps false alarms close to
-     the nominal 5%),
+     with an effective sample size and a small-sample correction; in simulations a false
+     "Confirmed" appears in about 3% of trendless cases with independent years, about 4-8% with
+     persistent years over 25+ years, and about 10-15% for 10-15-year periods),
    - a **second opinion** from the Mann-Kendall test with Sen's slope, adjusted for persistence in
      the same way,
    - a plain-language summary for students and the public.
@@ -95,11 +96,11 @@ Highlights from the world regions (full records unless stated):
   Yang, E.-S., Qin, W., Vasilkov, A., Li, C., Joiner, J., Choi, S., & Swartz, W. H. (2024).
   OMI/Aura NO2 Cloud-Screened Total and Tropospheric Column L3 Global Gridded 0.25 degree x 0.25
   degree Ver 5.0, Col 004. NASA GES DISC. https://doi.org/10.5067/AURA/OMI/DATA3407
-- Area averages of NO₂ were produced with the Giovanni online data system, developed and maintained
-  by the NASA GES DISC.
+- Area averages of NO₂, carbon monoxide, black carbon and CO₂ were produced with the Giovanni
+  online data system, developed and maintained by the NASA GES DISC.
 - Didan, K. (2021). MODIS/Terra Vegetation Indices Monthly L3 Global 1km SIN Grid V061. NASA EOSDIS
   Land Processes Distributed Active Archive Center. https://doi.org/10.5067/MODIS/MOD13A3.061
-- NDVI area statistics were produced with AppEEARS (Application for Extracting and Exploring
+- NDVI and tree-cover area statistics were produced with AppEEARS (Application for Extracting and Exploring
   Analysis Ready Samples), NASA EOSDIS LP DAAC and USGS EROS Center,
   https://appeears.earthdatacloud.nasa.gov (accessed 14 November 2026).
 
@@ -117,6 +118,9 @@ Highlights from the world regions (full records unless stated):
   assimilated CO2 V10r. NASA GES DISC. https://doi.org/10.5067/BGFIODET3HZ8
 - DiMiceli, C., Sohlberg, R., & Townshend, J. (2022). MODIS/Terra Vegetation Continuous Fields
   Yearly L3 Global 250m SIN Grid V061. NASA LP DAAC. https://doi.org/10.5067/MODIS/MOD44B.061
+
+- Huffman, G. J., Behrangi, A., Bolvin, D. T., & Nelkin, E. J. (2025). GPCP Precipitation Level 3 Monthly 0.5-Degree V3.3. NASA GES DISC. https://doi.org/10.5067/MEASURES/GPCP/DATA306
+  (used as a second check of the precipitation trends for the Amazon, the Sahel and Beijing)
 
 Methods references:
 - Santer, B. D., et al. (2000). Statistical significance of trends and trend differences in

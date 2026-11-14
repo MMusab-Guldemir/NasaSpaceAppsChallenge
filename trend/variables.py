@@ -121,6 +121,9 @@ VARIABLES: dict[str, Variable] = {
             "Comes from the MERRA-2 reanalysis, corrected with observed precipitation where "
             "available, on a grid of about 50 km.",
             "Rain varies a lot from year to year, so a trend needs a long record to show up.",
+            "The rain-gauge data used for the correction change over the decades (far fewer stations "
+            "in some regions after the mid-2000s), so part of a trend can come from the data rather "
+            "than the weather; NASA's GPCP satellite-gauge record is a useful second check.",
             "The newest months in NASA POWER can come from a near-real-time product and may be "
             "revised later.",
         ),
@@ -199,7 +202,9 @@ VARIABLES: dict[str, Variable] = {
         citation=f"{MOPITT_REFERENCE} {GIOVANNI_ACKNOWLEDGMENT}",
         caveats=(
             "The value counts carbon monoxide in the whole column of air, not only at the ground.",
-            "Big fire years, for example in the Amazon or Siberia, can stand out.",
+            "Big fire years, for example in the Amazon, can stand out; far-north regions such as "
+            "Siberia have no daytime measurements in mid-winter, so no complete yearly value can be "
+            "built there.",
             "MOPITT data in Giovanni currently end in December 2024.",
         ),
     ),
