@@ -12,25 +12,32 @@ Pick a place and a measurement from NASA Earth data, and find out **what** is ch
 
 ## What it does
 
-1. **Where?** Pick one of ten prepared regions with up to ten measurements each, out of eleven
+1. **Where?** Pick one of eleven prepared regions with up to eleven measurements each, out of twelve
    NASA measurements in the app (Colorado, Istanbul–Marmara, Medina, Beijing, Los Angeles, Cairo and
-   the Nile Delta, the Amazon, the Sahel, the Alps and Siberia; vegetation greenness is ready for all
-   ten regions, while tree cover is added when NASA AppEEARS delivers it and is not shown until then),
-   or
+   the Nile Delta, the Amazon, the Sahel, the Alps, Siberia and the Konya Closed Basin in Türkiye;
+   vegetation greenness is ready for every region except Konya, whose card shows Open case for now,
+   while tree cover is added when NASA AppEEARS delivers it and is not shown until then), or
    investigate **anywhere on Earth**: draw a rectangle on the world map,
    move or resize it with the edit tool (then click Save), or type its corners in the left panel.
    Any size from 0.01° to 40° per side works: a rectangle smaller than NASA's grid uses the nearest
    grid cell, and a large one is fetched in pieces. Temperature, precipitation, snowfall and dust and
    smoke come live from NASA POWER for any rectangle; NO₂, carbon monoxide, soot (black carbon),
-   CO₂, vegetation greenness and hot days are prepared in advance for the prepared regions. The cards are
-   grouped into Climate, Air, and Carbon and green land.
+   CO₂, vegetation greenness, groundwater and hot days are prepared in advance for the prepared
+   regions. The cards are grouped into Climate, Air, and Carbon, green land and water.
 2. An **investigation board** shows every clue for the area: one card per measurement with its
    rate of change and a verdict stamp (Confirmed, Disputed, No evidence, Weak clue, Open case; plus No snow, Not enough data and No data where they apply).
+   On a phone (under 640 px wide) the cards wrap into two columns.
    A "Case on the desk" strip at the top always shows the open case's stamp and rate, and opening a
-   case scrolls straight to its case file. **Famous cases from around the world** sit right under it:
+   case scrolls straight to its case file. Right under it, a **guided start** asks two questions,
+   what (heat; water: rain, snow, groundwater; air pollution; green land; carbon in the air) and
+   where (a big city, a desert, a rain forest, dry grassland, mountains, a river delta or the cold
+   north), and offers up to three prepared cases with their stamps. "No evidence" cases are offered
+   too, because not every change is a real trend. **Famous cases from around the world** follow:
    one click opens the Amazon drying, the opposite case of Beijing getting wetter, Beijing's air after
-   2013, Istanbul warming, the air over Cairo clearing, and a lesson on records that are too short
-   (each one is checked against the data by a test).
+   2013, more days above 30 °C in Istanbul, the air over Cairo clearing, a lesson on records that are
+   too short, and three groundwater cases: rising in the Sahel, falling under the Alps, and a fall in
+   Konya that the chart shows but the test cannot prove yet (each one is checked against the data by
+   a test).
 3. The user picks a clue, chooses the **period**, and immediately gets a large
    **"Real or chance?"** verdict with a chance meter, followed by the evidence (chart) and a
    second witness. An **EN / TR** switch (top right) shows the whole app in English or Turkish.
@@ -43,7 +50,11 @@ Pick a place and a measurement from NASA Earth data, and find out **what** is ch
    why the cautious test cannot decide and suggests a shorter period.
 4. Behind the scenes, NASA monthly data become one value per year (removing the seasonal cycle).
    The monthly chart can switch to "Seasonal cycle removed" (each month compared with its own usual
-   value) and says how much bigger the seasonal swing is than the trend.
+   value) and says how much bigger the seasonal swing is than the trend. **Which season is
+   changing?** runs the same trend test for each three-month season (Dec–Feb, Mar–May, Jun–Aug,
+   Sep–Nov) for temperature, precipitation and hot days: bars show each season's rate per decade with
+   its 95% interval, next to a dashed whole-year line. In Istanbul–Marmara summer (Jun–Aug) warms
+   fastest, +0.64 °C per decade (1981-2025, Confirmed), and spring is slowest at +0.42 °C per decade.
 5. The app fits a linear trend and reports:
    - the **rate of change per decade** with its 95% confidence interval,
    - whether the trend is **significant** (two-sided t-test, adjusted for year-to-year persistence
@@ -57,16 +68,24 @@ Pick a place and a measurement from NASA Earth data, and find out **what** is ch
      the same way,
    - a plain-language summary for students and the public.
 6. **Possible reasons:** common explanations from research for a rise, a fall or no clear trend,
-   plus local context for the prepared regions, with a clear note that the test shows *that*
-   something changed, not *why*.
+   plus local context for the prepared regions (for groundwater: the "Sahel paradox", the 2023 and
+   2024 Amazon droughts, Europe's 2022 drought in the Alps, and the wells and sinkholes of the Konya
+   plain), with a clear note that the test shows *that* something changed, not *why*.
 7. Charts, a data table, CSV downloads, share links and a "How the detective works" section make
-   every result checkable.
+   every result checkable. A **case report** download puts one case on a single printable page
+   (self-contained HTML that opens offline and saves as PDF from any browser): the verdict, a chart
+   of the yearly values with the trend line, the second witness, possible reasons, caveats, the data
+   source with its DOI and the share link.
 8. **World board:** switch to "World board" at the top (link: `?view=world`). Every prepared
    region and measurement is tested with the same rules and shown in one table (click a cell to open
    the case). A "Same clue, opposite trends" box answers the challenge's key point automatically:
-   for example rain is rising in the Sahel and Beijing but falling in the Amazon, and NO₂ is rising
-   in the Sahel but falling over the Alps. It also reminds readers how many of the roughly 80
-   Confirmed stamps chance alone could produce.
+   for example rain is rising in the Sahel and Beijing but falling in the Amazon, NO₂ is rising
+   in the Sahel but falling over the Alps, and groundwater is rising in the Sahel but falling in the
+   Amazon and the Alps. The board shows 54 Confirmed stamps out of 114 tests, and reminds readers
+   that even if nothing were changing anywhere, about 3-11 of them would be Confirmed by chance.
+   **Open data:** a download button gives every prepared monthly series, the NASA witness records
+   and a `SOURCES.md` listing each region box, product, DOI and citation as one ZIP file (about
+   0.7 MB), so anyone can re-run the tests outside the app.
 9. **Detective exam (game):** switch from "Investigation" to "Detective exam" at the top. A secret,
    unlabeled chart draws itself year by year; the earlier the player decides "real increase",
    "real decrease" or "chance", the more points they get. Then the stamp, the place and a possible
@@ -89,7 +108,8 @@ Pick a place and a measurement from NASA Earth data, and find out **what** is ch
     related, so their agreement is not counted as support; GPM IMERG is a high-resolution check, not
     an extra witness), MODIS for dust and smoke (not independent, so only a consistency check, run up
     to 2021 because the app's aerosol data switch satellites in 2022) and GLDAS-2.1 for snowfall (a
-    model cross-check, not a measurement). Every case that is not Confirmed lists the reasons: a short record,
+    model cross-check, not a measurement). Groundwater has no third witness: it comes only from the GLDAS
+    model guided by GRACE, the app has no second, independent groundwater record, and the page says so. Every case that is not Confirmed lists the reasons: a short record,
     a change small next to the year-to-year swings, a curved shape, the two tests disagreeing, and a
     rough record length that would give a 90% chance of detecting the change (Weatherhead et al.,
     1998). Where the gap between two records jumps, the page says one of them has a break.
@@ -100,7 +120,9 @@ Pick a place and a measurement from NASA Earth data, and find out **what** is ch
     differences, rain and snow in percent of normal (in millimetres in deserts), on one fixed scale
     per place so that years compare. A stripe above the slider shows the yearly average of the
     squares (weighted by latitude), and the 3 highest or lowest years are named: the Sahel's 2024
-    is the wettest of 45 years, as in the case file. Optional NASA GIBS satellite images of the same
+    is the wettest of 45 years, as in the case file. A "Compare two years" button shows two years
+    side by side: drag the white line to swipe between them (for example the Sahel's 1984 drought
+    and 2024). Optional NASA GIBS satellite images of the same
     year (true colour, vegetation greenness, snow cover, night lights, land cover, carbon monoxide)
     give context. The page says that one year can be unusual by chance, that the trend test, not
     the colours, decides, and that the images are context, not evidence. Link: `?map=time`.
@@ -128,10 +150,10 @@ Highlights from the world regions (full records unless stated):
 - NO₂ over the Alps fell by about 0.42 × 10¹⁵ molecules/cm² per decade (2005-2025, p = 0.002).
 - Beijing is getting greener: May-September NDVI rose by about +0.029 per decade (2000-2025,
   p < 0.001, both tests agree).
-- Air temperature rose significantly in nine of the ten prepared regions, from +0.12 °C per decade
+- Air temperature rose significantly in ten of the eleven prepared regions, from +0.12 °C per decade
   in the Sahel to +0.55 °C per decade in Istanbul–Marmara (1981-2025); in Beijing the rise
   (+0.23 °C per decade) is borderline (p = 0.06).
-- Hot days above 30 °C became more common in seven of the ten prepared regions (no evidence in
+- Hot days above 30 °C became more common in eight of the eleven prepared regions (no evidence in
   Beijing, the Sahel and Siberia). In Istanbul–Marmara the regional average went from about 10 a year
   in the early 1980s to 34-46 in 2023-2025 (+5.0 days per decade, 1981-2025, Confirmed); Colorado
   +4.1 and Medina +5.2 days per decade, both Confirmed.
@@ -139,6 +161,17 @@ Highlights from the world regions (full records unless stated):
   decade, almost exactly the app's +0.547, both Confirmed. Beijing +0.42 °C per decade (p < 0.001,
   Confirmed): Beijing is probably warming too, and the app's record shows a slower rise that just
   misses the 5% line.
+- Groundwater (GRACE-assisted GLDAS, 2004-2025; 2003 is left out because the record starts in
+  February): Confirmed falls in the Amazon (about −62 mm of water per decade, p = 0.027) and under
+  the Alps (−28 mm per decade, p = 0.019), and a Confirmed rise in the Sahel (+99 mm per decade,
+  p = 0.004). Konya falls by about 27 mm per decade, but the test cannot confirm it yet (p = 0.15).
+  The other seven regions show no evidence of a trend.
+- Konya Closed Basin (1981-2025 unless stated): air temperature +0.40 °C per decade and hot days
+  above 30 °C +6.4 per decade, both Confirmed (p < 0.001); NASA GISTEMP weather stations give
+  +0.50 °C per decade, also Confirmed. Carbon monoxide fell (−0.07 × 10¹⁸ molecules/cm² per decade,
+  2002-2024, p = 0.005), while soot rose (+0.04 µg/m³ per decade, 1980-2025, p = 0.041) and CO₂ rose
+  (+25 ppm per decade, 2015-2021, p < 0.001), all Confirmed. Precipitation, snowfall, dust and smoke
+  (AOD) and NO₂ show no evidence of a trend.
 
 ## Data
 
@@ -154,6 +187,7 @@ Highlights from the world regions (full records unless stated):
 | Carbon monoxide (CO) | MOPITT `MOP03JM` v010 total column, daytime (monthly, 1°) | Giovanni area-averaged time series |
 | Soot (black carbon) | MERRA-2 `M2TMNXAER` v5.12.4 black carbon surface concentration (monthly) | Giovanni area-averaged time series |
 | Carbon dioxide (CO₂) | OCO-2 GEOS L3 monthly V10r column-average CO₂ (2015-2022) | Giovanni area-averaged time series |
+| Groundwater storage | GLDAS-2.2 Catchment Land Surface Model with GRACE data assimilation `GLDAS_CLSM025_DA1_D` v2.2 (daily, 0.25°, mm of water, February 2003 to December 2025): daily area averages become monthly means, then yearly means | Giovanni area-averaged time series |
 | Tree cover | MODIS Terra `MOD44B` v061 Vegetation Continuous Fields (yearly, 250 m) | AppEEARS area statistics |
 
 - These data were obtained from the NASA Langley Research Center (LaRC) POWER Project funded
@@ -164,8 +198,8 @@ Highlights from the world regions (full records unless stated):
   Yang, E.-S., Qin, W., Vasilkov, A., Li, C., Joiner, J., Choi, S., & Swartz, W. H. (2024).
   OMI/Aura NO2 Cloud-Screened Total and Tropospheric Column L3 Global Gridded 0.25 degree x 0.25
   degree Ver 5.0, Col 004. NASA GES DISC. https://doi.org/10.5067/AURA/OMI/DATA3407
-- Area averages of NO₂, carbon monoxide, black carbon and CO₂ were produced with the Giovanni
-  online data system, developed and maintained by the NASA GES DISC.
+- Area averages of NO₂, carbon monoxide, black carbon, CO₂ and groundwater were produced with the
+  Giovanni online data system, developed and maintained by the NASA GES DISC.
 - Didan, K. (2021). MODIS/Terra Vegetation Indices Monthly L3 Global 1km SIN Grid V061. NASA EOSDIS
   Land Processes Distributed Active Archive Center. https://doi.org/10.5067/MODIS/MOD13A3.061
 - NDVI and tree-cover area statistics were produced with AppEEARS (Application for Extracting and Exploring
@@ -186,6 +220,8 @@ Highlights from the world regions (full records unless stated):
   assimilated CO2 V10r. NASA GES DISC. https://doi.org/10.5067/BGFIODET3HZ8
 - DiMiceli, C., Sohlberg, R., & Townshend, J. (2022). MODIS/Terra Vegetation Continuous Fields
   Yearly L3 Global 250m SIN Grid V061. NASA LP DAAC. https://doi.org/10.5067/MODIS/MOD44B.061
+- Li, B., Beaudoing, H., & Rodell, M., NASA/GSFC/HSL (2020). GLDAS Catchment Land Surface Model L4
+  daily 0.25 x 0.25 degree GRACE-DA1 V2.2. NASA GES DISC. https://doi.org/10.5067/TXBMLX370XX8
 
 Second datasets used only as the "third witness" (monthly area means in `data/witness/`):
 - GISTEMP Team (2026). GISS Surface Temperature Analysis (GISTEMP), version 4, 250 km smoothing.
@@ -264,6 +300,7 @@ python -m venv .venv
 pip install -r requirements-dev.txt
 python scripts/prefetch.py --region colorado   # refresh cached data (optional)
 # NO2: put the Giovanni CSV downloads in data/raw as giovanni_no2_<region>_*.csv
+# Groundwater: put the daily Giovanni CSV downloads in data/raw as giovanni_groundwater_<region>_*.csv
 # NDVI: put the AppEEARS statistics CSV in data/raw as appeears_ndvi_<region>_*.csv
 streamlit run app.py
 python -m pytest -q
@@ -273,7 +310,7 @@ python -m pytest -q
 
 ```
 app.py                 Streamlit app
-trend/regions.py       region catalog (ten prepared regions)
+trend/regions.py       region catalog (eleven prepared regions)
 trend/variables.py     measurement catalog: definitions, units, products, citations, caveats
 trend/fetch.py         NASA POWER client, Giovanni loader, cached CSV storage
 trend/appeears.py      AppEEARS API client (area requests and statistics downloads)
@@ -286,18 +323,22 @@ trend/game.py          Detective exam game: cases, answers, explanations and the
 trend/trendmap.py      crime scene map: a trend test per grid cell, the many-cells correction, the map layer
 trend/verify.py        third witness (a second NASA dataset) and the reasons a result is not verified
 trend/timelapse.py     time travel map: yearly squares, differences from the normal, NASA imagery, the page
+trend/guide.py         guided start: two questions (what and where) that lead to up to three prepared cases
+trend/seasonal.py      "Which season is changing?": the trend test for each three-month season, next to the whole year
+trend/report.py        downloadable case report: one case on a printable, self-contained HTML page
+trend/bundle.py        open data: every prepared series and the witness records in one ZIP with SOURCES.md
 scripts/prefetch.py    fetches and caches data for a region
 scripts/build_gistemp_witness.py  NASA GISTEMP area means for the temperature witness
 data/processed/        small cached monthly CSVs used by the app
 data/witness/          second-dataset series for the third witness (GISTEMP, GPCP, IMERG, MODIS, GLDAS)
-tests/                 unit and app tests (434)
+tests/                 unit and app tests (570)
 docs/ARCHITECTURE.md   design and methods
 docs/SUBMISSION.md     draft of the Space Apps project page
 ```
 
 ## Use of AI
 
-Team Avni chose the challenge, the regions (Colorado, Istanbul–Marmara and eight world regions
+On Saturday night the team asked the AI to add new products on its own for a few hours. The AI proposed and built the Konya Closed Basin region, the groundwater measurement, the season comparison, the case report, the guided start and the open-data download, had them reviewed by another model, and the team approved publishing them. Before that night, Team Avni chose the challenge, the regions (Colorado, Istanbul–Marmara and eight world regions
 picked from a list of options), the measurements (including dust and smoke for any rectangle, and precipitation, carbon monoxide,
 soot, CO₂ and tree cover picked from a list of NASA options), the goal of keeping false results as
 rare as possible, the

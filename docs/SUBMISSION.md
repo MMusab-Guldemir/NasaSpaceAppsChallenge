@@ -14,10 +14,11 @@ Earth System Trend Detective
 
 Earth System Trend Detective is a free web tool that turns NASA Earth observations into clear,
 checkable answers to four questions: **what** is changing, **where**, **by how much**, and **is the
-change statistically significant?** A user picks a region (ten prepared regions from Colorado and
-Istanbul–Marmara to Beijing, the Amazon and Siberia, or any rectangle on Earth drawn on a world
-map), a measurement (air temperature, precipitation, snowfall, tropospheric NO₂, carbon monoxide,
-soot, dust and smoke, CO₂, vegetation greenness or tree cover) and a period. The tool builds a long time series
+change statistically significant?** A user picks a region (eleven prepared regions from Colorado and
+Istanbul–Marmara to Beijing, the Amazon, Siberia and Türkiye's Konya Closed Basin, or any rectangle
+on Earth drawn on a world map), a measurement (air temperature, precipitation, snowfall, hot days
+above 30 °C, tropospheric NO₂, carbon monoxide, soot, dust and smoke, CO₂, vegetation greenness,
+groundwater storage or tree cover) and a period. The tool builds a long time series
 from NASA data, removes the seasonal cycle by using one value per year, fits a linear trend, and
 reports the rate of change per decade with its 95% confidence interval and a significance test. A
 second test of a different kind (Mann-Kendall with Sen's slope) acts as a "second witness". Results
@@ -48,13 +49,13 @@ from the app's own NASA data and statistics code.
 **Why this challenge.** In Team Avni's own words: "I chose this challenge because it is much
 harder than the other topics, and it interested me more than any of the others."
 
-**Any place on Earth.** Besides ten prepared regions, users can draw, move and resize a rectangle
+**Any place on Earth.** Besides eleven prepared regions, users can draw, move and resize a rectangle
 on a world map, or type its corners, to investigate any area from 0.01° to 40° on each side. A
 rectangle smaller than NASA's grid uses the nearest grid cell; a large one is fetched in pieces of
 at most 10° × 10°. Temperature, precipitation, snowfall and dust and smoke (aerosol optical depth)
 for that rectangle are fetched live from the NASA POWER API within seconds; NO₂, carbon monoxide,
-soot, CO₂, vegetation greenness and tree cover, which come from slower NASA services that need a
-login, are prepared in advance for the prepared regions.
+soot, CO₂, vegetation greenness, groundwater and tree cover, which come from slower NASA services
+that need a login, are prepared in advance for the prepared regions.
 
 **What it does.** The user opens an **investigation board** for a region: one clue card per
 measurement, each with its rate of change, a verdict stamp (Confirmed, Disputed, No evidence, Weak clue, Open case; plus No snow, Not enough data and No data where they apply) and a small sparkline. After picking a clue, the user (1) chooses the
@@ -67,6 +68,30 @@ context, with a clear note that the test shows that something changed, not why),
 case notes with caveats, monthly data, a data table, CSV downloads, the methods and a
 share link that reopens exactly that case. An EN / TR switch in the top right shows the whole app
 in English (default) or Turkish.
+
+**Guided start and famous cases.** A visitor who does not know where to start answers two
+questions, what (heat; water: rain, snow, groundwater; air pollution; green land; carbon in the air)
+and where (a big city, a desert, a rain forest, dry grassland, mountains, a river delta or the cold
+north), and gets up to three prepared cases with their stamps. "No evidence" cases are offered too,
+because not every change is a real trend. Nine famous cases open with one click, from the Amazon
+drying to three groundwater cases: rising in the Sahel, falling under the Alps, and a fall in Konya
+that the chart shows but the test cannot prove yet. Local notes explain the groundwater results:
+the "Sahel paradox", the 2023 and 2024 Amazon droughts, Europe's 2022 drought in the Alps, and the
+wells and sinkholes of the Konya plain. On a phone the measurement cards wrap into two columns.
+
+**Which season is changing?** The case file runs the same trend test for each three-month season
+(December-February, March-May, June-August, September-November) for temperature, precipitation and
+hot days, and draws each season's rate per decade with its 95% interval next to a dashed whole-year
+line. In Istanbul–Marmara summer warms fastest (+0.64 °C per decade, 1981-2025, Confirmed) and
+spring slowest (+0.42 °C per decade).
+
+**Case report and open data.** One button downloads the case as a printable, self-contained HTML
+page that opens offline: the verdict, a chart of the yearly values with the trend line, the second
+witness, possible reasons, caveats, the data source with its DOI and the share link. The World
+board view, which tests every prepared region and measurement with the same rules, offers every
+prepared monthly series, the NASA witness records and a `SOURCES.md` listing each region box,
+product, DOI and citation as one ZIP file (about 0.7 MB), so anyone can re-run the tests outside
+the app.
 
 **Detective exam.** A switch at the top turns the app into a game for students: a secret, unlabeled
 chart from a prepared region draws itself year by year, and the player decides as early as they
@@ -94,7 +119,7 @@ GPM IMERG is shown as a high-resolution check, not as an extra witness), MODIS f
 (not independent: the app's aerosol values are held close to MODIS, so this is a consistency check,
 run up to 2021 because the app's aerosol data switch satellites in 2022), and GLDAS-2.1 for snowfall
 (a model cross-check, not a measurement). The GISTEMP
-stations show significant warming in every prepared region (the speeds match closely in five; in
+stations show significant warming in every prepared region (the speeds match closely in six; in
 four only the direction does), including Beijing, where the main record falls just short of the
 evidence line. GPCP backs the direction of Amazon drying, at a different speed; over the Sahel the
 two rain records are related, so their agreement is expected rather than independent support.
@@ -111,7 +136,9 @@ dust and smoke as plain differences, rain and snow in percent of normal (millime
 on one fixed scale per place, so years compare. A play button runs the years; a stripe above the
 slider shows the yearly average of the squares, and the 3 highest or lowest years are named. In
 the Sahel the map turns from the brown drought years of the 1980s to green-blue recent years, and
-2024 comes out as the wettest of 45 years, the same answer as the case file. Optional NASA GIBS
+2024 comes out as the wettest of 45 years, the same answer as the case file. A "Compare two years"
+button shows two years side by side: drag the white line to swipe between them (for example the
+Sahel's 1984 drought and 2024). Optional NASA GIBS
 satellite images of the same year (true colour, vegetation greenness, snow cover, night lights,
 land cover, carbon monoxide) give context; the page says that one year can be unusual by chance
 and that the trend test, not the colours, decides.
@@ -119,7 +146,8 @@ and that the trend test, not the colours, decides.
 **How it works.**
 1. *Data:* monthly area averages over the region, from NASA POWER (MERRA-2 based temperature,
    precipitation and snowfall; aerosol optical depth from CERES SYN1deg), Giovanni area-averaged
-   time series (OMI tropospheric NO₂, MOPITT carbon monoxide, MERRA-2 black carbon, OCO-2 GEOS CO₂)
+   time series (OMI tropospheric NO₂, MOPITT carbon monoxide, MERRA-2 black carbon, OCO-2 GEOS CO₂,
+   and daily GLDAS-2.2 groundwater with GRACE data assimilation, averaged per month)
    and AppEEARS area statistics (MODIS NDVI and tree cover). Data for prepared regions are cached as small CSV files, so the app works even
    when the source services are busy.
 2. *One value per year:* monthly values are aggregated per year (calendar-year means, water-year
@@ -156,8 +184,13 @@ The same measurement can behave differently in two places: both regions are warm
 Marmara faster, while CO₂ rises at the same pace in both because it mixes around the planet.
 Among the world regions, Beijing's NO₂ fell by about 3.7 × 10¹⁵ molecules/cm² per decade from 2013
 to 2025 (p = 0.013, both tests agree), after China's 2013 clean-air plan, and air temperature rose
-significantly in nine of the ten prepared regions (from +0.12 °C per decade in the Sahel to +0.55 °C
-per decade in Istanbul–Marmara, 1981-2025; Beijing is borderline, p = 0.06).
+significantly in ten of the eleven prepared regions (from +0.12 °C per decade in the Sahel to +0.55 °C
+per decade in Istanbul–Marmara, 1981-2025; Beijing is borderline, p = 0.06). Groundwater
+(2004-2025) fell in the Amazon (about −62 mm of water per decade, p = 0.027) and under the Alps
+(−28 mm per decade, p = 0.019) and rose in the Sahel (+99 mm per decade, p = 0.004), all Confirmed.
+In Türkiye's Konya Closed Basin it falls by about 27 mm per decade, but the test cannot confirm it
+yet (p = 0.15); the same basin warms by +0.40 °C per decade (NASA GISTEMP stations: +0.50) and
+gains about 6.4 hot days above 30 °C per decade, both Confirmed (1981-2025).
 
 **Benefits.** Students and the public can explore real NASA data, see how scientists decide whether a
 change is real, and download everything to check the result themselves. Every number comes with its
@@ -165,17 +198,18 @@ uncertainty and its data source.
 
 **What we hope to achieve.** In Team Avni's own words: "In the future, the project should become a
 place where anyone who is really interested in NASA or in this topic can come to do research and
-learn." Ten regions are prepared today with vegetation greenness for all of them (tree cover is added
-when NASA AppEEARS delivers it), and the same pipeline can be repeated for more regions.
+learn." Eleven regions are prepared today, with vegetation greenness for all but Konya (tree cover is
+added when NASA AppEEARS delivers it), and the same pipeline can be repeated for more regions.
 
 **Tools.** Python, Streamlit, Plotly, pandas, NumPy, SciPy, pymannkendall, requests, folium and
 streamlit-folium (Leaflet, Leaflet.draw, OpenStreetMap map tiles); NASA POWER API, Giovanni,
-AppEEARS and NASA GIBS imagery tiles; GitHub; Streamlit Community Cloud. 434 automated tests check the statistics, the data
-loaders, the game, the map, the verification and the app.
+AppEEARS and NASA GIBS imagery tiles; GitHub; Streamlit Community Cloud. 570 automated tests check
+the statistics, the data loaders, the game, the maps, the verification, the guided start, the season
+test, the case report, the open-data ZIP and the app.
 
 ## Use of Super Intelligence (SI)
 
-Team Avni chose the challenge, the regions (Colorado,
+On Saturday night the team asked the AI to add new products on its own for a few hours. The AI proposed and built the Konya Closed Basin region, the groundwater measurement, the season comparison, the case report, the guided start and the open-data download, had them reviewed by another model, and the team approved publishing them. Before that night, Team Avni chose the challenge, the regions (Colorado,
 Istanbul–Marmara and eight world regions picked from a list of options), the measurements
 (including dust and smoke for any rectangle, and precipitation, carbon monoxide,
 soot, CO₂ and tree cover picked from a list of NASA options), the goal of keeping false results as
@@ -213,12 +247,13 @@ so on every slide; no other AI-generated images, video or audio are used.
 | Carbon monoxide | MOPITT `MOP03JM` v010, total column, daytime | Giovanni (NASA LaRC ASDC) | Drummond, Gille & Worden, doi:10.5067/TERRA/MOPITT/MOP03JM_L3.010 |
 | Soot (black carbon) | MERRA-2 `M2TMNXAER` v5.12.4, surface concentration | Giovanni (NASA GES DISC) | GMAO (2015), doi:10.5067/FH9A0MLJPC7N |
 | Carbon dioxide | OCO-2 GEOS L3 monthly V10r, column-average CO₂ | Giovanni (NASA GES DISC) | Weir, Ott & OCO-2 Science Team (2022), doi:10.5067/BGFIODET3HZ8 |
+| Groundwater storage | GLDAS-2.2 Catchment Land Surface Model with GRACE data assimilation, `GLDAS_CLSM025_DA1_D` v2.2, daily 0.25°, mm of water (February 2003 to December 2025, averaged per month) | Giovanni (NASA GES DISC) | Li, Beaudoing & Rodell (2020), doi:10.5067/TXBMLX370XX8 |
 | Tree cover | MODIS Terra `MOD44B` v061, yearly 250 m | AppEEARS (NASA LP DAAC) | DiMiceli, Sohlberg & Townshend (2022), doi:10.5067/MODIS/MOD44B.061 |
 
 These data were obtained from the NASA Langley Research Center (LaRC) POWER Project funded through the
-NASA Earth Science/Applied Science Program. Area averages of NO₂, carbon monoxide, black carbon and
-CO₂ were produced with the Giovanni online data system, developed and maintained by the NASA GES
-DISC. NDVI and tree-cover area statistics were produced with AppEEARS (NASA EOSDIS LP DAAC and USGS
+NASA Earth Science/Applied Science Program. Area averages of NO₂, carbon monoxide, black carbon,
+CO₂ and groundwater were produced with the Giovanni online data system, developed and maintained by
+the NASA GES DISC. NDVI and tree-cover area statistics were produced with AppEEARS (NASA EOSDIS LP DAAC and USGS
 EROS Center). Precipitation trends for the Amazon, the Sahel and Beijing were checked against NASA's
 GPCP V3.3 satellite-gauge record (Huffman, G. J., Behrangi, A., Bolvin, D. T., & Nelkin, E. J. (2025). GPCP Precipitation Level 3 Monthly 0.5-Degree V3.3. NASA GES DISC. doi:10.5067/MEASURES/GPCP/DATA306).
 
@@ -285,6 +320,8 @@ SNPP night lights and MOPITT carbon monoxide. We acknowledge the use of imagery 
   assimilated CO2 V10r. NASA GES DISC. doi:10.5067/BGFIODET3HZ8
 - DiMiceli, C., Sohlberg, R., & Townshend, J. (2022). MODIS/Terra Vegetation Continuous Fields
   Yearly L3 Global 250m SIN Grid V061. NASA LP DAAC. doi:10.5067/MODIS/MOD44B.061
+- Li, B., Beaudoing, H., & Rodell, M., NASA/GSFC/HSL (2020). GLDAS Catchment Land Surface Model L4
+  daily 0.25 x 0.25 degree GRACE-DA1 V2.2. NASA GES DISC. doi:10.5067/TXBMLX370XX8
 - Mann, H. B. (1945). Nonparametric tests against trend. *Econometrica*, 13, 245-259.
 - Kendall, M. G. (1975). *Rank Correlation Methods*. Griffin, London.
 - Sen, P. K. (1968). Estimates of the regression coefficient based on Kendall's tau. *JASA*, 63, 1379-1389.

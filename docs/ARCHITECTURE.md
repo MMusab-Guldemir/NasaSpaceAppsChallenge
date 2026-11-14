@@ -19,6 +19,10 @@ and **is the change statistically significant?** Visualization plus analysis is 
   available for any rectangle, **CO2**, **vegetation greenness (NDVI)** and **tree cover**.
 - Regions: **Colorado**, **Istanbul–Marmara**, then eight world regions picked from options:
   Medina, Beijing, Los Angeles, Cairo and the Nile Delta, the Amazon, the Sahel, the Alps, Siberia.
+- Added on Saturday night, when the team asked the AI to add new products on its own: the Konya
+  Closed Basin region, the groundwater measurement, the season comparison, the case report, the
+  guided start and the open-data download. The AI proposed and built them; the team approved
+  publishing them.
 - Any place on Earth: a rectangle of any size (0.01° to 40°) the user draws, moves and resizes on a
   map or types in.
 - A "possible reasons" step after the verdict.
@@ -38,6 +42,7 @@ and **is the change statistically significant?** Visualization plus analysis is 
 | Carbon monoxide | MOPITT `MOP03JM` v010 total column, daytime (molecules/cm2 x 1e-18) | Giovanni area-averaged time series | Earthdata Login | Mar 2000 to Dec 2024 |
 | Soot (black carbon) | MERRA-2 `M2TMNXAER` v5.12.4 `BCSMASS` (kg/m3 x 1e9 = ug/m3) | Giovanni area-averaged time series | Earthdata Login | 1980 to present |
 | CO2 | OCO-2 GEOS L3 monthly V10r `XCO2` (mol/mol x 1e6 = ppm); min_years = 7 | Giovanni area-averaged time series | Earthdata Login | 2015 to Feb 2022 |
+| Groundwater storage | GLDAS-2.2 Catchment Land Surface Model with GRACE data assimilation `GLDAS_CLSM025_DA1_D` v2.2, groundwater storage (mm of water), daily, 0.25 deg; doi:10.5067/TXBMLX370XX8 | Giovanni area-averaged time series CSV (daily), requested in chunks of up to 8 years | Earthdata Login | Feb 2003 to Dec 2025 |
 | Tree cover | MODIS Terra `MOD44B` v061 `Percent_Tree_Cover`, yearly, 250 m | AppEEARS area request (statistics CSV) | Earthdata Login | 2000 to present |
 
 Verification notes:
@@ -53,7 +58,8 @@ Verification notes:
 Regions (W, S, E, N): Colorado -109.05, 37.0, -102.04, 41.0; Istanbul–Marmara 27.0, 40.0, 30.0, 42.0;
 Medina 38.5, 23.5, 40.5, 25.5; Beijing 115.5, 39.0, 118.0, 41.0; Los Angeles -119.0, 33.5, -117.0, 35.5;
 Cairo and the Nile Delta 29.5, 29.5, 32.5, 31.75; Amazon (Rondônia) -66.0, -13.0, -60.0, -8.0;
-Sahel -2.0, 12.0, 8.0, 16.0; Alps 6.0, 45.5, 14.0, 48.0; Siberia (Yakutia) 125.0, 60.0, 135.0, 65.0.
+Sahel -2.0, 12.0, 8.0, 16.0; Alps 6.0, 45.5, 14.0, 48.0; Siberia (Yakutia) 125.0, 60.0, 135.0, 65.0;
+Konya Closed Basin 31.75, 37.0, 34.25, 39.0.
 Area averages: cosine-latitude-weighted mean of POWER grid cells. Giovanni and AppEEARS compute their
 own area statistics over the same boxes; we do not claim cosine weighting for those paths.
 
@@ -63,8 +69,10 @@ own area statistics over the same boxes; we do not claim cosine weighting for th
    (columns: `date, value, unit, source` plus a count column). The files are small and committed,
    so the prepared regions never depend on NASA servers being up.
 2. Giovanni and AppEEARS downloads go to `data/raw/` (git-ignored) as
-   `giovanni_no2_<region>_*.csv` and `appeears_ndvi_<region>_*.csv`, and are converted by loaders
-   that handle metadata header rows, fill values and scale factors.
+   `giovanni_no2_<region>_*.csv`, `giovanni_groundwater_<region>_*.csv` and
+   `appeears_ndvi_<region>_*.csv`, and are converted by loaders that handle metadata header rows,
+   fill values and scale factors. Daily NO2 and groundwater values become monthly means; a month
+   with too few valid days (10 for NO2, 25 for groundwater) is left empty.
 3. Custom rectangles: the app fetches temperature, precipitation, snowfall and dust and smoke live from the POWER
    API with a short timeout. POWER serves 2 to 10 degrees per request, so a small rectangle is
    requested inside a 2-degree box and a large one in overlapping pieces fetched in parallel; the
@@ -83,6 +91,7 @@ autocorrelation. A year enters the analysis only if it is complete for its aggre
 | NO2 | calendar-year mean of monthly means | 12 months, each with at least 10 valid days |
 | NDVI | mean of May to September (the northern growing season) | all 5 months present |
 | Snowfall | water-year total, October to September, labelled by its ending year | all 12 months present; mm/day x days in month |
+| Groundwater | calendar-year mean of monthly means | 12 months, each with at least 25 valid days; the record starts in February 2003, so trends run from 2004 |
 
 Tests on the annual series:
 - **Headline:** OLS linear trend with slope, 95% confidence interval and two-sided t-test p-value.
@@ -133,6 +142,10 @@ Tests on the annual series:
 - Carbon monoxide: whole-column values; no daytime retrievals in the polar winter (Siberia).
 - Soot: MERRA-2 aerosol reanalysis; very persistent from year to year.
 - CO2: only 7 complete years; mixes globally, so regional values rise at almost the same pace.
+- Groundwater: a model (GLDAS-2.2 Catchment) guided by GRACE satellite gravity, which sees water over
+  areas a few hundred kilometres wide, so the trend is regional, not the level of a single well. It
+  starts in 2003; the gap between GRACE and GRACE-FO (late 2017 to mid 2018) is filled by the model.
+  No second NASA record of underground water exists for these areas, so there is no third witness.
 - Tree cover: yearly map; plantations count as trees.
 
 ## User interface (Streamlit)
@@ -151,6 +164,14 @@ Tests on the annual series:
   to the case file, the evidence timeline and start-year check, the animated replay, the seasons view,
   the "not a straight line" note, the World board view (`?view=world`), and, from the partner session,
   the crime scene map layer and the third witness.
+- Also added: the Konya Closed Basin and groundwater storage; a guided start under the verdict strip
+  (two questions, what and where, lead to up to three prepared cases with their stamps); three
+  groundwater famous cases (nine in all) and local groundwater notes; "Which season is changing?" in
+  the case file (the same test for Dec–Feb, Mar–May, Jun–Aug and Sep–Nov, for temperature,
+  precipitation and hot days; bars with 95% intervals and a dashed whole-year line, which for
+  precipitation and hot days is a quarter of the whole-year change); a case report download (one
+  printable, self-contained HTML page); two measurement cards per row on phones (under 640 px); an
+  open-data ZIP on the World board; and a "Compare two years" swipe on the time travel map.
 
 ## Project structure
 
@@ -171,13 +192,18 @@ NasaSpaceAppsChallenge/
 │   ├── timeline.py         # evidence timeline and start-year check
 │   ├── replay.py           # animated replay of the verdict as years are added
 │   ├── seasons.py          # monthly values with the seasonal cycle removed
+│   ├── seasonal.py         # "which season is changing?": the trend test for each three-month season
 │   ├── linecheck.py        # "not a straight line" note
 │   ├── examples.py         # famous cases (checked against the data by tests)
+│   ├── guide.py            # guided start: two questions (what, where) lead to up to three prepared cases
 │   ├── hotdays.py          # hot days: daily maximum temperature counted per grid cell
 │   │                       # (scripts/build_grid_cells.py writes per-cell yearly values for the time map)
 │   ├── trendmap.py         # crime scene map: grid-cell trends with a Benjamini-Hochberg filter
 │   ├── verify.py           # third witness and "why is it not verified?"
 │   ├── timelapse.py        # time travel map: each grid cell's yearly difference from its normal
+│   │                       # (and the "Compare two years" swipe)
+│   ├── report.py           # downloadable case report: one printable, self-contained HTML page
+│   ├── bundle.py           # open data: every prepared series and witness record in one ZIP with SOURCES.md
 │   └── game.py             # Detective exam
 ├── scripts/prefetch.py     # fetch and cache region x variable CSVs
 ├── data/raw/               # manual downloads (git-ignored)
@@ -190,13 +216,17 @@ NasaSpaceAppsChallenge/
 
 ## Testing
 
-434 automated tests (`python -m pytest -q`), all offline:
+570 automated tests (`python -m pytest -q`), all offline:
 - statistics: known-slope series, white and autocorrelated noise (false-positive rates of both
   tests), completeness rules, water-year labelling, total change, constant series;
 - loaders: POWER payload parsing, fill values, land-only cells, Giovanni CSVs, retry rules;
 - rectangles: validation, the 2 to 10 degree limits in plain floats, drawn and edited shapes;
 - app: every case file in both languages and the prepared regions, examples, periods, custom areas with
-  synthetic live data, an offline NASA POWER.
+  synthetic live data, an offline NASA POWER;
+- newer features: the guided start offers only prepared, testable cases; the season test (Dec–Feb
+  labelled by its January, season words by hemisphere, real Istanbul data); the case report (every
+  text escaped, one self-contained page); the groundwater files (daily Giovanni values become
+  monthly means from 2003); the open-data ZIP (every prepared series unchanged, every DOI listed).
 
 ## Deployment
 
@@ -208,8 +238,9 @@ browser are limited to the error type.
 
 Cut: seasonal Mann-Kendall, NO2 and NDVI for custom rectangles (their NASA services need a login
 and take minutes per request), the earthaccess download path.
-Feature freeze: Saturday evening (team decision); after that only bug fixes and NASA data that was
-still arriving.
+Feature freeze: planned for Saturday evening (team decision). The team then asked for one night
+session of new products (see above) and approved publishing them; after that only bug fixes and NASA
+data that was still arriving.
 
 ## Rules compliance
 
