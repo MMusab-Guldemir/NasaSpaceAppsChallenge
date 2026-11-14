@@ -99,6 +99,7 @@ def test_world_board_view_renders_and_opens_a_case():
     assert not at.exception
     assert at.session_state["view"] == "world"
     assert any("table class='world'" in m.value for m in at.markdown)
+    assert any("Hazır tüm serileri indir" in b.proto.label for b in at.get("download_button"))  # open data ZIP
     buttons = [b for b in at.button if b.key and b.key.startswith("world_open_")]
     assert buttons, "the opposite-trends finds should offer buttons"
     target = buttons[0].key.removeprefix("world_open_")

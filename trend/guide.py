@@ -4,10 +4,11 @@ Written with AI assistance (Claude Opus 5.5, Anthropic) for Team Avni,
 NASA Space Apps Challenge 2026.
 
 The challenge statement suggests a short series of what/where questions that leads to variables. The
-first question picks a topic (heat, rain and snow, air pollution, green land, carbon), the second a
-kind of place (big city, desert, rain forest, ...). ``suggest`` turns the pair into up to three
-prepared cases, each with the stamp the detective gives it over its period (the World board's rules,
-``trend.world.board_verdict``), so the visitor sees the answer before opening the case file.
+first question picks a topic (heat; water: rain, snow, groundwater; air pollution; green land;
+carbon), the second a kind of place (big city, desert, rain forest, ...). ``suggest`` turns the pair
+into up to three prepared cases, each with the stamp the detective gives it over its period (the World
+board's rules, ``trend.world.board_verdict``), so the visitor sees the answer before opening the case
+file.
 "No evidence" cases are offered too: they show that not every change is a real trend.
 """
 from __future__ import annotations
@@ -27,7 +28,7 @@ MAX_SUGGESTIONS = 3
 # First question: what do you wonder about? (key -> answer text per interface language, emoji first)
 TOPICS: dict[str, dict[str, str]] = {
     "heat": {"en": "🌡️ Heat", "tr": "🌡️ Sıcaklık"},
-    "water": {"en": "🌧️ Rain and snow", "tr": "🌧️ Yağmur ve kar"},
+    "water": {"en": "💧 Water: rain, snow, groundwater", "tr": "💧 Su: yağmur, kar, yeraltı suyu"},
     "air": {"en": "🏭 Air pollution", "tr": "🏭 Hava kirliliği"},
     "green": {"en": "🌳 Green land", "tr": "🌳 Yeşil alanlar"},
     "carbon": {"en": "🫧 Carbon in the air", "tr": "🫧 Havadaki karbon"},

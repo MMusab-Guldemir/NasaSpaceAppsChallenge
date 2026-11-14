@@ -34,6 +34,7 @@ from trend.area import (
     pick_drawn_bbox,
     power_request_boxes,
 )
+from trend.bundle import bundle_text, data_bundle
 from trend.charts import annual_trend_figure, monthly_figure, sparkline_figure
 from trend.examples import EXAMPLES, example_key, example_label, examples_title
 from trend.guide import (
@@ -241,6 +242,12 @@ def measured_somewhere(files: tuple) -> frozenset:
 def world_board(files: tuple) -> dict:
     """Verdicts for every prepared region and measurement (full records), for the World board."""
     return world_cells(load_monthly)
+
+
+@st.cache_data(show_spinner=False)
+def bundle_bytes(files: tuple) -> bytes:
+    """Open data: the ZIP of every prepared series with SOURCES.md (rebuilt when a data file changes)."""
+    return data_bundle()
 
 
 @st.cache_data(show_spinner=False)
@@ -550,6 +557,12 @@ def show_world_board(lang: str) -> None:
                 key=f"world_open_{region_key}_{variable_key}", on_click=open_world_case,
                 args=(region_key, variable_key), width="stretch",
             )
+
+    # Open data: everything behind the board in one ZIP, so anyone can re-run the tests (trend/bundle.py)
+    st.download_button(
+        bundle_text(lang, "button"), bundle_bytes(data_files()), file_name="trend-detective-data.zip",
+        mime="application/zip", help=bundle_text(lang, "help"), key="data_bundle_download",
+    )
 
 
 # --- Language, shared links and area state -------------------------------------------------------
