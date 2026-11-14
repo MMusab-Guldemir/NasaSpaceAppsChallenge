@@ -70,8 +70,10 @@ from trend.variables import VARIABLES
 from trend.world import (
     SHORT_NAMES,
     WORLD_STYLE,
+    Cell,
     board_verdict,
     case_status,
+    cell_symbol,
     opposite_trends,
     place_name,
     summary_counts,
@@ -129,6 +131,12 @@ STYLE = """
 .hero.disputed { border-left-color: #a8501b; }
 .hero.disputed .meter-marker { background: #a8501b; box-shadow: 0 0 0 1px #7a3a14; }
 .meter-labels { display: flex; justify-content: space-between; font-size: 0.8rem; color: #52514e; margin-top: 8px; }
+.strip {
+  background: #ffffff; border: 1px solid #e1e0d9; border-left: 6px solid #2a78d6; border-radius: 8px;
+  padding: 8px 14px; margin: 2px 0 10px 0; font-size: 0.95rem; line-height: 1.9;
+}
+.strip .stamp { margin: 0 8px; font-size: 0.85rem; }
+.strip a { white-space: nowrap; }
 </style>
 """
 
@@ -142,6 +150,12 @@ def load_monthly(region_key: str, variable_key: str) -> pd.DataFrame | None:
 def game_page(lang: str) -> str:
     """The Detective exam page: every case and its answer, built from the cached data files."""
     return render_game_html(lang)
+
+
+@st.cache_data(show_spinner=False)
+def measured_somewhere() -> frozenset:
+    """Measurements with a cached file in at least one prepared region (others are not shown)."""
+    return frozenset(key for region_key in REGIONS for key in available_variable_keys(region_key))
 
 
 @st.cache_data(show_spinner=False)
@@ -205,6 +219,18 @@ def clear_area_error() -> None:
     st.session_state["area_error"] = None
 
 
+def reset_periods() -> None:
+    """A new place starts every case on its full record."""
+    st.session_state["periods"] = {}
+    for key in [k for k in st.session_state if str(k).startswith("period_")]:
+        del st.session_state[key]
+
+
+def on_region_change() -> None:
+    clear_area_error()
+    reset_periods()
+
+
 def on_mode_change() -> None:
     """Entering custom mode: keep a rectangle the user made, otherwise start from the region on screen.
 
@@ -212,6 +238,7 @@ def on_mode_change() -> None:
     that were not on screen.
     """
     clear_area_error()
+    reset_periods()
     if st.session_state.get("area_mode") != "custom":
         return
     if st.session_state.get("_custom_set"):
@@ -282,6 +309,7 @@ def axis_title(name: str, unit: str) -> str:
 
 def open_case(variable_key: str) -> None:
     st.session_state["case"] = variable_key
+    st.session_state["_jump"] = True  # scroll to the case file after this click
 
 
 # Demonstration cases suggested by the challenge statement: one click opens a case and period.
@@ -297,6 +325,7 @@ EXAMPLE_CASES = [
 
 def open_example(variable_key: str, start: int | None, end: int | None) -> None:
     st.session_state["case"] = variable_key
+    st.session_state["_jump"] = True
     periods = st.session_state.setdefault("periods", {})
     if start is None:
         st.session_state.pop(f"period_{variable_key}", None)  # full record on the next run
@@ -312,9 +341,9 @@ def open_world_case(region_key: str, variable_key: str) -> None:
     st.session_state["region"] = region_key
     st.session_state["custom_bbox"] = REGIONS[region_key].bbox
     st.session_state["case"] = variable_key
-    st.session_state.pop(f"period_{variable_key}", None)  # full record
-    st.session_state.setdefault("periods", {}).pop(variable_key, None)
+    reset_periods()  # a new place: full records
     st.session_state["view"] = "case"
+    st.session_state["_jump"] = True
 
 
 def show_world_board(lang: str) -> None:
@@ -436,6 +465,8 @@ if st.session_state["view"] == "exam":
     st.caption(t(lang, "footer"))
     st.stop()
 
+verdict_slot = st.container()  # filled with the current case's verdict once it is known
+
 # --- Left sidebar: choose the area -------------------------------------------------------------
 
 with st.sidebar:
@@ -446,7 +477,7 @@ with st.sidebar:
     )
     if st.session_state["area_mode"] == "prepared":
         st.selectbox(
-            t(lang, "region_label"), list(REGIONS), key="region", on_change=clear_area_error,
+            t(lang, "region_label"), list(REGIONS), key="region", on_change=on_region_change,
             format_func=lambda key: region_name(lang, key, REGIONS[key].name),
         )
     else:
@@ -588,15 +619,18 @@ BOARD_GROUPS = (
     ("group_carbon_green", ("co2", "ndvi", "tree_cover")),
 )
 board_cells = []
+measured = measured_somewhere()
 for group_key, group_variables in BOARD_GROUPS:
-    keys = [k for k in group_variables if k in VARIABLES]
+    keys = [k for k in group_variables if k in VARIABLES and k in measured]
+    if not keys:
+        continue
     st.markdown(
         f"<div class='eyebrow' lang='{lang}'>{html.escape(t(lang, group_key))}</div>",
         unsafe_allow_html=True,
     )
     board_cells.extend(zip(st.columns(4), keys))
 listed = {k for _, ks in BOARD_GROUPS for k in ks}
-extra = [k for k in VARIABLES if k not in listed]  # any measurement not placed in a group
+extra = [k for k in VARIABLES if k not in listed and k in measured]  # measurements not in a group
 if extra:
     board_cells.extend(zip(st.columns(4), extra))
 for column, key in board_cells:
@@ -611,9 +645,8 @@ for column, key in board_cells:
             unsafe_allow_html=True,
         )
         if result is not None:
-            arrow = ""
-            if result.significant and result.slope_per_year != 0:
-                arrow = "▲ " if result.slope_per_year > 0 else "▼ "
+            symbol = cell_symbol(Cell(region_key, key, status, result.slope_per_decade))
+            arrow = f"{symbol} " if symbol not in ("", "–") else ""  # same marks as the World board
             rate_text = num(result.slope_per_decade, lang, variable.decimals, signed=True)
             st.markdown(
                 f"<div class='clue-value'>{arrow}{rate_text}</div>"
@@ -653,12 +686,19 @@ annual_all = annual_by_key[case_key]
 monthly = monthly_by_key[case_key]
 
 st.divider()
+st.markdown("<div id='case-file'></div>", unsafe_allow_html=True)
 st.markdown(
     f"<div class='eyebrow' lang='{lang}'>{html.escape(t(lang, 'case_label', region=region_label, variable=texts['name']))}</div>",
     unsafe_allow_html=True,
 )
 st.header(t(lang, "question", subject=subject, region=region_label))
 st.write(t(lang, "question_body", name=texts["name"], definition=texts["definition"], subject=subject))
+if st.session_state.pop("_jump", False):  # only after a click that opened a case
+    components.html(
+        "<script>try{window.parent.document.getElementById('case-file')"
+        ".scrollIntoView({behavior:'smooth'})}catch(e){}</script>",
+        height=0,
+    )
 
 # Step 2: choose the period
 st.markdown(f"<div class='step'>{html.escape(t(lang, 'step_when'))}</div>", unsafe_allow_html=True)
@@ -694,6 +734,16 @@ result = analyze_trend(annual["year"], annual["value"], min_years=min_years)
 band = trend_line_band(annual["year"], annual["value"])
 status = case_status(result)
 rate = num(result.slope_per_decade, lang, decimals, signed=True)
+with verdict_slot:
+    mark = cell_symbol(Cell(region_key, case_key, status, result.slope_per_decade))
+    mark = f"{mark} " if mark not in ("", "–") else ""
+    st.markdown(
+        f"<div class='strip'><span class='eyebrow' lang='{lang}'>{html.escape(t(lang, 'strip_eyebrow'))}</span> · "
+        f"<b>{html.escape(region_label)} · {html.escape(texts['name'])}</b> · {start_year}–{end_year}"
+        f"{stamp(lang, status)}<b>{mark}{html.escape(rate)} {html.escape(unit)} "
+        f"{html.escape(t(lang, 'per_decade'))}</b> · <a href='#case-file'>{html.escape(t(lang, 'strip_link'))}</a></div>",
+        unsafe_allow_html=True,
+    )
 
 # Step 3: real or chance?
 st.markdown(f"<div class='step'>{html.escape(t(lang, 'step_verdict'))}</div>", unsafe_allow_html=True)

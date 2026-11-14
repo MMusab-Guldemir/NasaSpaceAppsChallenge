@@ -47,6 +47,8 @@ TEXT: dict[str, dict[str, str]] = {
         "investigate": "Investigate",
         "selected": "Selected",
         "case_label": "Case file · {region} · {variable}",
+        "strip_eyebrow": "Case on the desk",
+        "strip_link": "Read the case file ↓",
         "question": "Is the {subject} in {region} changing?",
         "question_body": "**{name}:** {definition} Each point on the chart is one {subject}.",
         "step_when": "Step 3 · When? Choose the period",
@@ -166,9 +168,9 @@ TEXT: dict[str, dict[str, str]] = {
         "apply_coords": "Investigate these coordinates",
         "custom_help": (
             "Temperature, precipitation, snowfall and dust and smoke come live from NASA POWER for "
-            "any rectangle up to 40° × 40°. NO₂, carbon monoxide, soot, CO₂, vegetation greenness and "
-            "tree cover are available for prepared regions only, because NASA delivers them through "
-            "slower services that need a login."
+            "any rectangle up to 40° × 40°. NO₂, carbon monoxide, soot, CO₂ and vegetation greenness "
+            "are available for prepared regions only, because NASA delivers them through slower "
+            "services that need a login."
         ),
         "map_help": (
             "Draw a rectangle with the square tool on the left of the map, or move and resize the "
@@ -236,6 +238,8 @@ TEXT: dict[str, dict[str, str]] = {
         "investigate": "İncele",
         "selected": "Seçili",
         "case_label": "Dava dosyası · {region} · {variable}",
+        "strip_eyebrow": "Masadaki dosya",
+        "strip_link": "Dosyayı oku ↓",
         "question": "{region} bölgesinde {subject} değişiyor mu?",
         "question_body": "**{name}:** {definition} Grafikteki her nokta: {subject}.",
         "step_when": "3. adım · Ne zaman? Dönemi seç",
@@ -353,9 +357,8 @@ TEXT: dict[str, dict[str, str]] = {
         "apply_coords": "Bu koordinatları incele",
         "custom_help": (
             "Sıcaklık, yağış, kar yağışı ve toz-duman, 40° × 40°'ye kadar her dikdörtgen için NASA "
-            "POWER'dan canlı gelir. NO₂, karbon monoksit, is, CO₂, bitki yeşilliği ve ağaç örtüsü ise "
-            "NASA'nın giriş gerektiren daha yavaş servislerinden geldiği için sadece hazır bölgelerde "
-            "var."
+            "POWER'dan canlı gelir. NO₂, karbon monoksit, is, CO₂ ve bitki yeşilliği ise NASA'nın giriş "
+            "gerektiren daha yavaş servislerinden geldiği için sadece hazır bölgelerde var."
         ),
         "map_help": (
             "Haritanın solundaki kare aracıyla bir dikdörtgen çiz ya da mevcut dikdörtgeni "

@@ -258,6 +258,8 @@ def world_table_html(
     )
     rows = []
     for variable_key in VARIABLES:
+        if all(cells.get((r, variable_key), Cell(r, variable_key, "open")).status == "open" for r in regions):
+            continue  # no prepared region has this measurement yet
         tds = []
         for region_key in regions:
             cell = cells.get((region_key, variable_key), Cell(region_key, variable_key, "open"))
