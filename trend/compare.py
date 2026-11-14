@@ -22,7 +22,7 @@ import plotly.graph_objects as go
 
 from trend.charts import AXIS, FONT_FAMILY, GRIDLINE, SURFACE, TEXT_PRIMARY, TEXT_SECONDARY
 from trend.fetch import load_processed
-from trend.i18n import num, p_phrase, status_text
+from trend.i18n import ci_bounds, num, p_phrase, status_text
 from trend.regions import REGIONS
 from trend.seasonal import OTHER_COLOR, STAMP_COLORS
 from trend.variables import get_variable
@@ -45,9 +45,10 @@ COMPARE_TEXT = {
         ),
         "note": (
             "Blue: Confirmed · orange: Disputed or Weak clue · grey: No evidence. Thin lines: 95% confidence "
-            "interval. Outlined bar: this region. The period chosen above does not apply here: every region "
-            "uses its full record, and record lengths differ between measurements (for example NO₂ from "
-            "2005, groundwater from 2003)."
+            "interval; bars whose thin lines overlap may in truth be in either order, and an interval that "
+            "runs off the chart is cut (hover for its ends). Outlined bar: this region. The period chosen "
+            "above does not apply here: every region uses its full record, and record lengths differ "
+            "between measurements (for example NO₂ from 2005, groundwater from 2004)."
         ),
         "x_title": "{unit} per decade",
         "hover": (
@@ -63,6 +64,13 @@ COMPARE_TEXT = {
             "Over the full records, {owner} rate ({rate} {unit} per decade) is the {ordinal} highest of {n} "
             "regions."
         ),
+        "rank_shared": (
+            "Over the full records, {owner} rate ({rate} {unit} per decade) shares {ordinal} place among {n} "
+            "regions."
+        ),
+        "caution": "Its own trend is not Confirmed ({stamp}), so its place in this order could be chance.",
+        "period_same": "All regions: {start}–{end}.",
+        "period_range": "Records between {start} and {end}.",
         "extremes": "Highest: {top} ({top_rate}); lowest: {bottom} ({bottom_rate}).",
         "highest_only": "Highest: {top} ({top_rate}).",
         "lowest_only": "Lowest: {bottom} ({bottom_rate}).",
@@ -93,9 +101,10 @@ COMPARE_TEXT = {
         ),
         "note": (
             "Mavi: Doğrulandı · turuncu: Tartışmalı ya da Zayıf ipucu · gri: Delil yok. İnce çizgiler: %95 "
-            "güven aralığı. Çerçeveli çubuk: bu bölge. Yukarıda seçilen dönem burada kullanılmaz: her "
-            "bölgede kaydın tamamı kullanılır ve kayıt uzunlukları ölçümden ölçüme değişir (örneğin NO₂ "
-            "2005'ten, yeraltı suyu 2003'ten başlar)."
+            "güven aralığı; ince çizgileri örtüşen çubukların gerçek sırası farklı olabilir, grafiğin dışına "
+            "taşan bir aralık kesilir (uçları için üzerine gel). Çerçeveli çubuk: bu bölge. Yukarıda seçilen "
+            "dönem burada kullanılmaz: her bölgede kaydın tamamı kullanılır ve kayıt uzunlukları ölçümden "
+            "ölçüme değişir (örneğin NO₂ 2005'ten, yeraltı suyu 2004'ten başlar)."
         ),
         "x_title": "{unit} / 10 yıl",
         "hover": (
@@ -114,6 +123,13 @@ COMPARE_TEXT = {
             "Kayıtların tamamına bakıldığında {place}, on yılda {rate} {unit} ile {n} bölge içinde {ordinal} "
             "sırada."
         ),
+        "rank_shared": (
+            "Kayıtların tamamına bakıldığında {place}, on yılda {rate} {unit} ile {n} bölge içinde {ordinal} "
+            "sırayı paylaşıyor."
+        ),
+        "caution": "Bu bölgenin kendi trendi doğrulanmadı ({stamp}); sıradaki yeri tesadüf olabilir.",
+        "period_same": "Tüm bölgeler: {start}–{end}.",
+        "period_range": "Kayıtlar {start} ile {end} arasında.",
         "extremes": "En yüksek: {top} ({top_rate}); en düşük: {bottom} ({bottom_rate}).",
         "highest_only": "En yüksek: {top} ({top_rate}).",
         "lowest_only": "En düşük: {bottom} ({bottom_rate}).",
@@ -250,7 +266,7 @@ def ranking_figure(
             continue
         hover.append(compare_text(
             lang, "hover", region=name, rate=num(value, lang, decimals, signed=True), unit=unit,
-            low=num(lo, lang, decimals, signed=True), high=num(hi, lang, decimals, signed=True),
+            low=ci_bounds(lo, hi, lang, decimals)[0], high=ci_bounds(lo, hi, lang, decimals)[1],
             stamp=status_text(lang, status)[0], p=p_phrase(float(p), lang), start=start, end=end,
         ))
 
@@ -270,8 +286,12 @@ def ranking_figure(
         )
     )
 
-    edges = [0.0, *low[tested], *high[tested]]
-    left, right = min(edges), max(edges)
+    core = [0.0, *slope[tested]]
+    core_left, core_right = min(core), max(core)
+    core_span = (core_right - core_left) or 1.0
+    # Intervals are shown up to 60% of the rates' spread past the extreme rates; longer ones are cut
+    left = max(min([0.0, *low[tested]]), core_left - 0.6 * core_span)
+    right = min(max([0.0, *high[tested]]), core_right + 0.6 * core_span)
     span = (right - left) or 1.0
     pad, room = 0.02 * span, 0.24 * span  # room for the value written past the end of each interval
     for label, value, lo, hi, is_current in zip(labels, slope, low, high, current):
@@ -280,7 +300,8 @@ def ranking_figure(
         up = value >= 0
         text = num(value, lang, decimals, signed=True)
         fig.add_annotation(
-            x=(hi + pad) if up else (lo - pad), y=label, text=f"<b>{text}</b>" if is_current else text,
+            x=(min(hi, right) + pad) if up else (max(lo, left) - pad), y=label,
+            text=f"<b>{text}</b>" if is_current else text,
             xanchor="left" if up else "right", showarrow=False, font={"color": TEXT_PRIMARY, "size": 12},
         )
     fig.add_vline(x=0, line_color=TEXT_SECONDARY, line_width=1)
@@ -337,22 +358,39 @@ def ranking_sentence(
         return num(slopes[i], lang, decimals, signed=True)
 
     top, bottom = _place(lang, regions[0], names), _place(lang, regions[-1], names)
+    starts, ends = list(table["start_year"]), list(table["end_year"])
+    if len(set(starts)) == 1 and len(set(ends)) == 1:
+        period = compare_text(lang, "period_same", start=starts[0], end=ends[0])
+    else:
+        period = compare_text(lang, "period_range", start=min(starts), end=max(ends))
     if current_region in regions:
         i = regions.index(current_region)
         place = _place(lang, current_region, names)
         values = {"place": place, "owner": _owner(place), "rate": rate(i), "unit": unit, "n": n}
-        if i == 0:
-            first = compare_text(lang, "rank_top", **values)
-            second = compare_text(lang, "lowest_only", bottom=bottom, bottom_rate=rate(n - 1))
-        elif i == n - 1:
-            first = compare_text(lang, "rank_bottom", **values)
-            second = compare_text(lang, "highest_only", top=top, top_rate=rate(0))
-        else:
-            first = compare_text(lang, "rank_middle", ordinal=ordinal(lang, i + 1), **values)
+        shown = [round(value, int(decimals)) for value in slopes]  # the rates as the reader sees them
+        higher = sum(value > shown[i] for value in shown)
+        lower = sum(value < shown[i] for value in shown)
+        shared = shown.count(shown[i]) > 1
+        if shared:
+            first = compare_text(lang, "rank_shared", ordinal=ordinal(lang, higher + 1), **values)
             second = compare_text(
                 lang, "extremes", top=top, top_rate=rate(0), bottom=bottom, bottom_rate=rate(n - 1)
             )
-        return f"{first} {second}"
+        elif higher == 0:
+            first = compare_text(lang, "rank_top", **values)
+            second = compare_text(lang, "lowest_only", bottom=bottom, bottom_rate=rate(n - 1))
+        elif lower == 0:
+            first = compare_text(lang, "rank_bottom", **values)
+            second = compare_text(lang, "highest_only", top=top, top_rate=rate(0))
+        else:
+            first = compare_text(lang, "rank_middle", ordinal=ordinal(lang, higher + 1), **values)
+            second = compare_text(
+                lang, "extremes", top=top, top_rate=rate(0), bottom=bottom, bottom_rate=rate(n - 1)
+            )
+        status = str(table["status"].iloc[i])
+        caution = "" if status == "confirmed" else " " + compare_text(
+            lang, "caution", stamp=status_text(lang, status)[0])
+        return f"{first}{caution} {second} {period}"
 
     summary = compare_text(
         lang, "summary", n=n, top=top, top_rate=rate(0), bottom=bottom, bottom_rate=rate(n - 1), unit=unit

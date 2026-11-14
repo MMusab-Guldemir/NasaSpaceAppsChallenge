@@ -306,8 +306,8 @@ def test_texts_have_the_same_keys_and_fields_in_both_languages():
     assert compare_text("tr", "title") == "Bu bölge diğerleriyle nasıl kıyaslanıyor?"
     assert "same test" in compare_text("en", "intro") and "full record" in compare_text("en", "intro")
     assert "aynı test" in compare_text("tr", "intro") and "kaydının tamamı" in compare_text("tr", "intro")
-    for lang, words in (("en", ("Blue", "95%", "Outlined", "NO₂", "2005", "2003")),
-                        ("tr", ("Mavi", "%95", "Çerçeveli", "NO₂", "2005", "2003"))):
+    for lang, words in (("en", ("Blue", "95%", "Outlined", "NO₂", "2005", "2004")),
+                        ("tr", ("Mavi", "%95", "Çerçeveli", "NO₂", "2005", "2004"))):
         note = compare_text(lang, "note")
         assert all(word in note for word in words), (lang, note)
     assert compare_text("de", "title") == "How does this place compare?"  # unknown language: English
@@ -325,11 +325,11 @@ def test_ordinals():
 def test_sentence_for_a_region_in_the_middle():
     assert ranking_sentence("en", EXAMPLE, "marmara", EN, "°C", 2) == (
         "Over the full records, Istanbul's rate (+0.55 °C per decade) is the 4th highest of 11 regions. "
-        "Highest: Medina (+0.63); lowest: the Amazon (+0.12)."
+        "Highest: Medina (+0.63); lowest: the Amazon (+0.12). All regions: 1981–2025."
     )
     assert ranking_sentence("tr", EXAMPLE, "marmara", TR, "°C", 2) == (
         "Kayıtların tamamına bakıldığında İstanbul, on yılda +0,55 °C ile 11 bölge içinde 4. sırada. "
-        "En yüksek: Medine (+0,63); en düşük: Amazon (+0,12)."
+        "En yüksek: Medine (+0,63); en düşük: Amazon (+0,12). Tüm bölgeler: 1981–2025."
     )
     assert ranking_sentence("en", EXAMPLE, "alps", EN, "°C", 2).startswith(
         "Over the full records, the Alps' rate (+0.60 °C per decade) is the 2nd highest of 11 regions."
@@ -345,19 +345,19 @@ def test_sentence_for_a_region_in_the_middle():
 def test_sentence_for_the_highest_and_the_lowest():
     assert ranking_sentence("en", EXAMPLE, "medina", EN, "°C", 2) == (
         "Over the full records, Medina's rate (+0.63 °C per decade) is the highest of 11 regions. "
-        "Lowest: the Amazon (+0.12)."
+        "Lowest: the Amazon (+0.12). All regions: 1981–2025."
     )
     assert ranking_sentence("en", EXAMPLE, "amazon", EN, "°C", 2) == (
         "Over the full records, the Amazon's rate (+0.12 °C per decade) is the lowest of 11 regions. "
-        "Highest: Medina (+0.63)."
+        "Highest: Medina (+0.63). All regions: 1981–2025."
     )
     assert ranking_sentence("tr", EXAMPLE, "medina", TR, "°C", 2) == (
         "Kayıtların tamamına bakıldığında Medine, on yılda +0,63 °C ile 11 bölge içinde en yüksek değere sahip. "
-        "En düşük: Amazon (+0,12)."
+        "En düşük: Amazon (+0,12). Tüm bölgeler: 1981–2025."
     )
     assert ranking_sentence("tr", EXAMPLE, "amazon", TR, "°C", 2) == (
         "Kayıtların tamamına bakıldığında Amazon, on yılda +0,12 °C ile 11 bölge içinde en düşük değere sahip. "
-        "En yüksek: Medine (+0,63)."
+        "En yüksek: Medine (+0,63). Tüm bölgeler: 1981–2025."
     )
 
 
@@ -366,15 +366,15 @@ def test_sentence_with_only_falling_rates_still_says_highest_and_lowest():
     unit = "10¹⁸ molecules/cm²"
     assert ranking_sentence("en", falling, "medina", EN, unit, 2) == (
         f"Over the full records, Medina's rate (-0.02 {unit} per decade) is the highest of 3 regions. "
-        "Lowest: Beijing (-0.31)."
+        "Lowest: Beijing (-0.31). All regions: 1981–2025."
     )
     assert ranking_sentence("en", falling, "marmara", EN, unit, 2) == (
         f"Over the full records, Istanbul's rate (-0.10 {unit} per decade) is the 2nd highest of 3 regions. "
-        "Highest: Medina (-0.02); lowest: Beijing (-0.31)."
+        "Highest: Medina (-0.02); lowest: Beijing (-0.31). All regions: 1981–2025."
     )
     assert ranking_sentence("tr", falling, "beijing", TR, unit, 2) == (
         f"Kayıtların tamamına bakıldığında Pekin, on yılda -0,31 {unit} ile 3 bölge içinde en düşük değere "
-        "sahip. En yüksek: Medine (-0,02)."
+        "sahip. En yüksek: Medine (-0,02). Tüm bölgeler: 1981–2025."
     )
 
 
@@ -435,3 +435,21 @@ def test_untested_text_is_empty_when_every_region_is_ranked():
                                                  ("amazon", "no_snow")])
     assert untested_text("en", table, EN) == "Not ranked: Medina, Cairo and Amazon (No snow)."
     assert untested_text("tr", table, TR) == "Sıralamaya girmeyenler: Medine, Kahire ve Amazon (Kar yok)."
+
+
+
+def test_rank_is_shared_for_equal_shown_rates_and_an_unconfirmed_region_gets_a_caution():
+    table = table_of(("medina", 0.40), ("cairo_nile", 0.33), ("siberia", 0.331), ("amazon", 0.12))
+    assert "shares 2nd place among 4 regions" in ranking_sentence("en", table, "siberia", EN, "°C", 2)
+    assert "2. sırayı paylaşıyor" in ranking_sentence("tr", table, "cairo_nile", TR, "°C", 2)
+    table.loc[table["region"] == "amazon", "status"] = "noevidence"
+    sentence = ranking_sentence("en", table, "amazon", EN, "°C", 2)
+    assert "Its own trend is not Confirmed (No evidence)" in sentence
+    assert "kendi trendi doğrulanmadı" in ranking_sentence("tr", table, "amazon", TR, "°C", 2)
+
+
+def test_a_very_wide_interval_does_not_squeeze_the_bars():
+    table = table_of(("medina", 0.40), ("cairo_nile", 0.30), ("amazon", 0.10))
+    table.loc[table["region"] == "medina", ["ci_low", "ci_high"]] = (-20.0, 20.8)
+    axis = ranking_figure(table, "en", "amazon", EN, "°C").layout.xaxis.range
+    assert axis[1] - axis[0] < 2.0  # set by the rates (0 to 0.40), not by the -20 to +20.8 interval

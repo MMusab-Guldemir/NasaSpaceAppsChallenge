@@ -207,8 +207,8 @@ def _stamp(lang: str, start: int, end: int, status: str, p_value: float) -> dict
         "x": 0, "xref": "paper", "xanchor": "left",
         "y": 1, "yref": "paper", "yanchor": "bottom", "yshift": 8,
         "showarrow": False, "align": "left",
-        "font": {"family": FONT_FAMILY, "color": color, "size": 14},
-        "bgcolor": background, "bordercolor": color, "borderwidth": 1.5, "borderpad": 5,
+        "font": {"family": FONT_FAMILY, "color": color, "size": 12},  # fits a phone-wide chart
+        "bgcolor": background, "bordercolor": color, "borderwidth": 1.5, "borderpad": 4,
     }
 
 

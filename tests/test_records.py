@@ -3,11 +3,13 @@
 Written with AI assistance (Claude Opus 5.5, Anthropic) for Team Avni,
 NASA Space Apps Challenge 2026.
 """
+import numpy as np
 import pandas as pd
 
 from trend.fetch import load_processed
 from trend.records import (
     RECORD_TEXT,
+    stripe_positions,
     last_year_rank,
     record_sentence,
     stripes_caption,
@@ -35,7 +37,16 @@ def test_sentences_in_both_languages():
     dry = last_year_rank(_annual([5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 5.5]))
     assert record_sentence("en", dry, "precipitation") == "📌 2011 is the 2nd driest of 11 years (2001–2011)."
     assert record_sentence("tr", dry, "precipitation") == "📌 2011, 11 yılın en kurak 2. yılı (2001–2011)."
-    assert "highest value" in record_sentence("en", warm, "no2")
+    assert record_sentence("en", warm, "no2") == "📌 2011 had the highest value of the 11 years (2001–2011)."
+    second = last_year_rank(_annual([1, 2, 3, 4, 5, 6, 7, 8, 9, 12, 10]))
+    assert record_sentence("en", second, "hot_days") == "📌 2011 had the 2nd most hot days of the 11 years (2001–2011)."
+    assert record_sentence("tr", second, "hot_days") == (
+        "📌 2011, 11 yıl içinde en çok sıcak gün görülen 2. yıl (2001–2011)."
+    )
+    low = last_year_rank(_annual([5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 4]))
+    assert record_sentence("tr", low, "groundwater") == (
+        "📌 2011, 11 yıl içinde yeraltı suyunun en az olduğu yıl (2001–2011)."
+    )
 
 
 def test_no_sentence_for_a_middle_year_or_a_flat_record():
@@ -44,6 +55,11 @@ def test_no_sentence_for_a_middle_year_or_a_flat_record():
     flat = last_year_rank(_annual([4.0] * 12))
     assert record_sentence("en", flat, "air_temperature") is None
     assert record_sentence("en", None, "air_temperature") is None
+    many_zero = last_year_rank(_annual([0, 0, 0, 0, 5, 6, 7, 8, 9, 10, 0]))  # snow in a few years only
+    assert record_sentence("en", many_zero, "snowfall") is None
+    hazy = last_year_rank(_annual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12], first=2013))  # 2023: after VIIRS
+    assert record_sentence("en", hazy, "aod") is None
+    assert record_sentence("en", last_year_rank(_annual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12], first=2010)), "aod")
 
 
 def test_real_konya_hot_days_and_rain():
@@ -60,8 +76,20 @@ def test_stripes_figure_and_caption():
     assert list(heat.x) == list(range(2001, 2011)) and len(heat.z[0]) == 10
     assert heat.colorscale[0][1] == "#8c5a2b"  # water: brown for the lowest years
     assert figure.layout.separators == ",." and figure.layout.height == 70
+    assert min(heat.z[0]) == -1 and max(heat.z[0]) == 1  # both ends of the colour scale are reached
     flat = stripes_figure(_annual([3.0] * 10), "air_temperature", "°C")
-    assert flat.data[0].zmin < 3.0 < flat.data[0].zmax
+    assert set(flat.data[0].z[0]) == {0.0}  # a flat series: every stripe the neutral middle colour
+
+
+def test_a_missing_year_stays_an_empty_slot_and_skewed_records_reach_both_colours():
+    gappy = pd.DataFrame({"year": [2001, 2002, 2004, 2005], "value": [1.0, 2.0, 4.0, 5.0]})
+    heat = stripes_figure(gappy, "air_temperature", "°C").data[0]
+    assert list(heat.x) == [2001, 2002, 2003, 2004, 2005]
+    assert heat.z[0][2] is None or np.isnan(heat.z[0][2])  # 2003 was not used: an empty slot
+    assert "empty slot" in stripes_caption("en", "air_temperature", gappy)
+    assert "empty slot" not in stripes_caption("en", "air_temperature", _annual([1, 2, 3]))
+    skewed = stripe_positions(np.array([1.0, 1.0, 1.2, 1.1, 1.0, 9.0]))
+    assert skewed.min() == -1 and skewed.max() == 1
     assert "kahverengi" in stripes_caption("tr", "precipitation") and "red" in stripes_caption("en", "air_temperature")
     for key in RECORD_TEXT["en"]:
         assert key in RECORD_TEXT["tr"]

@@ -293,3 +293,21 @@ def test_co2_uses_its_short_record_with_a_note(monkeypatch):
     at.button(key="open_co2").click().run()
     assert not at.exception
     assert any("fewer than the usual 10" in info.value for info in at.info)
+
+
+def test_quick_pick_a_city_sets_its_box_and_names_the_case(monkeypatch):
+    import trend.fetch
+    from trend.cities import city_bbox
+
+    monkeypatch.setattr(trend.fetch, "fetch_power_area", _synthetic_fetch)
+    at = run_app("tr")
+    at.radio(key="area_mode").set_value("custom").run()
+    at.selectbox(key="city_pick").set_value("ankara").run()
+    assert not at.exception
+    assert tuple(at.session_state["custom_bbox"]) == city_bbox("ankara")
+    assert _corner_inputs(at) == city_bbox("ankara")
+    assert any("Ankara çevresi, Türkiye" in h.value for h in at.header)
+    for key, value in zip(("bbox_w", "bbox_s", "bbox_e", "bbox_n"), (30.0, 36.0, 34.0, 39.0)):
+        at.number_input(key=key).set_value(value)
+    next(b for b in at.button if b.label == TEXT["tr"]["apply_coords"]).click().run()
+    assert not at.exception and at.session_state["city_pick"] is None  # another box: no city shown

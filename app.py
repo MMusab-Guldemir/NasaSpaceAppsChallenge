@@ -36,6 +36,9 @@ from trend.area import (
 )
 from trend.bundle import bundle_text, data_bundle
 from trend.charts import annual_trend_figure, monthly_figure, sparkline_figure
+from trend.cities import (
+    CITY_BY_KEY, city_bbox, city_for_bbox, city_label, city_options, city_text, near_label,
+)
 from trend.compare import compare_text, ranking_figure, ranking_sentence, region_ranking, untested_text
 from trend.examples import EXAMPLES, example_key, example_label, examples_title
 from trend.guide import (
@@ -458,6 +461,14 @@ def apply_coords() -> None:
     set_custom_bbox(bbox)
 
 
+def pick_city() -> None:
+    """Quick pick: a city (trend/cities.py) sets the rectangle to a 2° × 2° box centred on it."""
+    city = CITY_BY_KEY.get(st.session_state.get("city_pick"))
+    if city:
+        set_custom_bbox(city_bbox(city))
+        reset_periods()
+
+
 def use_drawn() -> None:
     drawn = st.session_state.get("drawn_bbox")
     if not drawn:
@@ -722,6 +733,14 @@ with st.sidebar:
         )
     else:
         st.caption(t(lang, "custom_help"))
+        # Quick pick: a city (trend/cities.py). The list shows a city only while its box is the rectangle.
+        on_city = city_for_bbox(st.session_state["custom_bbox"])
+        st.session_state["city_pick"] = on_city.key if on_city else None
+        st.selectbox(
+            city_text(lang, "label"), city_options(lang), index=None, key="city_pick",
+            format_func=lambda key: city_label(lang, key), placeholder=city_text(lang, "placeholder"),
+            help=city_text(lang, "help"), on_change=pick_city,
+        )
         st.markdown(f"**{t(lang, 'coords_title')}**")
         col_left, col_right = st.columns(2)
         col_left.number_input(t(lang, "west"), -180.0, 180.0, step=0.5, key="bbox_w")
@@ -737,10 +756,16 @@ with st.sidebar:
 custom_mode = st.session_state["area_mode"] == "custom"
 if custom_mode:
     active_bbox = tuple(st.session_state["custom_bbox"])
-    region = custom_region(active_bbox, t(lang, "custom_name", bbox=format_bbox(active_bbox, lang)))
+    near_city = city_for_bbox(active_bbox)  # a quick-pick box is named after its city
+    region = custom_region(
+        active_bbox,
+        f"{near_label(lang, near_city)} ({format_bbox(active_bbox, lang)})" if near_city
+        else t(lang, "custom_name", bbox=format_bbox(active_bbox, lang)),
+    )
     region_key = "custom"
     region_label = region.name
 else:
+    near_city = None
     region_key = st.session_state["region"]
     region = REGIONS[region_key]
     region_label = region_name(lang, region_key, region.name)
@@ -1219,7 +1244,7 @@ st.plotly_chart(
     stripes_figure(annual, case_key, unit, separators, decimals), width="stretch", theme=None,
     config={"displaylogo": False, "displayModeBar": False}, key="stripes_chart",
 )
-st.caption(stripes_caption(lang, case_key))
+st.caption(stripes_caption(lang, case_key, annual))
 record = record_sentence(lang, last_year_rank(annual), case_key)
 if record:
     st.markdown(record)
