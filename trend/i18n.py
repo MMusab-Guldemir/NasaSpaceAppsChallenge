@@ -760,7 +760,9 @@ REGION_CONTEXT: dict[str, dict[str, dict[str, str]]] = {
             "tree_cover": "Rondônia is part of the 'arc of deforestation', where forest has been "
                           "cleared for farms and pasture.",
             "ndvi": "Rondônia is part of the 'arc of deforestation', where forest has been cleared "
-                    "for farms and pasture.",
+                    "for farms and pasture. Note: May to September is the growing season in the "
+                    "northern mid-latitudes, but the dry season here, so this card measures "
+                    "dry-season greenness.",
             "aod": "Smoke from dry-season fires used to clear forest makes some years very hazy.",
         },
         "siberia": {
@@ -816,7 +818,8 @@ REGION_CONTEXT: dict[str, dict[str, dict[str, str]]] = {
             "tree_cover": "Rondônia, ormanın tarla ve mera için kesildiği 'ormansızlaşma yayının' "
                           "bir parçası.",
             "ndvi": "Rondônia, ormanın tarla ve mera için kesildiği 'ormansızlaşma yayının' bir "
-                    "parçası.",
+                    "parçası. Not: Mayıs–Eylül kuzeydeki orta enlemlerde büyüme mevsimidir ama burada "
+                    "kurak mevsimdir; yani bu kart kurak mevsimdeki yeşilliği ölçüyor.",
             "aod": "Orman açmak için kurak mevsimde çıkarılan yangınların dumanı bazı yılları çok "
                    "puslu yapıyor.",
         },

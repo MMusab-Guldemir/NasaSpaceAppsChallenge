@@ -57,6 +57,15 @@ from trend.i18n import (
 from trend.regions import REGIONS, Region
 from trend.share import build_share_link, parse_period
 from trend.stats import MIN_YEARS, RECOMMENDED_YEARS, TrendResult, analyze_trend, trend_line_band
+from trend.timeline import (
+    earlier_significant_years,
+    evidence_timeline,
+    solid_since,
+    start_year_check,
+    timeline_figure,
+    timeline_text,
+    year_ranges,
+)
 from trend.variables import VARIABLES
 from trend.world import (
     SHORT_NAMES,
@@ -778,6 +787,32 @@ if dropped:
 if result.n_effective < 0.9 * result.n_years:
     basis += t(lang, "neff_note", n=result.n_years, n_eff=num(result.n_effective, lang, 0))
 st.caption(basis)
+
+# How the evidence built up, and whether the verdict depends on the start year (trend/timeline.py)
+timeline = evidence_timeline(annual, min_years)
+if len(timeline) >= 3:
+    st.markdown(f"**{timeline_text(lang, 'title')}**")
+    st.caption(timeline_text(lang, "intro"))
+    st.plotly_chart(
+        timeline_figure(timeline, lang, result.start_year, separators),
+        width="stretch", theme=None, config={"displaylogo": False, "displayModeBar": False},
+        key="timeline_chart",
+    )
+    since = solid_since(timeline)
+    earlier = earlier_significant_years(timeline)
+    if since is not None:
+        direction = timeline_text(lang, "up" if result.slope_per_year > 0 else "down")
+        st.markdown(timeline_text(lang, "solid_since", year=since, direction=direction))
+    elif earlier:
+        st.markdown(timeline_text(lang, "flipped", years=year_ranges(earlier)))
+    else:
+        st.markdown(timeline_text(lang, "not_solid"))
+    check = start_year_check(annual, min_years)
+    if check:
+        st.markdown(timeline_text(
+            lang, "robust", n=check["n"], first=check["first"], last=check["last"], min=min_years,
+            k=check["same"], status=status_text(lang, check["status"])[0],
+        ))
 
 # Step 5: the second witness
 st.markdown(f"<div class='step'>{html.escape(t(lang, 'step_witness'))}</div>", unsafe_allow_html=True)
