@@ -34,6 +34,11 @@ in Turkish.
 
 ## Detailed Project Description
 
+**Any place on Earth.** Besides prepared regions, users can draw, move and resize a rectangle on a
+world map, or type its corners, to investigate any area of 2° to 10° on each side. Temperature and
+snowfall for that rectangle are fetched live from the NASA POWER API within seconds; air pollution
+and vegetation, which come from slower NASA services, are prepared in advance for selected regions.
+
 **What it does.** The user opens an **investigation board** for a region: one clue card per
 measurement, each with its rate of change and a verdict stamp (Confirmed, Disputed, No evidence,
 Weak clue or Open case) and a small sparkline. After picking a clue, the user (1) chooses the

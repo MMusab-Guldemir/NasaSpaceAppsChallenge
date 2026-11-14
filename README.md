@@ -9,8 +9,12 @@ Pick a place and a measurement from NASA Earth data, and find out **what** is ch
 
 ## What it does
 
-1. An **investigation board** shows every clue for a region (Colorado first; more regions to come):
-   one card per measurement with its rate of change and a verdict stamp.
+1. **Where?** Pick a prepared region (Colorado, with all four measurements) or investigate
+   **anywhere on Earth**: draw, move or resize a rectangle on the world map, or type its corners
+   in the left sidebar. Temperature and snowfall for custom rectangles (2° to 10° wide) are fetched
+   live from NASA POWER; air pollution and vegetation are prepared in advance for selected regions.
+2. An **investigation board** shows every clue for the area: one card per measurement with its
+   rate of change and a verdict stamp.
 2. The user picks a clue, chooses the **period**, and immediately gets a large
    **"Real or chance?"** verdict with a chance meter, followed by the evidence (chart) and a
    second witness. An **EN / TR** switch (top right) shows the whole app in English or Turkish.

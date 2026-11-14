@@ -15,8 +15,20 @@ import math
 import pandas as pd
 import streamlit as st
 
-from trend.charts import annual_trend_figure, monthly_figure, region_map_figure, sparkline_figure
-from trend.fetch import available_variable_keys, load_processed
+import folium
+import requests
+from folium.plugins import Draw
+from streamlit_folium import st_folium
+
+from trend.area import AreaError, bbox_from_drawing, custom_region, format_bbox, normalize_bbox
+from trend.charts import annual_trend_figure, monthly_figure, sparkline_figure
+from trend.fetch import (
+    POWER_VARIABLES,
+    DataSourceError,
+    available_variable_keys,
+    fetch_power_variable,
+    load_processed,
+)
 from trend.i18n import (
     LANGUAGES,
     METHODS,
@@ -29,7 +41,7 @@ from trend.i18n import (
     t,
     variable_text,
 )
-from trend.regions import REGIONS
+from trend.regions import REGIONS, Region
 from trend.share import build_share_link, parse_period
 from trend.stats import MIN_YEARS, RECOMMENDED_YEARS, TrendResult, analyze_trend, to_annual, trend_line_band
 from trend.variables import VARIABLES
@@ -53,7 +65,7 @@ STYLE = """
 .stamp.confirmed { color: #1c5cab; }
 .stamp.noevidence { color: #52514e; }
 .stamp.disputed, .stamp.weak { color: #a8501b; }
-.stamp.open { color: #898781; border-style: dashed; }
+.stamp.open, .stamp.prepared_only { color: #898781; border-style: dashed; }
 .clue-name { font-size: 0.78rem; letter-spacing: 0.06em; color: #52514e; min-height: 2.2em; }
 .clue-value { font-size: 1.45rem; font-weight: 700; color: #0b0b0b; line-height: 1.2; }
 .clue-unit { font-size: 0.82rem; color: #52514e; min-height: 2.6em; }
@@ -87,6 +99,76 @@ def load_monthly(region_key: str, variable_key: str) -> pd.DataFrame | None:
     return load_processed(region_key, variable_key)
 
 
+@st.cache_data(show_spinner=False, ttl=24 * 3600, max_entries=64)
+def live_monthly(variable_key: str, bbox: tuple[float, float, float, float]) -> pd.DataFrame:
+    """Fetch a POWER variable live for any rectangle (cached for a day per rectangle)."""
+    variable = VARIABLES[variable_key]
+    monthly, sources = fetch_power_variable(variable, Region("custom", "custom", *bbox), 1981, 2026)
+    monthly = monthly.copy()
+    monthly["source"] = f"{variable.product}; live NASA POWER request; POWER sources: {sources}"
+    return monthly
+
+
+def area_map(bbox: tuple[float, float, float, float]) -> folium.Map:
+    """World map with the active rectangle, editable with the draw tools."""
+    west, south, east, north = bbox
+    fmap = folium.Map(
+        location=[(south + north) / 2, (west + east) / 2], zoom_start=4, tiles="OpenStreetMap",
+        control_scale=True,
+    )
+    group = folium.FeatureGroup(name="area")
+    folium.Rectangle(
+        bounds=[[south, west], [north, east]], color="#2a78d6", weight=2, fill=True,
+        fill_color="#2a78d6", fill_opacity=0.15,
+    ).add_to(group)
+    group.add_to(fmap)
+    Draw(
+        export=False, feature_group=group, position="topleft",
+        draw_options={
+            "rectangle": {"shapeOptions": {"color": "#2a78d6", "weight": 2}},
+            "polyline": False, "polygon": False, "circle": False, "marker": False,
+            "circlemarker": False,
+        },
+        edit_options={"edit": True, "remove": False},
+    ).add_to(fmap)
+    fmap.fit_bounds([[south, west], [north, east]], padding=(40, 40))
+    return fmap
+
+
+def set_custom_bbox(bbox: tuple[float, float, float, float], widened: bool) -> None:
+    st.session_state.update(
+        {
+            "custom_bbox": bbox, "area_mode": "custom", "area_error": None, "area_widened": widened,
+            "bbox_w": float(bbox[0]), "bbox_s": float(bbox[1]),
+            "bbox_e": float(bbox[2]), "bbox_n": float(bbox[3]),
+        }
+    )
+
+
+def apply_coords() -> None:
+    try:
+        bbox, widened = normalize_bbox(
+            st.session_state["bbox_w"], st.session_state["bbox_s"],
+            st.session_state["bbox_e"], st.session_state["bbox_n"],
+        )
+    except AreaError as error:
+        st.session_state["area_error"] = error.code
+        return
+    set_custom_bbox(bbox, widened)
+
+
+def use_drawn() -> None:
+    drawn = st.session_state.get("drawn_bbox")
+    if not drawn:
+        return
+    try:
+        bbox, widened = normalize_bbox(*drawn)
+    except AreaError as error:
+        st.session_state["area_error"] = error.code
+        return
+    set_custom_bbox(bbox, widened)
+
+
 def case_status(result: TrendResult | None) -> str:
     if result is None:
         return "open"
@@ -96,7 +178,7 @@ def case_status(result: TrendResult | None) -> str:
 
 
 def stamp(lang: str, status: str) -> str:
-    return f"<span class='stamp {status}'>{html.escape(status_text(lang, status)[0])}</span>"
+    return f"<span class='stamp {status}' lang='{lang}'>{html.escape(status_text(lang, status)[0])}</span>"
 
 
 def upper(text: str, lang: str) -> str:
@@ -147,19 +229,33 @@ def open_example(variable_key: str, start: int | None, end: int | None) -> None:
         st.session_state[f"period_{variable_key}"] = (start, end)
 
 
-# --- Language (top right) and header -------------------------------------------------------------
+# --- Language, shared links and area state -------------------------------------------------------
 
 if "_url_loaded" not in st.session_state:
-    # Restore a shared link once per session: language, region, case and period.
+    # Restore a shared link once per session: language, area, case and period.
     params = st.query_params
     requested = params.get("lang")
     st.session_state.setdefault("lang", requested if requested in LANGUAGES else "en")
     if params.get("region") in REGIONS:
         st.session_state["region"] = params.get("region")
+    elif params.get("region") == "custom":
+        try:
+            shared_bbox, _ = normalize_bbox(params.get("w"), params.get("s"), params.get("e"), params.get("n"))
+            st.session_state["area_mode"] = "custom"
+            st.session_state["custom_bbox"] = shared_bbox
+        except (AreaError, TypeError, ValueError):
+            pass
     if params.get("case") in VARIABLES:
         st.session_state["case"] = params.get("case")
         st.session_state["_url_period"] = (params.get("case"), params.get("start"), params.get("end"))
     st.session_state["_url_loaded"] = True
+
+default_region = next(iter(REGIONS))
+st.session_state.setdefault("area_mode", "prepared")
+st.session_state.setdefault("region", default_region)
+st.session_state.setdefault("custom_bbox", REGIONS[st.session_state["region"]].bbox)
+for corner, value in zip(("bbox_w", "bbox_s", "bbox_e", "bbox_n"), st.session_state["custom_bbox"]):
+    st.session_state.setdefault(corner, float(value))
 
 st.markdown(STYLE, unsafe_allow_html=True)
 head_left, head_right = st.columns([6, 1], vertical_alignment="center")
@@ -169,37 +265,115 @@ with head_right:
         label_visibility="collapsed",
     )
 lang = st.session_state.get("lang") or "en"
-st.query_params["lang"] = lang
 separators = ",." if lang == "tr" else ".,"
 
 with head_left:
-    st.markdown(f"<div class='eyebrow'>{html.escape(t(lang, 'eyebrow'))}</div>", unsafe_allow_html=True)
+    st.markdown(f"<div class='eyebrow' lang='{lang}'>{html.escape(t(lang, 'eyebrow'))}</div>", unsafe_allow_html=True)
 st.title(t(lang, "title"))
 st.caption(t(lang, "subtitle"))
 with st.expander(t(lang, "why_title")):
     st.markdown(t(lang, "why_body"))
 
+# --- Left sidebar: choose the area -------------------------------------------------------------
+
+with st.sidebar:
+    st.header(t(lang, "sidebar_title"))
+    st.radio(
+        t(lang, "mode_label"), ["prepared", "custom"], key="area_mode",
+        format_func=lambda mode: t(lang, "mode_prepared" if mode == "prepared" else "mode_custom"),
+    )
+    if st.session_state["area_mode"] == "prepared":
+        st.selectbox(
+            t(lang, "region_label"), list(REGIONS), key="region",
+            format_func=lambda key: region_name(lang, key, REGIONS[key].name),
+        )
+    else:
+        st.caption(t(lang, "custom_help"))
+        st.markdown(f"**{t(lang, 'coords_title')}**")
+        col_left, col_right = st.columns(2)
+        col_left.number_input(t(lang, "west"), -180.0, 180.0, step=0.5, key="bbox_w")
+        col_right.number_input(t(lang, "east"), -180.0, 180.0, step=0.5, key="bbox_e")
+        col_left.number_input(t(lang, "south"), -90.0, 90.0, step=0.5, key="bbox_s")
+        col_right.number_input(t(lang, "north"), -90.0, 90.0, step=0.5, key="bbox_n")
+        st.button(t(lang, "apply_coords"), on_click=apply_coords, type="primary", width="stretch")
+    if st.session_state.get("area_error"):
+        st.error(t(lang, f"err_{st.session_state['area_error']}"))
+
+# --- Step 1: where? (world map with a movable, resizable rectangle) -----------------------------
+
+custom_mode = st.session_state["area_mode"] == "custom"
+if custom_mode:
+    active_bbox = tuple(st.session_state["custom_bbox"])
+    region = custom_region(active_bbox, t(lang, "custom_name", bbox=format_bbox(active_bbox)))
+    region_key = "custom"
+    region_label = region.name
+else:
+    region_key = st.session_state["region"]
+    region = REGIONS[region_key]
+    region_label = region_name(lang, region_key, region.name)
+    active_bbox = region.bbox
+
 st.markdown(f"<div class='step'>{html.escape(t(lang, 'step_where'))}</div>", unsafe_allow_html=True)
-region_key = st.selectbox(
-    t(lang, "region_label"), list(REGIONS),
-    format_func=lambda key: region_name(lang, key, REGIONS[key].name), key="region",
+st.caption(t(lang, "map_help"))
+map_state = st_folium(
+    area_map(active_bbox), height=420, use_container_width=True,
+    returned_objects=["last_active_drawing"], key=f"area_map_{region_key}_{active_bbox}",
 )
-region = REGIONS[region_key]
-region_label = region_name(lang, region_key, region.name)
-cached = set(available_variable_keys(region_key))
+drawn_bbox = bbox_from_drawing((map_state or {}).get("last_active_drawing"))
+if drawn_bbox and drawn_bbox != tuple(active_bbox):
+    st.session_state["drawn_bbox"] = drawn_bbox
+    st.button(
+        t(lang, "use_drawn", bbox=format_bbox(drawn_bbox)), on_click=use_drawn, type="primary",
+        key="use_drawn",
+    )
+if custom_mode and st.session_state.get("area_widened"):
+    st.info(t(lang, "note_widened"))
+
+# --- Collect the evidence: cached files for prepared regions, live NASA POWER for custom areas ---
+
+monthly_by_key: dict[str, pd.DataFrame] = {}
+unavailable_status: dict[str, str] = {}
+if custom_mode:
+    with st.spinner(t(lang, "fetching")):
+        for key in VARIABLES:
+            if key not in POWER_VARIABLES:
+                unavailable_status[key] = "prepared_only"
+                continue
+            try:
+                monthly_by_key[key] = live_monthly(key, active_bbox)
+            except DataSourceError as error:
+                unavailable_status[key] = "open"
+                message = str(error).lower()
+                if "fill" in message or "no grid cells" in message:
+                    name = lower_first(variable_text(lang, VARIABLES[key])["name"])
+                    st.warning(t(lang, "err_no_data", variable=name))
+                else:
+                    st.error(t(lang, "err_fetch"))
+            except requests.RequestException:
+                unavailable_status[key] = "open"
+                st.error(t(lang, "err_fetch"))
+else:
+    cached = set(available_variable_keys(region_key))
+    for key in VARIABLES:
+        if key in cached:
+            monthly_by_key[key] = load_monthly(region_key, key)
+        else:
+            unavailable_status[key] = "open"
 
 annual_by_key: dict[str, pd.DataFrame] = {}
 incomplete_by_key: dict[str, list[int]] = {}
 board_results: dict[str, TrendResult | None] = {}
 for key, variable in VARIABLES.items():
-    if key not in cached:
+    if key not in monthly_by_key:
         board_results[key] = None
         continue
-    annual, incomplete = to_annual(load_monthly(region_key, key), variable)
+    annual, incomplete = to_annual(monthly_by_key[key], variable)
+    if len(annual) < MIN_YEARS:
+        board_results[key] = None
+        unavailable_status[key] = "open"
+        continue
     annual_by_key[key], incomplete_by_key[key] = annual, incomplete
-    board_results[key] = (
-        analyze_trend(annual["year"], annual["value"]) if len(annual) >= MIN_YEARS else None
-    )
+    board_results[key] = analyze_trend(annual["year"], annual["value"])
 
 if not annual_by_key:
     st.warning(t(lang, "no_data_region"))
@@ -209,10 +383,13 @@ available = [key for key in VARIABLES if key in annual_by_key]
 if st.session_state.get("case") not in available:
     st.session_state["case"] = available[0]
 
-# --- Step 1: choose a clue -----------------------------------------------------------------------
+# --- Step 2: what? -----------------------------------------------------------------------------
 
 st.markdown(f"<div class='step'>{html.escape(t(lang, 'step_what'))}</div>", unsafe_allow_html=True)
-examples = [example for example in EXAMPLE_CASES if example["case"] in annual_by_key]
+examples = [
+    example for example in EXAMPLE_CASES
+    if region_key == "colorado" and example["case"] in annual_by_key
+]
 if examples:
     st.caption(t(lang, "examples_title"))
     for column, example in zip(st.columns(4), examples):
@@ -224,7 +401,7 @@ st.caption(t(lang, "step1_caption"))
 for column, (key, variable) in zip(st.columns(len(VARIABLES)), VARIABLES.items()):
     texts = variable_text(lang, variable)
     result = board_results[key]
-    status = case_status(result)
+    status = case_status(result) if result is not None else unavailable_status.get(key, "open")
     selected = st.session_state["case"] == key
     with column.container(border=True):
         st.markdown(
@@ -248,7 +425,7 @@ for column, (key, variable) in zip(st.columns(len(VARIABLES)), VARIABLES.items()
         else:
             st.markdown(
                 "<div class='clue-value'>—</div>"
-                f"<div class='clue-unit'>{html.escape(t(lang, 'evidence_pending'))}<br>&nbsp;</div>",
+                f"<div class='clue-unit'>{html.escape(status_text(lang, status)[1])}</div>",
                 unsafe_allow_html=True,
             )
             st.markdown("<div style='height:64px'></div>", unsafe_allow_html=True)
@@ -267,23 +444,15 @@ texts = variable_text(lang, variable)
 unit = texts["annual_unit"]
 subject = lower_first(texts["annual_label"])
 annual_all = annual_by_key[case_key]
-monthly = load_monthly(region_key, case_key)
+monthly = monthly_by_key[case_key]
 
 st.divider()
-head_question, head_map = st.columns([3, 2], vertical_alignment="top")
-with head_question:
-    st.markdown(
-        f"<div class='eyebrow'>{html.escape(t(lang, 'case_label', region=region_label, variable=texts['name']))}</div>",
-        unsafe_allow_html=True,
-    )
-    st.header(t(lang, "question", subject=subject, region=region_label))
-    st.write(t(lang, "question_body", name=texts["name"], definition=texts["definition"], subject=subject))
-with head_map:
-    st.plotly_chart(
-        region_map_figure(region), width="stretch", theme=None, key="region_map",
-        config={"staticPlot": True, "displayModeBar": False},
-    )
-    st.caption(t(lang, "map_caption", region=region_label))
+st.markdown(
+    f"<div class='eyebrow' lang='{lang}'>{html.escape(t(lang, 'case_label', region=region_label, variable=texts['name']))}</div>",
+    unsafe_allow_html=True,
+)
+st.header(t(lang, "question", subject=subject, region=region_label))
+st.write(t(lang, "question_body", name=texts["name"], definition=texts["definition"], subject=subject))
 
 # Step 2: choose the period
 st.markdown(f"<div class='step'>{html.escape(t(lang, 'step_when'))}</div>", unsafe_allow_html=True)
@@ -301,9 +470,10 @@ st.session_state[period_key] = (
 start_year, end_year = st.slider(
     t(lang, "period_label"), min_value=first_year, max_value=last_year, key=period_key,
 )
-st.query_params.update(
-    {"lang": lang, "region": region_key, "case": case_key, "start": str(start_year), "end": str(end_year)}
-)
+state = {"lang": lang, "region": region_key, "case": case_key, "start": str(start_year), "end": str(end_year)}
+for corner, value in zip(("w", "s", "e", "n"), active_bbox if custom_mode else ()):
+    state[corner] = str(value)
+st.query_params.from_dict(state)
 annual = annual_all[annual_all["year"].between(start_year, end_year)].reset_index(drop=True)
 if len(annual) < MIN_YEARS:
     st.error(t(lang, "too_short", min=MIN_YEARS, n=len(annual)))
@@ -370,7 +540,13 @@ if result.n_years < RECOMMENDED_YEARS:
     st.warning(t(lang, "warn_short", n=result.n_years, rec=RECOMMENDED_YEARS))
 with st.expander(t(lang, "share_title")):
     st.caption(t(lang, "share_caption"))
-    st.code(build_share_link(lang, region_key, case_key, start_year, end_year), language=None)
+    st.code(
+        build_share_link(
+            lang, region_key, case_key, start_year, end_year,
+            bbox=active_bbox if custom_mode else None,
+        ),
+        language=None,
+    )
 
 # Step 4: the evidence
 st.markdown(f"<div class='step'>{html.escape(t(lang, 'step_evidence'))}</div>", unsafe_allow_html=True)

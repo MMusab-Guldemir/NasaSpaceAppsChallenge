@@ -128,6 +128,40 @@ TEXT: dict[str, dict[str, str]] = {
             "This link opens exactly this case, period and language. Copy it with the button on the "
             "right of the box."
         ),
+        "sidebar_title": "Choose the area",
+        "mode_label": "Area type",
+        "mode_prepared": "Prepared region",
+        "mode_custom": "Anywhere on Earth (custom rectangle)",
+        "coords_title": "Rectangle corners (degrees)",
+        "west": "West longitude",
+        "south": "South latitude",
+        "east": "East longitude",
+        "north": "North latitude",
+        "apply_coords": "Investigate these coordinates",
+        "custom_help": (
+            "Temperature and snowfall come live from NASA POWER for any rectangle up to 10° × 10°. "
+            "Air pollution and vegetation are available for prepared regions only, because NASA "
+            "delivers them through slower services."
+        ),
+        "map_help": (
+            "Draw a rectangle with the square tool on the left of the map, or use the edit tool "
+            "(pencil) to drag and resize the current one. Then press the button below the map."
+        ),
+        "use_drawn": "Investigate the drawn rectangle ({bbox})",
+        "custom_name": "Custom area ({bbox})",
+        "fetching": "Fetching NASA data for this area… (up to about 30 seconds per measurement)",
+        "err_range": "Latitudes must be between -90 and 90, longitudes between -180 and 180.",
+        "err_order": "West must be smaller than east, and south smaller than north.",
+        "err_too_big": (
+            "The rectangle is too large: NASA POWER allows at most 10° of latitude and 10° of "
+            "longitude. Make it smaller."
+        ),
+        "note_widened": (
+            "The rectangle was widened to at least 2° in each direction, the smallest area NASA "
+            "POWER serves."
+        ),
+        "err_fetch": "NASA POWER did not answer for this area right now. Try again in a minute.",
+        "err_no_data": "There is no {variable} data over this area (for example, open sea).",
     },
     "tr": {
         "eyebrow": "NASA Dünya verisi · İstatistiksel soruşturma",
@@ -244,6 +278,39 @@ TEXT: dict[str, dict[str, str]] = {
             "Bu link tam olarak bu dosyayı, dönemi ve dili açar. Kutunun sağındaki düğmeyle "
             "kopyalayabilirsin."
         ),
+        "sidebar_title": "Alanı seç",
+        "mode_label": "Alan türü",
+        "mode_prepared": "Hazır bölge",
+        "mode_custom": "Dünyanın her yeri (özel dikdörtgen)",
+        "coords_title": "Dikdörtgenin köşeleri (derece)",
+        "west": "Batı boylamı",
+        "south": "Güney enlemi",
+        "east": "Doğu boylamı",
+        "north": "Kuzey enlemi",
+        "apply_coords": "Bu koordinatları incele",
+        "custom_help": (
+            "Sıcaklık ve kar yağışı, 10° × 10°'ye kadar her dikdörtgen için NASA POWER'dan canlı "
+            "gelir. Hava kirliliği ve bitki yeşilliği ise NASA'nın daha yavaş servislerinden geldiği "
+            "için sadece hazır bölgelerde var."
+        ),
+        "map_help": (
+            "Haritanın solundaki kare aracıyla bir dikdörtgen çiz ya da düzenleme aracıyla (kalem) "
+            "mevcut dikdörtgeni sürükleyip büyüt, küçült. Sonra haritanın altındaki düğmeye bas."
+        ),
+        "use_drawn": "Çizilen dikdörtgeni incele ({bbox})",
+        "custom_name": "Özel alan ({bbox})",
+        "fetching": "Bu alan için NASA verisi getiriliyor… (ölçüm başına yaklaşık 30 saniyeye kadar)",
+        "err_range": "Enlemler -90 ile 90, boylamlar -180 ile 180 arasında olmalı.",
+        "err_order": "Batı doğudan, güney de kuzeyden küçük olmalı.",
+        "err_too_big": (
+            "Dikdörtgen çok büyük: NASA POWER en fazla 10° enlem ve 10° boylama izin veriyor. "
+            "Küçült."
+        ),
+        "note_widened": (
+            "Dikdörtgen, NASA POWER'ın verdiği en küçük alan olan her yönde en az 2°'ye genişletildi."
+        ),
+        "err_fetch": "NASA POWER şu an bu alan için cevap vermedi. Bir dakika sonra tekrar dene.",
+        "err_no_data": "Bu alanın üzerinde {variable} verisi yok (örneğin açık deniz).",
     },
 }
 
@@ -254,6 +321,10 @@ STATUS: dict[str, dict[str, tuple[str, str]]] = {
         "noevidence": ("No evidence", "No significant trend detected."),
         "weak": ("Weak clue", "Only the second witness sees a trend."),
         "open": ("Open case", "Evidence still being collected."),
+        "prepared_only": (
+            "Prepared regions only",
+            "Needs slower NASA services, so it is prepared in advance for selected regions.",
+        ),
     },
     "tr": {
         "confirmed": ("Kanıtlandı", "Gerçek bir trend: iki test de aynı fikirde."),
@@ -261,6 +332,10 @@ STATUS: dict[str, dict[str, tuple[str, str]]] = {
         "noevidence": ("Delil yok", "Anlamlı bir trend tespit edilmedi."),
         "weak": ("Zayıf ipucu", "Trendi sadece ikinci tanık görüyor."),
         "open": ("Açık dosya", "Deliller hâlâ toplanıyor."),
+        "prepared_only": (
+            "Sadece hazır bölgeler",
+            "Daha yavaş NASA servisleri gerektirdiği için seçili bölgelerde önceden hazırlanıyor.",
+        ),
     },
 }
 

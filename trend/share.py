@@ -11,11 +11,19 @@ APP_URL = "https://avni-trend-detective.streamlit.app"
 
 
 def build_share_link(
-    lang: str, region: str, case: str, start: int, end: int, base: str = APP_URL
+    lang: str,
+    region: str,
+    case: str,
+    start: int,
+    end: int,
+    base: str = APP_URL,
+    bbox: tuple[float, float, float, float] | None = None,
 ) -> str:
-    """Link that reopens exactly this case, period and language."""
-    query = urlencode({"lang": lang, "region": region, "case": case, "start": start, "end": end})
-    return f"{base}/?{query}"
+    """Link that reopens exactly this case, period and language (and custom rectangle)."""
+    params: dict[str, object] = {"lang": lang, "region": region, "case": case, "start": start, "end": end}
+    if bbox is not None:
+        params.update({"w": bbox[0], "s": bbox[1], "e": bbox[2], "n": bbox[3]})
+    return f"{base}/?{urlencode(params)}"
 
 
 def parse_period(start_text, end_text, first: int, last: int) -> tuple[int, int] | None:
