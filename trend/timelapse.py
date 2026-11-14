@@ -491,7 +491,9 @@ TEMPLATE = r"""<!doctype html>
     font-size:44px; font-weight:800; line-height:1; color:#fff; letter-spacing:1px;
     text-shadow:0 2px 6px rgba(0,0,0,.55), 0 0 2px rgba(0,0,0,.8); }
   .tl-info { position:absolute; left:10px; top:60px; z-index:800; pointer-events:none; max-width:70%;
-    font-size:12px; color:#fff; text-shadow:0 1px 3px rgba(0,0,0,.8); line-height:1.35; }
+    font-size:12px; color:#fff; text-shadow:0 1px 3px rgba(0,0,0,.8); line-height:1.35;
+    background:rgba(29,36,51,.62); border-radius:6px; padding:3px 7px; }
+  .tl-info:empty { display:none; }
   .tl-bottom { display:flex; align-items:center; gap:10px; padding:8px 10px 4px; }
   .tl-bottom button { font-size:14px; padding:6px 12px; border:1px solid var(--line); border-radius:8px;
     background:#1d2433; color:#fff; cursor:pointer; min-width:92px; }
