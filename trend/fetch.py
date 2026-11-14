@@ -76,8 +76,9 @@ def parse_power_regional(payload: dict, parameter: str) -> pd.DataFrame:
 
     The average is weighted by the cosine of latitude, because grid cells shrink toward the poles.
     POWER's 13th "month" key (its annual value) is dropped and fill values become missing.
-    A month where any grid cell is missing gets a missing value, so a partial average is never
-    passed off as a full one.
+    Cells that never report data (for example sea cells for land-only variables such as snowfall)
+    are left out. A month where any of the remaining cells is missing gets a missing value, so a
+    partial average is never passed off as a full one.
 
     Returns a DataFrame with columns ``date`` (first day of the month), ``value`` and ``n_cells``.
     """
@@ -95,10 +96,10 @@ def parse_power_regional(payload: dict, parameter: str) -> pd.DataFrame:
         raise DataSourceError("POWER returned no grid cells for this region.")
 
     cells = pd.DataFrame(rows, columns=["year", "month", "lat", "lon", "value"])
-    expected_cells = cells[["lat", "lon"]].drop_duplicates().shape[0]
     cells["value"] = pd.to_numeric(cells["value"], errors="coerce")
     is_fill = np.isclose(cells["value"], fill_value) | (cells["value"] <= -998)
     cells.loc[is_fill, "value"] = np.nan
+    expected_cells = cells.dropna(subset=["value"])[["lat", "lon"]].drop_duplicates().shape[0]
 
     cells["weight"] = np.cos(np.radians(cells["lat"]))
     cells["weighted"] = cells["weight"] * cells["value"]

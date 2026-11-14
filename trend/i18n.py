@@ -21,8 +21,19 @@ TEXT: dict[str, dict[str, str]] = {
         "language": "Language",
         "region_label": "Region under investigation",
         "no_data_region": "No evidence has been collected for this region yet.",
-        "step1": "Step 1 · Choose a clue",
+        "step_where": "Step 1 · Where?",
+        "step_what": "Step 2 · What do you want to investigate?",
         "step1_caption": "Each card is one measurement from NASA Earth data over its full record.",
+        "examples_title": "Famous cases: open one with a single click",
+        "why_title": "Why it matters",
+        "why_body": (
+            "- Claims about the climate and the environment are everywhere. This tool lets anyone "
+            "check them against NASA's own measurements.\n"
+            "- It shows how scientists decide whether a change is real: a trend, its uncertainty, a "
+            "significance test and a second, independent test.\n"
+            "- Every number can be downloaded and checked, so students and teachers can use it in "
+            "class projects."
+        ),
         "per_decade": "per decade",
         "evidence_pending": "Evidence pending",
         "investigate": "Investigate",
@@ -30,13 +41,13 @@ TEXT: dict[str, dict[str, str]] = {
         "case_label": "Case file · {region} · {variable}",
         "question": "Is the {subject} in {region} changing?",
         "question_body": "**{name}:** {definition} Each point on the chart is one {subject}.",
-        "step2": "Step 2 · Choose the period",
+        "step_when": "Step 3 · When? Choose the period",
         "period_label": "Years to investigate",
         "too_short": (
             "Not enough evidence: a trend test needs at least {min} complete years, and this period "
             "has {n}. Pick a longer period."
         ),
-        "step3": "Step 3 · Real or chance?",
+        "step_verdict": "Step 4 · Real or chance?",
         "headline_up": "Unlikely to be chance: a real upward trend",
         "headline_down": "Unlikely to be chance: a real downward trend",
         "headline_chance": "Could be chance: no clear trend",
@@ -69,10 +80,10 @@ TEXT: dict[str, dict[str, str]] = {
         "warn_short": (
             "Only {n} years of data. Trend tests are less reliable with fewer than {rec} years."
         ),
-        "step4": "Step 4 · The evidence",
+        "step_evidence": "Step 5 · The evidence",
         "based_on": "Based on {n} complete years ({start} to {end}).",
         "not_used": " Not used because incomplete: {years}.",
-        "step5": "Step 5 · The second witness",
+        "step_witness": "Step 6 · The second witness",
         "witness_agrees": (
             "✅ **The second witness agrees:** the {method} test, which does not assume a straight "
             "line, finds {found} ({p}; Sen's slope {sen} {unit} per decade)."
@@ -128,8 +139,19 @@ TEXT: dict[str, dict[str, str]] = {
         "language": "Dil",
         "region_label": "İncelenen bölge",
         "no_data_region": "Bu bölge için henüz delil toplanmadı.",
-        "step1": "1. adım · Bir ipucu seç",
+        "step_where": "1. adım · Nerede?",
+        "step_what": "2. adım · Neyi incelemek istiyorsun?",
         "step1_caption": "Her kart, NASA Dünya verisinden bir ölçümü tüm kayıt boyunca gösterir.",
+        "examples_title": "Ünlü vakalar: tek tıkla aç",
+        "why_title": "Neden önemli?",
+        "why_body": (
+            "- İklim ve çevre hakkında her yerde iddialar var. Bu araç, herkesin bu iddiaları "
+            "NASA'nın kendi ölçümleriyle kontrol etmesini sağlar.\n"
+            "- Bilim insanlarının bir değişimin gerçek olup olmadığına nasıl karar verdiğini "
+            "gösterir: trend, belirsizliği, anlamlılık testi ve bağımsız ikinci bir test.\n"
+            "- Her sayı indirilip kontrol edilebilir; öğrenciler ve öğretmenler bunu sınıf "
+            "projelerinde kullanabilir."
+        ),
         "per_decade": "on yılda",
         "evidence_pending": "Delil bekleniyor",
         "investigate": "İncele",
@@ -137,13 +159,13 @@ TEXT: dict[str, dict[str, str]] = {
         "case_label": "Dava dosyası · {region} · {variable}",
         "question": "{region} bölgesinde {subject} değişiyor mu?",
         "question_body": "**{name}:** {definition} Grafikteki her nokta: {subject}.",
-        "step2": "2. adım · Dönemi seç",
+        "step_when": "3. adım · Ne zaman? Dönemi seç",
         "period_label": "İncelenecek yıllar",
         "too_short": (
             "Yeterli delil yok: trend testi için en az {min} tam yıl gerekiyor, bu dönemde {n} yıl "
             "var. Daha uzun bir dönem seç."
         ),
-        "step3": "3. adım · Gerçek mi, tesadüf mü?",
+        "step_verdict": "4. adım · Gerçek mi, tesadüf mü?",
         "headline_up": "Tesadüf olması çok zor: gerçek bir artış trendi",
         "headline_down": "Tesadüf olması çok zor: gerçek bir azalış trendi",
         "headline_chance": "Tesadüf olabilir: belirgin bir trend yok",
@@ -176,10 +198,10 @@ TEXT: dict[str, dict[str, str]] = {
         "warn_short": (
             "Sadece {n} yıllık veri var. {rec} yıldan kısa dönemlerde trend testleri daha az güvenilir."
         ),
-        "step4": "4. adım · Delil",
+        "step_evidence": "5. adım · Delil",
         "based_on": "{n} tam yıla dayanıyor ({start}–{end}).",
         "not_used": " Eksik olduğu için kullanılmadı: {years}.",
-        "step5": "5. adım · İkinci tanık",
+        "step_witness": "6. adım · İkinci tanık",
         "witness_agrees": (
             "✅ **İkinci tanık doğruluyor:** düz bir çizgi varsaymayan {method} testinin sonucu: "
             "{found} ({p}; Sen eğimi on yılda {sen} {unit})."

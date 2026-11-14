@@ -26,7 +26,15 @@ def test_board_and_default_case_render(lang):
     assert not at.exception
     assert any(TEXT[lang]["title"] == title.value for title in at.title)
     markdown = " ".join(md.value for md in at.markdown)
-    assert TEXT[lang]["step3"].split("·")[-1].strip() in markdown
+    assert TEXT[lang]["step_verdict"].split("·")[-1].strip() in markdown
+
+
+def test_example_case_opens_case_and_period():
+    at = run_app("en")
+    at.button(key="example_no2").click().run()
+    assert not at.exception
+    assert at.session_state["case"] == "no2"
+    assert at.slider(key="period_no2").value == (2005, 2019)
 
 
 @pytest.mark.parametrize("lang", ["en", "tr"])

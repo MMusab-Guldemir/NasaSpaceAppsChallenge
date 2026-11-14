@@ -51,6 +51,19 @@ def test_month_with_partial_fill_becomes_missing():
     assert np.isnan(monthly.loc[pd.Timestamp("2000-02-01"), "value"])
 
 
+def test_cells_that_never_report_data_are_left_out():
+    # A sea cell (always fill for a land-only variable) must not blank out every month.
+    payload = {
+        "header": {"fill_value": -999.0},
+        "features": [
+            feature(29.0, 41.0, {"200001": 3.0, "200002": 4.0}),
+            feature(28.0, 41.0, {"200001": -999.0, "200002": -999.0}),
+        ],
+    }
+    monthly = parse_power_regional(payload, "T2M")
+    assert monthly["value"].tolist() == [3.0, 4.0]
+
+
 def test_parse_power_regional_ignores_fill_values():
     payload = {
         "header": {"fill_value": -999.0},

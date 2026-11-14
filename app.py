@@ -128,6 +128,25 @@ def open_case(variable_key: str) -> None:
     st.session_state["case"] = variable_key
 
 
+# Demonstration cases suggested by the challenge statement: one click opens a case and period.
+EXAMPLE_CASES = [
+    {"case": "air_temperature", "start": None, "end": None,
+     "label": {"en": "🔎 Is Colorado warming?", "tr": "🔎 Colorado ısınıyor mu?"}},
+    {"case": "no2", "start": 2005, "end": 2019,
+     "label": {"en": "🔎 Did NO₂ fall before 2020?", "tr": "🔎 NO₂ 2020'den önce düştü mü?"}},
+    {"case": "snowfall", "start": None, "end": None,
+     "label": {"en": "🔎 Is snowfall changing?", "tr": "🔎 Kar yağışı değişiyor mu?"}},
+]
+
+
+def open_example(variable_key: str, start: int | None, end: int | None) -> None:
+    st.session_state["case"] = variable_key
+    if start is None:
+        st.session_state.pop(f"period_{variable_key}", None)  # full record on the next run
+    else:
+        st.session_state[f"period_{variable_key}"] = (start, end)
+
+
 # --- Language (top right) and header -------------------------------------------------------------
 
 if "_url_loaded" not in st.session_state:
@@ -157,7 +176,10 @@ with head_left:
     st.markdown(f"<div class='eyebrow'>{html.escape(t(lang, 'eyebrow'))}</div>", unsafe_allow_html=True)
 st.title(t(lang, "title"))
 st.caption(t(lang, "subtitle"))
+with st.expander(t(lang, "why_title")):
+    st.markdown(t(lang, "why_body"))
 
+st.markdown(f"<div class='step'>{html.escape(t(lang, 'step_where'))}</div>", unsafe_allow_html=True)
 region_key = st.selectbox(
     t(lang, "region_label"), list(REGIONS),
     format_func=lambda key: region_name(lang, key, REGIONS[key].name), key="region",
@@ -189,7 +211,15 @@ if st.session_state.get("case") not in available:
 
 # --- Step 1: choose a clue -----------------------------------------------------------------------
 
-st.markdown(f"<div class='step'>{html.escape(t(lang, 'step1'))}</div>", unsafe_allow_html=True)
+st.markdown(f"<div class='step'>{html.escape(t(lang, 'step_what'))}</div>", unsafe_allow_html=True)
+examples = [example for example in EXAMPLE_CASES if example["case"] in annual_by_key]
+if examples:
+    st.caption(t(lang, "examples_title"))
+    for column, example in zip(st.columns(4), examples):
+        column.button(
+            example["label"][lang], key=f"example_{example['case']}", on_click=open_example,
+            args=(example["case"], example["start"], example["end"]), width="stretch",
+        )
 st.caption(t(lang, "step1_caption"))
 for column, (key, variable) in zip(st.columns(len(VARIABLES)), VARIABLES.items()):
     texts = variable_text(lang, variable)
@@ -256,7 +286,7 @@ with head_map:
     st.caption(t(lang, "map_caption", region=region_label))
 
 # Step 2: choose the period
-st.markdown(f"<div class='step'>{html.escape(t(lang, 'step2'))}</div>", unsafe_allow_html=True)
+st.markdown(f"<div class='step'>{html.escape(t(lang, 'step_when'))}</div>", unsafe_allow_html=True)
 first_year, last_year = int(annual_all["year"].min()), int(annual_all["year"].max())
 period_key = f"period_{case_key}"
 url_period = st.session_state.pop("_url_period", None)
@@ -285,7 +315,7 @@ status = case_status(result)
 rate = num(result.slope_per_decade, lang, signed=True)
 
 # Step 3: real or chance?
-st.markdown(f"<div class='step'>{html.escape(t(lang, 'step3'))}</div>", unsafe_allow_html=True)
+st.markdown(f"<div class='step'>{html.escape(t(lang, 'step_verdict'))}</div>", unsafe_allow_html=True)
 if result.significant:
     headline = t(lang, "headline_up" if result.slope_per_year > 0 else "headline_down")
 else:
@@ -343,7 +373,7 @@ with st.expander(t(lang, "share_title")):
     st.code(build_share_link(lang, region_key, case_key, start_year, end_year), language=None)
 
 # Step 4: the evidence
-st.markdown(f"<div class='step'>{html.escape(t(lang, 'step4'))}</div>", unsafe_allow_html=True)
+st.markdown(f"<div class='step'>{html.escape(t(lang, 'step_evidence'))}</div>", unsafe_allow_html=True)
 st.plotly_chart(
     annual_trend_figure(
         annual, band,
@@ -364,7 +394,7 @@ if dropped:
 st.caption(basis)
 
 # Step 5: the second witness
-st.markdown(f"<div class='step'>{html.escape(t(lang, 'step5'))}</div>", unsafe_allow_html=True)
+st.markdown(f"<div class='step'>{html.escape(t(lang, 'step_witness'))}</div>", unsafe_allow_html=True)
 found = t(lang, {"increasing": "found_increasing", "decreasing": "found_decreasing"}.get(
     result.mk_trend, "found_none"))
 st.markdown(
