@@ -122,3 +122,24 @@ def test_case_report_download_is_a_printable_page():
     assert not at.exception
     labels = [b.proto.label for b in at.get("download_button")]
     assert any("Dosya raporunu indir" in label for label in labels)
+
+
+def test_compare_section_ranks_the_prepared_regions():
+    at = AppTest.from_file(APP, default_timeout=90)
+    at.query_params["lang"] = "tr"
+    at.query_params["region"] = "konya"
+    at.query_params["case"] = "groundwater"
+    at.run()
+    assert not at.exception
+    assert "Bu bölge diğerleriyle nasıl kıyaslanıyor?" in [e.label for e in at.expander]
+    assert any("11 bölge içinde" in m.value for m in at.markdown)
+
+
+def test_stripes_and_record_sentence_in_the_case_file():
+    at = AppTest.from_file(APP, default_timeout=90)
+    at.query_params["lang"] = "tr"
+    at.query_params["region"] = "konya"
+    at.query_params["case"] = "precipitation"
+    at.run()
+    assert not at.exception
+    assert any(m.value.startswith("📌 2025, 45 yılın en kurak 3. yılı") for m in at.markdown)

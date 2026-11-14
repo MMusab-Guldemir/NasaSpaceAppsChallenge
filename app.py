@@ -36,6 +36,7 @@ from trend.area import (
 )
 from trend.bundle import bundle_text, data_bundle
 from trend.charts import annual_trend_figure, monthly_figure, sparkline_figure
+from trend.compare import compare_text, ranking_figure, ranking_sentence, region_ranking, untested_text
 from trend.examples import EXAMPLES, example_key, example_label, examples_title
 from trend.guide import (
     PLACES, TOPICS, guide_text, place_label, suggest, suggestion_key, suggestion_label, topic_label,
@@ -68,6 +69,7 @@ from trend.i18n import (
     variable_text,
 )
 from trend.linecheck import line_check, line_text
+from trend.records import last_year_rank, record_sentence, record_text, stripes_caption, stripes_figure
 from trend.regions import REGIONS, Region
 from trend.replay import growing_record, replay_figure, replay_sentence, replay_summary, replay_text, replay_title
 from trend.seasons import (
@@ -270,6 +272,13 @@ def bundle_bytes(files: tuple) -> bytes:
 def guide_suggestions(topic: str, place: str, files: tuple) -> list:
     """Guided start: the prepared cases for one what/where pair (recomputed when a data file changes)."""
     return suggest(topic, place, loader=load_monthly)
+
+
+@st.cache_data(show_spinner=False)
+def ranking_table(variable_key: str, files: tuple) -> pd.DataFrame:
+    """How does this place compare: one measurement's full-record trend in every prepared region, ranked
+    (recomputed when a data file changes)."""
+    return region_ranking(variable_key, loader=load_monthly)
 
 
 @st.cache_data(show_spinner=False, ttl=24 * 3600, max_entries=64)
@@ -1205,6 +1214,17 @@ if result.n_effective < 0.9 * result.n_years:
     basis += t(lang, "neff_note", n=result.n_years, n_eff=num(result.n_effective, lang, 0))
 st.caption(basis)
 
+# Every year as one stripe, and whether the last year is among the highest or lowest (trend/records.py)
+st.plotly_chart(
+    stripes_figure(annual, case_key, unit, separators, decimals), width="stretch", theme=None,
+    config={"displaylogo": False, "displayModeBar": False}, key="stripes_chart",
+)
+st.caption(stripes_caption(lang, case_key))
+record = record_sentence(lang, last_year_rank(annual), case_key)
+if record:
+    st.markdown(record)
+    st.caption(record_text(lang)["note"])
+
 # How the evidence built up, and whether the verdict depends on the start year (trend/timeline.py)
 timeline = evidence_timeline(annual, min_years)
 if len(timeline) >= 3:
@@ -1263,6 +1283,25 @@ if case_key in seasonal.SUPPORTED:
         )
         st.caption(seasonal.figure_note(lang, case_key))
         st.markdown(seasonal.season_sentence(lang, season_table, case_key, season_latitude, unit))
+
+# How does this place compare? The same measurement in every prepared region, each over its full record
+# (trend/compare.py). Prepared regions only: a custom area has no ranking of its own.
+if not custom_mode:
+    with st.expander(compare_text(lang, "title")):
+        ranking = ranking_table(case_key, data_files())
+        short_names = SHORT_NAMES.get(lang, SHORT_NAMES["en"])
+        st.caption(compare_text(lang, "intro"))
+        if len(ranking) >= 2:
+            st.plotly_chart(
+                ranking_figure(ranking, lang, region_key, short_names, unit, separators, decimals),
+                width="stretch", theme=None, config={"displaylogo": False, "displayModeBar": False},
+                key="ranking_chart",
+            )
+            st.caption(compare_text(lang, "note"))
+        st.markdown(ranking_sentence(lang, ranking, region_key, short_names, unit, decimals))
+        not_ranked = untested_text(lang, ranking, short_names)
+        if not_ranked:
+            st.caption(not_ranked)
 
 # Step 5: the second witness
 st.markdown(f"<div class='step'>{html.escape(t(lang, 'step_witness'))}</div>", unsafe_allow_html=True)
