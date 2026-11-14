@@ -24,6 +24,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from trend.fetch import load_giovanni_csv  # noqa: E402
+from trend.regions import REGIONS  # noqa: E402
 
 RAW = ROOT / "data" / "raw"
 OUT = ROOT / "data" / "witness"
@@ -68,9 +69,21 @@ def convert(table: pd.DataFrame, how: str) -> pd.Series:
     return table["value"] * factor
 
 
+def check_box(raw_path: Path, region: str) -> None:
+    """The Giovanni request must have used the region's exact box (west, south, east, north)."""
+    for line in raw_path.read_text(encoding="utf-8", errors="replace").splitlines()[:12]:
+        if line.lower().startswith("user bounding box"):
+            box = [float(x) for x in line.split(",", 1)[1].strip().strip('"').split(",")]
+            if max(abs(a - b) for a, b in zip(box, REGIONS[region].bbox)) > 1e-6:
+                raise ValueError(f"{raw_path.name}: box {box} is not the {region} box {REGIONS[region].bbox}")
+            return
+    raise ValueError(f"{raw_path.name}: no 'User Bounding Box' line")
+
+
 def build(source_key: str, raw_path: Path) -> Path:
     spec = SOURCES[source_key]
     region = raw_path.stem.removeprefix(f"giovanni_{source_key}_")
+    check_box(raw_path, region)
     table = load_giovanni_csv(raw_path).dropna(subset=["value"])
     table["date"] = table["date"].dt.to_period("M").dt.to_timestamp()
     values = convert(table, spec.to_monthly)
