@@ -19,6 +19,8 @@ Pick a place and a measurement from NASA Earth data, and find out **what** is ch
    while tree cover is added when NASA AppEEARS delivers it and is not shown until then), or
    investigate **anywhere on Earth**: draw a rectangle on the world map,
    move or resize it with the edit tool (then click Save), or type its corners in the left panel.
+   **Quick pick: a city** sets a 2° × 2° box around one of 60 cities (20 of them in Türkiye) in one
+   click, and the case file is then titled after the city ("Ankara area, Türkiye").
    Any size from 0.01° to 40° per side works: a rectangle smaller than NASA's grid uses the nearest
    grid cell, and a large one is fetched in pieces. Temperature, precipitation, snowfall and dust and
    smoke come live from NASA POWER for any rectangle; NO₂, carbon monoxide, soot (black carbon),
@@ -55,6 +57,13 @@ Pick a place and a measurement from NASA Earth data, and find out **what** is ch
    Sep–Nov) for temperature, precipitation and hot days: bars show each season's rate per decade with
    its 95% interval, next to a dashed whole-year line. In Istanbul–Marmara summer (Jun–Aug) warms
    fastest, +0.64 °C per decade (1981-2025, Confirmed), and spring is slowest at +0.42 °C per decade.
+   **How does this place compare?** ranks the same measurement in all eleven prepared regions, each
+   over its full record, as bars with 95% intervals and the current region outlined: Istanbul–Marmara
+   warms fastest of the eleven (+0.55 °C per decade), and Konya has the second-fastest rise in hot
+   days (+6.4 per decade, after the Amazon). Under the evidence chart, **one stripe per year** shows
+   every year at once, and a sentence appears when the last year is among the three highest or lowest
+   of the period ("2025 is the 3rd driest of 45 years" in Konya), with a note that a record year is
+   not a trend by itself.
 5. The app fits a linear trend and reports:
    - the **rate of change per decade** with its 95% confidence interval,
    - whether the trend is **significant** (two-sided t-test, adjusted for year-to-year persistence
@@ -327,11 +336,14 @@ trend/guide.py         guided start: two questions (what and where) that lead to
 trend/seasonal.py      "Which season is changing?": the trend test for each three-month season, next to the whole year
 trend/report.py        downloadable case report: one case on a printable, self-contained HTML page
 trend/bundle.py        open data: every prepared series and the witness records in one ZIP with SOURCES.md
+trend/compare.py       "how does this place compare?": one measurement's full-record trend in every region, ranked
+trend/records.py       one stripe per year, and whether the last year is among the highest or lowest
+trend/cities.py        quick pick: 60 cities, each with a 2° × 2° box for the any-place rectangle
 scripts/prefetch.py    fetches and caches data for a region
 scripts/build_gistemp_witness.py  NASA GISTEMP area means for the temperature witness
 data/processed/        small cached monthly CSVs used by the app
 data/witness/          second-dataset series for the third witness (GISTEMP, GPCP, IMERG, MODIS, GLDAS)
-tests/                 unit and app tests (570)
+tests/                 unit and app tests (662)
 docs/ARCHITECTURE.md   design and methods
 docs/SUBMISSION.md     draft of the Space Apps project page
 ```

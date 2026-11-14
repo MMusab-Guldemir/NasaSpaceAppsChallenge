@@ -172,6 +172,9 @@ Tests on the annual series:
   precipitation and hot days is a quarter of the whole-year change); a case report download (one
   printable, self-contained HTML page); two measurement cards per row on phones (under 640 px); an
   open-data ZIP on the World board; and a "Compare two years" swipe on the time travel map.
+- Then: "How does this place compare?" (the same measurement in every prepared region, full records,
+  ranked with 95% intervals) and one stripe per year with a record-year sentence under the evidence
+  chart; a quick pick of 60 cities for the any-place rectangle (a 2° × 2° box around the city).
 
 ## Project structure
 
@@ -193,6 +196,9 @@ NasaSpaceAppsChallenge/
 │   ├── replay.py           # animated replay of the verdict as years are added
 │   ├── seasons.py          # monthly values with the seasonal cycle removed
 │   ├── seasonal.py         # "which season is changing?": the trend test for each three-month season
+│   ├── compare.py          # "how does this place compare?": the same measurement ranked across regions
+│   ├── records.py          # one stripe per year; is the last year among the highest or lowest?
+│   ├── cities.py           # quick pick: 60 cities with a 2° × 2° box each
 │   ├── linecheck.py        # "not a straight line" note
 │   ├── examples.py         # famous cases (checked against the data by tests)
 │   ├── guide.py            # guided start: two questions (what, where) lead to up to three prepared cases
@@ -216,7 +222,7 @@ NasaSpaceAppsChallenge/
 
 ## Testing
 
-570 automated tests (`python -m pytest -q`), all offline:
+662 automated tests (`python -m pytest -q`), all offline:
 - statistics: known-slope series, white and autocorrelated noise (false-positive rates of both
   tests), completeness rules, water-year labelling, total change, constant series;
 - loaders: POWER payload parsing, fill values, land-only cells, Giovanni CSVs, retry rules;

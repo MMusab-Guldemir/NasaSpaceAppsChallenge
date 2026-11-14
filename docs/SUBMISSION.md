@@ -50,7 +50,8 @@ from the app's own NASA data and statistics code.
 harder than the other topics, and it interested me more than any of the others."
 
 **Any place on Earth.** Besides eleven prepared regions, users can draw, move and resize a rectangle
-on a world map, or type its corners, to investigate any area from 0.01° to 40° on each side. A
+on a world map, or type its corners, to investigate any area from 0.01° to 40° on each side; a
+quick pick of 60 cities (20 in Türkiye) sets a 2° × 2° box around a city in one click. A
 rectangle smaller than NASA's grid uses the nearest grid cell; a large one is fetched in pieces of
 at most 10° × 10°. Temperature, precipitation, snowfall and dust and smoke (aerosol optical depth)
 for that rectangle are fetched live from the NASA POWER API within seconds; NO₂, carbon monoxide,
@@ -84,6 +85,13 @@ wells and sinkholes of the Konya plain. On a phone the measurement cards wrap in
 hot days, and draws each season's rate per decade with its 95% interval next to a dashed whole-year
 line. In Istanbul–Marmara summer warms fastest (+0.64 °C per decade, 1981-2025, Confirmed) and
 spring slowest (+0.42 °C per decade).
+
+**How does this place compare?** The same measurement in all eleven prepared regions, each over its
+full record, ranked as bars with 95% intervals: Istanbul–Marmara warms fastest of the eleven (+0.55
+°C per decade); Konya has the second-fastest rise in hot days (+6.4 per decade, after the Amazon).
+Under the evidence chart, one stripe per year shows the whole record at a glance, and a sentence
+notes when the last year is among the three highest or lowest ("2025 is the 3rd driest of 45 years"
+in Konya), adding that a record year is not a trend by itself.
 
 **Case report and open data.** One button downloads the case as a printable, self-contained HTML
 page that opens offline: the verdict, a chart of the yearly values with the trend line, the second
@@ -203,7 +211,7 @@ added when NASA AppEEARS delivers it), and the same pipeline can be repeated for
 
 **Tools.** Python, Streamlit, Plotly, pandas, NumPy, SciPy, pymannkendall, requests, folium and
 streamlit-folium (Leaflet, Leaflet.draw, OpenStreetMap map tiles); NASA POWER API, Giovanni,
-AppEEARS and NASA GIBS imagery tiles; GitHub; Streamlit Community Cloud. 570 automated tests check
+AppEEARS and NASA GIBS imagery tiles; GitHub; Streamlit Community Cloud. 662 automated tests check
 the statistics, the data loaders, the game, the maps, the verification, the guided start, the season
 test, the case report, the open-data ZIP and the app.
 
