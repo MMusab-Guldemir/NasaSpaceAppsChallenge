@@ -56,8 +56,20 @@ from trend.i18n import (
 )
 from trend.regions import REGIONS, Region
 from trend.share import build_share_link, parse_period
-from trend.stats import MIN_YEARS, RECOMMENDED_YEARS, TrendResult, analyze_trend, to_annual, trend_line_band
+from trend.stats import MIN_YEARS, RECOMMENDED_YEARS, TrendResult, analyze_trend, trend_line_band
 from trend.variables import VARIABLES
+from trend.world import (
+    SHORT_NAMES,
+    WORLD_STYLE,
+    board_verdict,
+    case_status,
+    opposite_trends,
+    place_name,
+    summary_counts,
+    world_cells,
+    world_table_html,
+    world_text,
+)
 
 st.set_page_config(page_title="Earth System Trend Detective", page_icon="🔎", layout="wide")
 LOG = logging.getLogger("trend_detective")
@@ -121,6 +133,12 @@ def load_monthly(region_key: str, variable_key: str) -> pd.DataFrame | None:
 def game_page(lang: str) -> str:
     """The Detective exam page: every case and its answer, built from the cached data files."""
     return render_game_html(lang)
+
+
+@st.cache_data(show_spinner=False)
+def world_board() -> dict:
+    """Verdicts for every prepared region and measurement (full records), for the World board."""
+    return world_cells(load_monthly)
 
 
 @st.cache_data(show_spinner=False, ttl=24 * 3600, max_entries=64)
@@ -219,14 +237,6 @@ def use_drawn() -> None:
     set_custom_bbox(bbox)
 
 
-def case_status(result: TrendResult | None) -> str:
-    if result is None:
-        return "open"
-    if result.significant:
-        return "confirmed" if result.agrees else "disputed"
-    return "noevidence" if result.agrees else "weak"
-
-
 def stamp(lang: str, status: str) -> str:
     return f"<span class='stamp {status}' lang='{lang}'>{html.escape(status_text(lang, status)[0])}</span>"
 
@@ -287,6 +297,62 @@ def open_example(variable_key: str, start: int | None, end: int | None) -> None:
         periods[variable_key] = (start, end)
 
 
+def open_world_case(region_key: str, variable_key: str) -> None:
+    """From the World board: open this prepared region and measurement in the investigation view."""
+    st.session_state["area_mode"] = "prepared"
+    st.session_state["region"] = region_key
+    st.session_state["custom_bbox"] = REGIONS[region_key].bbox
+    st.session_state["case"] = variable_key
+    st.session_state.pop(f"period_{variable_key}", None)  # full record
+    st.session_state.setdefault("periods", {}).pop(variable_key, None)
+    st.session_state["view"] = "case"
+
+
+def show_world_board(lang: str) -> None:
+    """Every prepared region and measurement at once, and the 'same clue, opposite trends' finds."""
+    cells = world_board()
+    names = {key: variable_text(lang, variable)["name"] for key, variable in VARIABLES.items()}
+    short = SHORT_NAMES.get(lang, SHORT_NAMES["en"])
+    st.markdown(WORLD_STYLE, unsafe_allow_html=True)
+    st.subheader(world_text(lang, "title"))
+    st.write(world_text(lang, "intro"))
+    st.markdown(
+        world_table_html(
+            cells, lang,
+            variable_name=lambda key: names[key],
+            status_name=lambda status: status_text(lang, status)[0],
+            unit_name=lambda key: variable_text(lang, VARIABLES[key])["annual_unit"],
+            rate_text=lambda key, value: num(value, lang, VARIABLES[key].decimals, signed=True),
+        ),
+        unsafe_allow_html=True,
+    )
+    st.caption(world_text(lang, "legend"))
+    counts = summary_counts(cells)
+    st.write(world_text(
+        lang, "counts", tested=counts["tested"], confirmed=counts["confirmed"],
+        disputed=counts["disputed"], weak=counts["weak"], none=counts["noevidence"],
+    ))
+    st.info(world_text(lang, "chance_note", tested=counts["tested"], low=counts["low"], high=counts["high"]))
+
+    st.markdown(f"<div class='step'>{html.escape(world_text(lang, 'opposite_title'))}</div>", unsafe_allow_html=True)
+    st.caption(world_text(lang, "opposite_why"))
+    found = opposite_trends(cells)
+    if not found:
+        st.write(world_text(lang, "opposite_none"))
+    for item in found:
+        joiner = " ve " if lang == "tr" else " and "
+        up = joiner.join(place_name(lang, r) for r in item["up"])
+        down = joiner.join(place_name(lang, r) for r in item["down"])
+        st.markdown(world_text(lang, "opposite_line", variable=names[item["variable"]], up=up, down=down))
+        buttons = [(r, item["variable"]) for r in item["up"][:2] + item["down"][:2]]
+        for column, (region_key, variable_key) in zip(st.columns(4), buttons):
+            column.button(
+                world_text(lang, "open_case", region=short[region_key], variable=lower_first(names[variable_key])),
+                key=f"world_open_{region_key}_{variable_key}", on_click=open_world_case,
+                args=(region_key, variable_key), width="stretch",
+            )
+
+
 # --- Language, shared links and area state -------------------------------------------------------
 
 if "_url_loaded" not in st.session_state:
@@ -307,8 +373,8 @@ if "_url_loaded" not in st.session_state:
     if params.get("case") in VARIABLES:
         st.session_state["case"] = params.get("case")
         st.session_state["_url_period"] = (params.get("case"), params.get("start"), params.get("end"))
-    if params.get("view") == "exam":
-        st.session_state["view"] = "exam"
+    if params.get("view") in ("exam", "world"):
+        st.session_state["view"] = params.get("view")
     st.session_state["_url_loaded"] = True
 
 default_region = next(iter(REGIONS))
@@ -341,10 +407,20 @@ with st.expander(t(lang, "why_title")):
 # --- View: the investigation or the Detective exam game (approved by Team Avni) -----------------
 
 st.session_state.setdefault("view", "case")
+view_labels = {
+    "case": VIEW_LABELS[lang]["case"],
+    "world": world_text(lang, "view_label"),
+    "exam": VIEW_LABELS[lang]["exam"],
+}
 st.segmented_control(
-    "View", options=list(VIEW_LABELS["en"]), format_func=lambda key: VIEW_LABELS[lang][key],
+    "View", options=list(view_labels), format_func=lambda key: view_labels[key],
     key="view", label_visibility="collapsed", required=True,
 )
+if st.session_state["view"] == "world":
+    st.query_params.from_dict({"lang": lang, "view": "world"})
+    show_world_board(lang)
+    st.caption(t(lang, "footer"))
+    st.stop()
 if st.session_state["view"] == "exam":
     st.query_params.from_dict({"lang": lang, "view": "exam"})
     components.html(game_page(lang), height=900, scrolling=True)
@@ -459,21 +535,16 @@ else:
 annual_by_key: dict[str, pd.DataFrame] = {}
 incomplete_by_key: dict[str, list[int]] = {}
 board_results: dict[str, TrendResult | None] = {}
-for key, variable in VARIABLES.items():
+for key in VARIABLES:
     if key not in monthly_by_key:
         board_results[key] = None
         continue
-    annual, incomplete = to_annual(monthly_by_key[key], variable)
-    if key == "snowfall" and len(annual) and annual["value"].max() < 1.0:
-        board_results[key] = None
-        unavailable_status[key] = "no_snow"
+    verdict = board_verdict(monthly_by_key[key], key)  # the same rules as the World board
+    board_results[key] = verdict.result
+    if verdict.result is None:
+        unavailable_status[key] = verdict.status
         continue
-    if len(annual) < variable.min_years:
-        board_results[key] = None
-        unavailable_status[key] = "insufficient"
-        continue
-    annual_by_key[key], incomplete_by_key[key] = annual, incomplete
-    board_results[key] = analyze_trend(annual["year"], annual["value"], min_years=variable.min_years)
+    annual_by_key[key], incomplete_by_key[key] = verdict.annual, verdict.incomplete
 
 if not annual_by_key:
     if custom_mode and fetch_failed:
