@@ -334,3 +334,18 @@ def test_nasa_not_answering_offers_the_nearest_prepared_region(monkeypatch):
     at.button(key="nearest_all").click().run()
     assert not at.exception
     assert at.session_state["area_mode"] == "prepared" and at.session_state["region"] == "konya"
+
+
+def test_a_custom_area_inside_a_region_is_not_called_0_km_away(monkeypatch):
+    import trend.fetch
+
+    monkeypatch.setattr(trend.fetch, "fetch_power_area", _failing_fetch)
+    at = AppTest.from_file(APP, default_timeout=60)
+    at.session_state["lang"] = "en"
+    at.query_params["region"] = "custom"
+    for key, value in zip("wsen", (27.6, 40.4, 29.4, 41.6)):  # inside the Istanbul–Marmara box
+        at.query_params[key] = str(value)
+    at.run()
+    assert not at.exception
+    infos = " ".join(i.value for i in at.info)
+    assert "lies in the prepared region Istanbul" in infos and "km" not in infos

@@ -217,7 +217,7 @@ added when NASA AppEEARS delivers it), and the same pipeline can be repeated for
 
 **Tools.** Python, Streamlit, Plotly, pandas, NumPy, SciPy, pymannkendall, requests, folium and
 streamlit-folium (Leaflet, Leaflet.draw, OpenStreetMap map tiles); NASA POWER API, Giovanni,
-AppEEARS and NASA GIBS imagery tiles; GitHub; Streamlit Community Cloud. 702 automated tests check
+AppEEARS and NASA GIBS imagery tiles; GitHub; Streamlit Community Cloud. 704 automated tests check
 the statistics, the data loaders, the game, the maps, the verification, the guided start, the season
 test, the case report, the open-data ZIP and the app.
 

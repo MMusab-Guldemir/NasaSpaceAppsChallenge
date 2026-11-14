@@ -418,6 +418,7 @@ LIVE_RETRY_SECONDS = 60  # a NASA POWER network error is not retried on reruns w
 
 
 NEAREST_MAX_KM = 1500  # the nearest prepared region is offered only when it is this close
+NEAREST_SAME_PLACE_KM = 300  # farther than this, the offer says it is a different place
 
 
 def offer_nearest_region(lang: str, bbox: tuple[float, float, float, float], key: str) -> None:
@@ -428,7 +429,13 @@ def offer_nearest_region(lang: str, bbox: tuple[float, float, float, float], key
     if km > NEAREST_MAX_KM:  # a region on another continent is no help
         return
     name = region_name(lang, region_key, REGIONS[region_key].name)
-    st.info(t(lang, "nearest_offer", region=name, km=num(round(km, -1), lang, 0)))
+    r_west, r_south, r_east, r_north = REGIONS[region_key].bbox
+    centre_lat, centre_lon = (south + north) / 2, (west + east) / 2
+    if r_south <= centre_lat <= r_north and r_west <= centre_lon <= r_east:  # no "about 0 km away"
+        st.info(t(lang, "nearest_inside", region=name))
+    else:
+        far = t(lang, "nearest_far") if km > NEAREST_SAME_PLACE_KM else ""
+        st.info(t(lang, "nearest_offer", region=name, km=num(round(km, -1), lang, 0)) + far)
     case = st.session_state.get("case")
     if case not in available_variable_keys(region_key):
         case = "air_temperature"

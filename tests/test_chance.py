@@ -258,3 +258,12 @@ def test_intro_for_years_that_are_not_alike():
     assert "independent" in english and "-0.20" in english and "sticky" not in english
     assert "bağımsız" in intro_line("tr", 200, 7, -0.2) and "-0,20" in intro_line("tr", 200, 7, -0.2)
     assert "0,00" in intro_line("tr", 200, 20, float("nan"))
+
+
+def test_detective_above_five_percent_is_said_honestly():
+    result = {"runs": 400, "naive": 120, "detective": 36}  # 9%: a short, very sticky record
+    lines = summary_lines("en", result, None)
+    assert any("still above 5%" in line for line in lines)
+    assert any("%5'in üstünde" in line for line in summary_lines("tr", result, None))
+    calm = {"runs": 400, "naive": 60, "detective": 16}  # 4%
+    assert not any("still above 5%" in line for line in summary_lines("en", calm, None))

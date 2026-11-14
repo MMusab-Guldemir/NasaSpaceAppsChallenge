@@ -38,6 +38,7 @@ BURN_IN = 50  # values thrown away so that every world starts in its usual state
 LAST_YEAR = 2025  # pretend years run from 2026 - n to 2025, as in scripts/accuracy_report.py
 MIN_WORLD_YEARS = 3  # a straight line through fewer points has no p-value
 STRONG_P = 0.01  # below this the real case is "rarely produced by chance alone"
+DETECTIVE_HIGH_SHARE = 0.075  # above this the detective's own false alarms are named (5% plus sampling swing)
 
 WORLD_COLOR = "#898781"  # grey, the "No evidence" colour of trend/seasonal.py: a pretend series
 NAIVE_COLOR = "#a8501b"  # orange, the "Disputed" colour: the naive test's straight line
@@ -64,6 +65,10 @@ CHANCE_TEXT = {
             "A naive test (no correction for persistence) saw a trend in **{naive} of {runs}** worlds "
             "({naive_pct}%).\n"
             "The detective stamped “{stamp}” in **{detective}** ({detective_pct}%)."
+        ),
+        "detective_high": (
+            "That is still above 5%: in a record this short and this sticky the correction cannot remove all "
+            "of the persistence, but the detective is fooled far less often than the naive test."
         ),
         "compare_strong": "The real case has {p}: chance alone rarely produces evidence this strong.",
         "compare_middle": (
@@ -102,6 +107,10 @@ CHANCE_TEXT = {
             "Sürekliliği hesaba katmayan saf bir test, {runs} dünyanın **{naive}** tanesinde trend gördü "
             "(%{naive_pct}).\n"
             "Dedektif ise **{detective}** tanesine “{stamp}” damgası vurdu (%{detective_pct})."
+        ),
+        "detective_high": (
+            "Bu hâlâ %5'in üstünde: bu kadar kısa ve bu kadar yapışkan bir kayıtta düzeltme sürekliliğin "
+            "hepsini gideremiyor; yine de dedektif saf testten çok daha az kanıyor."
         ),
         "compare_strong": "Gerçek dosyada {p}: tesadüf tek başına bu kadar güçlü bir delili nadiren üretir.",
         "compare_middle": (
@@ -264,6 +273,9 @@ def summary_lines(lang: str, result: dict, case_p: float | None) -> list[str]:
         stamp=status_text(lang, "confirmed")[0],
     )
     lines = text.split("\n")
+    # Clearly above 5% (more than the sampling swing of a few hundred worlds): say so instead of hiding it
+    if runs and int(result["detective"]) / runs > DETECTIVE_HIGH_SHARE:
+        lines.append(chance_text(lang, "detective_high"))
     if case_p is not None and math.isfinite(float(case_p)):
         lines.append(compare_line(lang, float(case_p)))
     return lines

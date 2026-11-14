@@ -205,6 +205,11 @@ TEXT: dict[str, dict[str, str]] = {
             "Meanwhile, the nearest prepared region, {region} (about {km} km from the centre of this area), "
             "works from files that are already in the app, without asking NASA POWER."
         ),
+        "nearest_inside": (
+            "Meanwhile, this area lies in the prepared region {region}, which works from files that are "
+            "already in the app, without asking NASA POWER."
+        ),
+        "nearest_far": " It is a different place, so its results do not describe this area.",
         "nearest_open": "Open {region}",
         "err_no_data": "There is no {variable} data over this area (for example, open sea).",
     },
@@ -396,6 +401,11 @@ TEXT: dict[str, dict[str, str]] = {
             "Bu arada en yakın hazır bölge olan {region} (bu alanın merkezinden yaklaşık {km} km uzakta), "
             "NASA POWER'a sormadan, uygulamada zaten bulunan dosyalarla çalışır."
         ),
+        "nearest_inside": (
+            "Bu arada bu alan, NASA POWER'a sormadan uygulamada zaten bulunan dosyalarla çalışan {region} "
+            "hazır bölgesinin içinde."
+        ),
+        "nearest_far": " Orası farklı bir yer; sonuçları bu alanı anlatmaz.",
         "nearest_open": "{region} dosyasını aç",
         "err_no_data": "Bu alanın üzerinde {variable} verisi yok (örneğin açık deniz).",
     },
