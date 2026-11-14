@@ -107,6 +107,8 @@ NO_WITNESS = {
         "co2": "No independent witness: OCO-2 GEOS is NASA's only CO₂ record for these years (2015 "
                "onward), so there is no second NASA record to compare.",
         "tree_cover": "No independent witness: MOD44B is NASA's only yearly tree-cover product.",
+        "hot_days": "No independent witness: daily maximum temperatures come only from NASA POWER here; NASA "
+                    "GISTEMP has monthly means, not daily values, so there is no independent daily witness.",
         "custom": "The third witness works for the prepared regions for now.",
         "incomplete": "The second NASA dataset has too few years in common with this record here (for "
                       "example, it cannot measure in the polar winter), so there is nothing to compare.",
@@ -120,6 +122,8 @@ NO_WITNESS = {
         "co2": "Bağımsız tanık yok: OCO-2 GEOS, bu yıllar için (2015'ten beri) NASA'nın tek CO₂ kaydı; "
                "karşılaştırılacak ikinci bir NASA kaydı yok.",
         "tree_cover": "Bağımsız tanık yok: MOD44B, NASA'nın tek yıllık ağaç örtüsü ürünü.",
+        "hot_days": "Bağımsız tanık yok: günlük en yüksek sıcaklık burada yalnızca NASA POWER'dan geliyor; NASA "
+                    "GISTEMP günlük değil aylık ortalama veriyor, bu yüzden bağımsız bir günlük tanık yok.",
         "custom": "Üçüncü tanık şimdilik hazır bölgelerde çalışıyor.",
         "incomplete": "İkinci NASA verisinin bu kayıtla burada yeterince ortak yılı yok (örneğin kutup kışında "
                       "ölçüm yapamıyor), bu yüzden karşılaştıracak bir şey kalmıyor.",
