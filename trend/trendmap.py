@@ -56,8 +56,8 @@ MAP_TEXT = {
     "en": {
         "layer_area": "📍 Pick the area", "layer_scene": "🔎 Crime scene map (dots)",
         "showing": "The map shows: {variable}, {start}–{end}",
-        "fallback": "{picked} has no NASA grid, so the map shows air temperature. Pick temperature, "
-                    "precipitation, snowfall or dust and smoke below to map them.",
+        "fallback": "{picked} cannot be shown square by square on this map, so it shows air temperature. "
+                    "Pick temperature, precipitation, snowfall or dust and smoke below to map them.",
         "loading": "Testing every grid cell...",
         "too_big": "The crime scene map works for areas up to {max}° per side. Draw a smaller "
                    "rectangle to see the dots.",
@@ -107,7 +107,7 @@ MAP_TEXT = {
     "tr": {
         "layer_area": "📍 Bölge seç", "layer_scene": "🔎 Olay yeri haritası (noktalar)",
         "showing": "Haritada: {variable}, {start}–{end}",
-        "fallback": "{picked} için NASA ızgara verisi yok; harita hava sıcaklığını gösteriyor. "
+        "fallback": "{picked} bu haritada kare kare gösterilemiyor; harita hava sıcaklığını gösteriyor. "
                     "Sıcaklık, yağış, kar ya da toz ve dumanı haritada görmek için aşağıdan seç.",
         "loading": "Her ızgara karesi test ediliyor...",
         "too_big": "Olay yeri haritası her kenarı en fazla {max}° olan alanlarda çalışıyor. Noktaları "

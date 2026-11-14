@@ -223,3 +223,12 @@ def test_huge_percentages_fall_back_to_the_change_per_decade():
     intercept = 1.82 - 1.07 * 1981
     text = _rate_text("en", "precipitation", result, intercept)
     assert "%" not in text and "per decade" in text and "not significant" in text
+
+
+def test_groundwater_rates_are_never_a_percentage_of_the_model_storage():
+    import trend.game as game_module
+    for lang in ("en", "tr"):
+        cases = [case for case in game_module.build_cases(lang) if case.get("who", "").startswith(
+            game_module.CHARACTERS[lang]["groundwater"])]
+        for case in cases:
+            assert "%" not in case["rate"], case["rate"]
