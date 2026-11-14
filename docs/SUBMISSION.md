@@ -18,7 +18,9 @@ data, removes the seasonal cycle by using one value per year, fits a linear tren
 rate of change per decade with its 95% confidence interval and a significance test. A second,
 assumption-light test (Mann-Kendall with Sen's slope) acts as a "second opinion". Results come with
 plain-language explanations, so high school and college students can investigate environmental
-change like data detectives. **[TEAM: add one sentence on what makes the experience unique.]**
+change like data detectives. The whole app is built around an **expert detective** theme: an
+investigation board shows every clue for a region with a verdict stamp ("Confirmed", "No evidence"),
+and each case file walks through the question, the evidence, the verdict and a second witness.
 
 ## Link to Project Demo
 
@@ -32,10 +34,13 @@ in Turkish.
 
 ## Detailed Project Description
 
-**What it does.** The user selects a region, an Earth-science measurement and a time period. The app
-shows a result card (What / Where / How much / Significant?), a one-paragraph verdict in plain
-language, a chart of annual values with the fitted trend line and its 95% confidence band, the
-monthly series, a data table with CSV downloads, and a "Methods and limitations" section.
+**What it does.** The user opens an **investigation board** for a region: one clue card per
+measurement, each with its rate of change and a verdict stamp (Confirmed, Disputed, No evidence,
+Weak clue or Open case). Opening a **case file** shows (1) the question, (2) the evidence: a chart
+of annual values with the fitted trend line, its 95% confidence band and a period selector, (3) the
+verdict: What / Where / How much / Significant? plus a plain-language explanation, (4) the second
+witness: an independent test, and (5) case notes with caveats, monthly data, a data table, CSV
+downloads and the methods.
 
 **How it works.**
 1. *Data:* monthly area averages over the region, from NASA POWER (MERRA-2 based temperature and
@@ -63,7 +68,10 @@ monthly series, a data table with CSV downloads, and a "Methods and limitations"
 change is real, and download everything to check the result themselves. Every number comes with its
 uncertainty and its data source.
 
-**What we hope to achieve.** **[TEAM: your goals and the detective experience.]**
+**What we hope to achieve.** A tool that the team itself, the judges and later anyone can use to
+investigate environmental change the way a secret, expert detective would: following the evidence,
+calling a second witness, and only declaring a case "Confirmed" when the statistics support it.
+After Colorado, the same pipeline will be repeated for more regions. **[TEAM: confirm or reword.]**
 
 **Tools.** Python, Streamlit, Plotly, pandas, NumPy, SciPy, statsmodels, pymannkendall, requests;
 NASA POWER API, Giovanni and AppEEARS; GitHub; Streamlit Community Cloud. 31 automated tests check
@@ -71,8 +79,10 @@ the statistics, the data loaders and the app.
 
 ## Use of Super Intelligence (SI)
 
-The project idea and all product decisions come from Team Avni. Claude Opus 5.5 (Anthropic) wrote the
-code and the documentation drafts, following the team's decisions. Claude Fable (Anthropic) reviewed
+The project idea and all product decisions come from Team Avni, including the choice of challenge,
+region, measurements and the "secret expert detective" theme. Claude Opus 5.5 (Anthropic) wrote the
+code and the documentation drafts, following the team's decisions; it also proposed three layout
+options for the detective theme, and the team chose the investigation-board-and-case-file layout. Claude Fable (Anthropic) reviewed
 the architecture plan and the statistics code; its review comments were applied by the code author.
 Every AI-assisted source file says so in its header, AI-assisted commits carry a `Co-Authored-By`
 trailer, and the README has a "Use of AI" section. No AI-generated images, video or audio are used.

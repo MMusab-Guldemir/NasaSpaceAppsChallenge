@@ -9,14 +9,17 @@ Pick a place and a measurement from NASA Earth data, and find out **what** is ch
 
 ## What it does
 
-1. The user picks a **region** (Colorado first; more regions to come), a **measurement** and a **period**.
-2. The app turns NASA monthly data into one value per year (removing the seasonal cycle).
-3. It fits a linear trend and reports:
+1. An **investigation board** shows every clue for a region (Colorado first; more regions to come):
+   one card per measurement with its rate of change and a verdict stamp.
+2. Opening a **case file** walks through the question, the evidence (chart and period selector),
+   the verdict and a second witness.
+3. Behind the scenes, NASA monthly data become one value per year (removing the seasonal cycle).
+4. The app fits a linear trend and reports:
    - the **rate of change per decade** with its 95% confidence interval,
    - whether the trend is **significant** (two-sided t-test, adjusted for year-to-year persistence),
    - a **second opinion** from the Mann-Kendall test with Sen's slope,
    - a plain-language summary for students and the public.
-4. Charts, a data table, CSV downloads and a "Methods and limitations" section make every result checkable.
+5. Charts, a data table, CSV downloads and a "How the detective works" section make every result checkable.
 
 First results for Colorado:
 - Annual mean air temperature rose by about **+0.33 °C per decade** (1981-2025, p < 0.001).
@@ -69,8 +72,9 @@ docs/ARCHITECTURE.md   design and methods plan
 
 ## Use of AI
 
-The idea and all product decisions come from Team Avni. The code and documentation were written
-with AI assistance: **Claude Opus 5.5** (Anthropic) wrote the code, and **Claude Fable** (Anthropic)
+The idea and all product decisions come from Team Avni, including the "secret expert detective"
+theme. The AI proposed three layout options for that theme and the team chose the board-and-case-file
+layout. The code and documentation were written with AI assistance: **Claude Opus 5.5** (Anthropic) wrote the code, and **Claude Fable** (Anthropic)
 reviewed the plan and the statistics code. Every AI-assisted source file says so in its header,
 and AI-assisted commits carry a `Co-Authored-By` trailer. No AI-generated images, video or audio
 are used.
