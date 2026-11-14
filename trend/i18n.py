@@ -484,14 +484,15 @@ REASONS: dict[str, dict[str, dict[str, list[str]]]] = {
         },
         "hot_days": {
             "up": [
-                "The whole region is warming (see the air temperature card), and even a small rise in "
-                "the average makes days above 30 °C much more common.",
+                "When a region warms (compare the air temperature card), even a small rise in the "
+                "average can add many days above 30 °C where summer temperatures are already close to "
+                "that line.",
                 "As the climate warms, heat waves are becoming more frequent and longer in many regions.",
                 "Soil that dries out in summer heats up faster, which can add hot days.",
             ],
             "down": [
-                "Fewer hot days are rare in recent decades. They can come from wetter summers, more "
-                "irrigation, or more cloud and haze that block sunlight.",
+                "A drop in hot days has been rare in recent decades. It can come from wetter summers, "
+                "more irrigation, or more cloud and haze that block sunlight.",
             ],
             "none": [
                 "Hot summers come and go with the weather from year to year; the record may be too short, "
@@ -637,18 +638,19 @@ REASONS: dict[str, dict[str, dict[str, list[str]]]] = {
         },
         "hot_days": {
             "up": [
-                "Bölgenin tamamı ısınıyor (hava sıcaklığı kartına bak); ortalamadaki küçük bir artış bile "
-                "30 °C'yi geçen günleri çok daha sık yapar.",
+                "Bölge ısındığında (hava sıcaklığı kartıyla karşılaştır), yaz sıcaklıkları zaten 30 °C'ye "
+                "yakınsa ortalamadaki küçük bir artış bile 30 °C'yi geçen gün sayısını epey artırabilir.",
                 "İklim ısındıkça birçok bölgede sıcak hava dalgaları daha sık ve daha uzun oluyor.",
                 "Yazın kuruyan toprak daha çabuk ısınır; bu da sıcak gün sayısını artırabilir.",
             ],
             "down": [
-                "Son on yıllarda sıcak günlerin azalması nadirdir. Daha yağışlı yazlardan, daha çok "
-                "sulamadan ya da güneşi engelleyen bulut ve pustan kaynaklanabilir.",
+                "Son birkaç on yılda sıcak günlerin azaldığı pek görülmez. Olursa, daha yağışlı yazlardan, "
+                "artan sulamadan ya da güneşi kesen bulut ve pustan kaynaklanabilir.",
             ],
             "none": [
-                "Sıcak yazlar yıldan yıla hava durumuyla gelir ve gider; kayıt kısa olabilir ya da bölge, "
-                "düzenli bir değişimin öne çıkması için fazla serin veya fazla sıcak olabilir.",
+                "Yazların ne kadar sıcak geçtiği yıldan yıla hava koşullarına göre değişir; kayıt kısa "
+                "olabilir ya da bölge, düzenli bir değişimin öne çıkması için fazla serin veya fazla sıcak "
+                "olabilir.",
             ],
         },
         "no2": {
@@ -926,12 +928,13 @@ VARIABLE_TEXT: dict[str, dict[str, dict]] = {
                 "30 °C'yi geçtiği."
             ),
             "annual_label": "Yıllık sıcak gün sayısı (günlük en yüksek sıcaklık 30 °C üstü)",
-            "unit": "ayda gün",
+            "unit": "gün/ay",
             "annual_unit": "gün",
             "year_axis_label": "Yıl",
             "caveats": [
                 "Her ızgara hücresi (yaklaşık 50 km) 30 °C'yi geçen kendi günlerini sayar; kart, bölgedeki "
-                "hücrelerin ortalamasını gösterir: bölgede tipik bir noktanın yaşadığı sıcak gün sayısı.",
+                "hücrelerin (kara ve deniz birlikte) ortalamasını gösterir; tek tek yerlerde bu sayı çok "
+                "daha fazla ya da çok daha az olabilir.",
                 "30 °C sabit bir çizgidir: çölde neredeyse her yaz günü bu çizginin üstündedir, Sibirya'da "
                 "ise yalnızca birkaç gün. Trend, bu günlerin daha sık mı yoksa daha seyrek mi olduğunu "
                 "gösterir.",

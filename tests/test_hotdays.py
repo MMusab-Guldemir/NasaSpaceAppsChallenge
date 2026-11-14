@@ -102,3 +102,18 @@ def test_istanbul_hot_days_are_rising():
         pytest.skip("hot-day file not built")
     verdict = board_verdict(load_processed("marmara", "hot_days"), "hot_days")
     assert verdict.status == "confirmed" and verdict.result.slope_per_year > 0
+
+
+def test_a_cell_repeated_by_overlapping_request_boxes_is_counted_once():
+    hot_july = year_of(lambda d: 35.0 if d.month == 7 else 20.0)
+    box_a = {"features": [feature(130.0, 62.0, hot_july)]}
+    box_b = {"features": [feature(130.0, 62.0, hot_july)]}  # the same edge cell in the second box
+    monthly = hd.monthly_hot_days([box_a, box_b], (125.0, 60.0, 135.0, 65.0))
+    assert monthly.loc[monthly["date"] == pd.Timestamp("2020-07-01"), "value"].item() == 31.0
+    assert monthly.attrs["cells"]["days"].tolist() == [31.0]
+
+
+def test_a_month_with_days_missing_from_the_answer_is_left_out():
+    daily = {k: v for k, v in year_of(lambda d: 35.0).items() if not ("20200710" <= k <= "20200720")}
+    monthly = hd.monthly_hot_days([{"features": [feature(27.5, 40.0, daily)]}], (27.0, 40.0, 30.0, 42.0))
+    assert np.isnan(monthly.loc[monthly["date"] == pd.Timestamp("2020-07-01"), "value"].item())

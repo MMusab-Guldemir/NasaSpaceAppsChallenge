@@ -11,6 +11,7 @@ hot and cool cells (sea, mountains) first would hide.
 """
 from __future__ import annotations
 
+import calendar
 import time
 from collections import defaultdict
 
@@ -56,6 +57,11 @@ def request_daily_year(bbox: tuple[float, float, float, float], year: int, timeo
     raise DataSourceError(f"NASA POWER daily API kept failing for {bbox} {year}.")
 
 
+def _days_in(month: str) -> int:
+    """Days in a calendar month given as 'YYYY-MM-01'."""
+    return calendar.monthrange(int(month[:4]), int(month[5:7]))[1]
+
+
 def monthly_hot_days(payloads: list[dict], bbox: tuple[float, float, float, float],
                      threshold: float = THRESHOLD_C) -> pd.DataFrame:
     """Monthly number of days above ``threshold`` (°C), averaged over the grid cells of ``bbox``.
@@ -77,6 +83,7 @@ def monthly_hot_days(payloads: list[dict], bbox: tuple[float, float, float, floa
     # (cell, month) -> [hot days, valid days, days in the record]
     counts: dict[tuple[tuple[float, float], str], list[int]] = defaultdict(lambda: [0, 0, 0])
     latitudes: dict[tuple[float, float], float] = {}
+    seen: set[tuple[tuple[float, float], str]] = set()  # overlapping request boxes repeat edge cells
     for feature in features:
         lon, lat = feature["geometry"]["coordinates"][:2]
         cell = (round(float(lon), 6), round(float(lat), 6))
@@ -84,6 +91,9 @@ def monthly_hot_days(payloads: list[dict], bbox: tuple[float, float, float, floa
             continue
         latitudes[cell] = float(lat)
         for day, value in feature["properties"]["parameter"][PARAMETER].items():
+            if (cell, day) in seen:
+                continue
+            seen.add((cell, day))
             month = f"{day[:4]}-{day[4:6]}-01"
             entry = counts[(cell, month)]
             entry[2] += 1
@@ -102,8 +112,8 @@ def monthly_hot_days(payloads: list[dict], bbox: tuple[float, float, float, floa
     for month in months:
         values = []
         for cell in cell_list:
-            hot, valid, total = counts.get((cell, month), [0, 0, 0])
-            values.append(hot if total and valid == total else np.nan)
+            hot, valid, _ = counts.get((cell, month), [0, 0, 0])
+            values.append(hot if valid == _days_in(month) else np.nan)
         values = np.asarray(values, dtype=float)
         value = float(np.average(values, weights=weights)) if not np.isnan(values).any() else np.nan
         rows.append({"date": pd.Timestamp(month), "value": value, "n_cells": len(cell_list)})
@@ -113,7 +123,9 @@ def monthly_hot_days(payloads: list[dict], bbox: tuple[float, float, float, floa
         for year in sorted({month[:4] for month in months}):
             year_months = [m for m in months if m.startswith(year)]
             entries = [counts.get((cell, m), [0, 0, 0]) for m in year_months]
-            complete = len(year_months) == 12 and all(total and valid == total for _, valid, total in entries)
+            complete = len(year_months) == 12 and all(
+                entry[1] == _days_in(m) for m, entry in zip(year_months, entries)
+            )
             cells_table.append({
                 "lat": latitudes[cell], "lon": cell[0], "year": int(year),
                 "days": float(sum(hot for hot, _, _ in entries)) if complete else np.nan,

@@ -162,7 +162,7 @@ VARIABLES: dict[str, Variable] = {
             "goes above 30 °C (86 °F)."
         ),
         unit="days per month",
-        annual_label="Hot days per year (daily maximum above 30 °C)",
+        annual_label="Number of hot days per year (daily maximum above 30 °C)",
         annual_unit="days",
         year_axis_label="Year",
         aggregation="sum",
@@ -174,7 +174,8 @@ VARIABLES: dict[str, Variable] = {
         citation=f"{POWER_ACKNOWLEDGMENT} {MERRA2_REFERENCE}",
         caveats=(
             "Each grid cell (about 50 km) counts its own days above 30 °C, and the card shows the "
-            "average over the region's cells: the number of hot days a typical spot in the region gets.",
+            "average over the region's cells (land and sea alike); single places can have far more or "
+            "far fewer.",
             "30 °C is a fixed line: in a desert almost every summer day is above it, in Siberia only a "
             "few days are. The trend shows whether such days are becoming more or less common.",
             "Comes from a reanalysis (a weather model combined with observations), not from one weather "

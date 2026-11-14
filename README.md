@@ -120,9 +120,10 @@ Highlights from the world regions (full records unless stated):
 - Air temperature rose significantly in nine of the ten prepared regions, from +0.12 °C per decade
   in the Sahel to +0.55 °C per decade in Istanbul–Marmara (1981-2025); in Beijing the rise
   (+0.23 °C per decade) is borderline (p = 0.06).
-- Hot days above 30 °C became much more common: in Istanbul–Marmara a typical spot had about 10 a
-  year in the early 1980s and 30-45 in recent years (+5.0 days per decade, 1981-2025, Confirmed);
-  Colorado +4.1 and Medina +5.2 days per decade, both Confirmed.
+- Hot days above 30 °C became more common in seven of the ten prepared regions (no evidence in
+  Beijing, the Sahel and Siberia). In Istanbul–Marmara the regional average went from about 10 a year
+  in the early 1980s to 34-46 in 2023-2025 (+5.0 days per decade, 1981-2025, Confirmed); Colorado
+  +4.1 and Medina +5.2 days per decade, both Confirmed.
 - Independent check with NASA GISTEMP weather stations (1981-2025): Istanbul–Marmara +0.55 °C per
   decade, almost exactly the app's +0.547, both Confirmed. Beijing +0.42 °C per decade (p < 0.001,
   Confirmed): Beijing is probably warming too, and the app's record shows a slower rise that just
@@ -272,7 +273,7 @@ scripts/prefetch.py    fetches and caches data for a region
 scripts/build_gistemp_witness.py  NASA GISTEMP area means for the temperature witness
 data/processed/        small cached monthly CSVs used by the app
 data/witness/          second-dataset series for the third witness (GISTEMP, GPCP, IMERG, MODIS, GLDAS)
-tests/                 unit and app tests (350)
+tests/                 unit and app tests (352)
 docs/ARCHITECTURE.md   design and methods
 docs/SUBMISSION.md     draft of the Space Apps project page
 ```
