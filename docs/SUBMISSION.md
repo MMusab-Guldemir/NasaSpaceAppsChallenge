@@ -76,7 +76,7 @@ in English (default) or Turkish.
 | Clue | Colorado, USA | Istanbul–Marmara, Türkiye |
 |---|---|---|
 | Air temperature, annual mean (1981-2025) | +0.33 °C per decade, about +1.4 °C along the trend line (p < 0.001), Confirmed | +0.55 °C per decade, about +2.4 °C along the trend line (p < 0.001), Confirmed |
-| Snowfall, water-year total (1982-2026) | no significant trend (p = 0.66) | no significant trend (p = 0.61) |
+| Snowfall, water-year total (1982-2026) | no significant trend (p = 0.66) | no significant trend (p = 0.60) |
 | Tropospheric NO₂, annual mean (2005-2025) | no significant straight-line trend (p = 0.23): a decline until a 2020 low, then a rise; the pre-pandemic decline 2005-2019 alone is significant (p = 0.016) | no significant trend (p = 0.87; 2024 left out as incomplete) |
 | Vegetation greenness, May-Sep NDVI (2000-2025) | no significant trend (p = 0.39) | +0.014 per decade (p = 0.03), but the second witness disagrees (p = 0.07), so the case is Disputed |
 
