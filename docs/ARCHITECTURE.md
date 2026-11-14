@@ -22,7 +22,7 @@ and **is the change statistically significant?** Visualization plus analysis is 
 | Air temperature at 2 m | NASA POWER monthly `T2M` (MERRA-2 based), 0.5 x 0.625 deg | POWER regional API, one parameter per request | none | 1981 to present |
 | Snowfall | NASA POWER monthly `PRECSNOLAND` (MERRA-2 based, mm/day) | POWER regional API | none | 1981 to present |
 | Tropospheric NO2 | OMI `OMNO2d` v004 `ColumnAmountNO2TropCloudScreened` (molecules/cm2), daily, 0.25 deg | Giovanni area-averaged time series CSV, requested in 5-year chunks | Earthdata Login | Oct 2004 to Nov 2026 |
-| NDVI | MODIS Terra `MOD13C2` v061, monthly, 0.05 deg | AppEEARS area request (statistics CSV) | Earthdata Login | Feb 2000 to present |
+| NDVI | MODIS Terra `MOD13A3` v061, monthly, 1 km (AppEEARS does not offer MOD13C2) | AppEEARS area request (statistics CSV) | Earthdata Login | Feb 2000 to present |
 
 Verification notes:
 - POWER regional API returns 99 grid cells over the Colorado box; requesting two parameters at once returns HTTP 422, so we request one parameter at a time.

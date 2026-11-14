@@ -5,6 +5,7 @@ NASA Space Apps Challenge 2026.
 """
 from __future__ import annotations
 
+import io
 from pathlib import Path
 
 import numpy as np
@@ -142,6 +143,67 @@ def fetch_power_variable(
     if is_daily_rate:
         monthly = daily_rate_to_monthly_total(monthly)
     return monthly, power_sources(payload)
+
+
+DU_TO_MOLECULES_PER_CM2 = 2.6867e16  # 1 Dobson unit in molecules/cm²
+
+
+def load_giovanni_csv(path: Path) -> pd.DataFrame:
+    """Read a Giovanni area-averaged time series CSV into ``date`` and ``value`` columns.
+
+    Giovanni puts metadata rows (title, dates, bounding box, fill value) above the data table,
+    which starts with a ``time,...`` header. Fill values become missing.
+    """
+    lines = Path(path).read_text(encoding="utf-8", errors="replace").splitlines()
+    fill_value = None
+    header_index = None
+    for index, line in enumerate(lines):
+        lowered = line.strip().lower()
+        if lowered.startswith("fill value"):
+            try:
+                fill_value = float(line.rsplit(",", 1)[-1])
+            except ValueError:
+                fill_value = None
+        if lowered.startswith("time,"):
+            header_index = index
+            break
+    if header_index is None:
+        raise DataSourceError(f"{Path(path).name}: no 'time,...' data header found.")
+
+    table = pd.read_csv(io.StringIO("\n".join(lines[header_index:])))
+    table = table.iloc[:, :2]
+    table.columns = ["date", "value"]
+    table["date"] = pd.to_datetime(table["date"], errors="coerce", utc=True).dt.tz_localize(None)
+    table["value"] = pd.to_numeric(table["value"], errors="coerce")
+    if fill_value is not None:
+        table.loc[np.isclose(table["value"], fill_value), "value"] = np.nan
+    table.loc[table["value"] < -1e20, "value"] = np.nan
+    return table.dropna(subset=["date"]).reset_index(drop=True)
+
+
+def daily_to_monthly_mean(daily: pd.DataFrame, min_valid_days: int) -> pd.DataFrame:
+    """Average daily values per month; months with too few valid days become missing."""
+    frame = daily.copy()
+    frame["month"] = frame["date"].dt.to_period("M")
+    grouped = frame.groupby("month")["value"]
+    monthly = pd.DataFrame({"value": grouped.mean(), "n_days": grouped.count()})
+    monthly.loc[monthly["n_days"] < min_valid_days, "value"] = np.nan
+    monthly["date"] = monthly.index.to_timestamp()
+    return monthly.reset_index(drop=True).loc[:, ["date", "value", "n_days"]]
+
+
+def build_no2_from_giovanni(files: list[Path], min_valid_days: int) -> pd.DataFrame:
+    """Combine Giovanni OMNO2d CSV chunks into a monthly series in 10^15 molecules/cm²."""
+    if not files:
+        raise DataSourceError("No Giovanni NO2 CSV files found in data/raw.")
+    daily = pd.concat([load_giovanni_csv(f) for f in sorted(files)], ignore_index=True)
+    daily = daily.sort_values("date").drop_duplicates(subset="date", keep="first")
+    valid = daily["value"].dropna()
+    if not valid.empty and valid.abs().median() < 1e3:
+        # Values in Dobson units: convert to molecules/cm².
+        daily["value"] = daily["value"] * DU_TO_MOLECULES_PER_CM2
+    daily["value"] = daily["value"] / 1e15
+    return daily_to_monthly_mean(daily, min_valid_days)
 
 
 def processed_path(region_key: str, variable_key: str) -> Path:

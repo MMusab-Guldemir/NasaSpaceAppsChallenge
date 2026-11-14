@@ -1,0 +1,23 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Colorado bounding box (W -109.05, S 37.0, E -102.04, N 41.0)"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-109.05, 37.0],
+            [-102.04, 37.0],
+            [-102.04, 41.0],
+            [-109.05, 41.0],
+            [-109.05, 37.0]
+          ]
+        ]
+      }
+    }
+  ]
+}

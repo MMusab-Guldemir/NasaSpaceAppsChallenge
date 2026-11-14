@@ -18,8 +18,11 @@ Pick a place and a measurement from NASA Earth data, and find out **what** is ch
    - a plain-language summary for students and the public.
 4. Charts, a data table, CSV downloads and a "Methods and limitations" section make every result checkable.
 
-First results for Colorado: annual mean air temperature rose by about **+0.33 °C per decade**
-(1981-2025, p < 0.001). Water-year snowfall shows **no significant trend** (1982-2026, p = 0.66).
+First results for Colorado:
+- Annual mean air temperature rose by about **+0.33 °C per decade** (1981-2025, p < 0.001).
+- Water-year snowfall shows **no significant trend** (1982-2026, p = 0.66).
+- Tropospheric NO₂ fell from 2005 to a low in 2020 and rose again afterwards, so the straight-line
+  trend over 2005-2025 is **not significant** (p = 0.23 after correcting for year-to-year persistence).
 
 ## Data
 
@@ -27,8 +30,8 @@ First results for Colorado: annual mean air temperature rose by about **+0.33 °
 |---|---|---|
 | Air temperature | NASA POWER monthly `T2M` (MERRA-2 based) | POWER API |
 | Snowfall | NASA POWER monthly `PRECSNOLAND` (MERRA-2 based) | POWER API |
-| Air pollution (NO₂) | OMI `OMNO2d` v004 tropospheric column | Giovanni (in progress) |
-| Vegetation greenness (NDVI) | MODIS Terra `MOD13C2` v061 | AppEEARS (in progress) |
+| Air pollution (NO₂) | OMI `OMNO2d` v004 tropospheric column (daily, averaged per month) | Giovanni area-averaged time series |
+| Vegetation greenness (NDVI) | MODIS Terra `MOD13A3` v061 (monthly, 1 km) | AppEEARS (in progress) |
 
 - These data were obtained from the NASA Langley Research Center (LaRC) POWER Project funded
   through the NASA Earth Science/Applied Science Program.
@@ -43,7 +46,8 @@ First results for Colorado: annual mean air temperature rose by about **+0.33 °
 python -m venv .venv
 .venv\Scripts\activate          # Windows
 pip install -r requirements-dev.txt
-python scripts/prefetch.py --region colorado   # refresh the cached POWER data (optional)
+python scripts/prefetch.py --region colorado   # refresh cached data (optional)
+# NO2: put the Giovanni CSV downloads in data/raw as giovanni_no2_*.csv before running prefetch
 streamlit run app.py
 python -m pytest -q
 ```

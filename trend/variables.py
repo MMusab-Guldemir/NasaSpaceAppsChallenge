@@ -111,6 +111,8 @@ VARIABLES: dict[str, Variable] = {
             "The OMI instrument has a 'row anomaly' that reduces the number of usable "
             "measurements.",
             "2020 shows a dip linked to reduced activity during the COVID-19 pandemic.",
+            "The OMI instrument is aging and its Aura satellite's orbit has been drifting in recent "
+            "years, so treat changes after about 2022 with extra caution.",
         ),
         min_valid_days=10,
     ),
@@ -128,11 +130,11 @@ VARIABLES: dict[str, Variable] = {
         aggregation="mean",
         season_months=(5, 6, 7, 8, 9),
         year_starts_month=1,
-        product="MODIS Terra MOD13C2 v061, monthly, 0.05°",
+        product="MODIS Terra MOD13A3 v061, monthly, 1 km",
         provider="NASA LP DAAC, via AppEEARS",
-        doi="10.5067/MODIS/MOD13C2.061",
-        citation="Didan, K. (2021). MODIS/Terra Vegetation Indices Monthly L3 Global 0.05Deg "
-        "CMG V061. NASA EOSDIS Land Processes Distributed Active Archive Center.",
+        doi="10.5067/MODIS/MOD13A3.061",
+        citation="Didan, K. (2021). MODIS/Terra Vegetation Indices Monthly L3 Global 1km SIN "
+        "Grid V061. NASA EOSDIS Land Processes Distributed Active Archive Center.",
         caveats=(
             "The Terra satellite's orbit has drifted since about 2020, which can slightly "
             "affect recent values.",

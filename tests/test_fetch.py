@@ -7,7 +7,12 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from trend.fetch import daily_rate_to_monthly_total, parse_power_regional
+from trend.fetch import (
+    build_no2_from_giovanni,
+    daily_rate_to_monthly_total,
+    load_giovanni_csv,
+    parse_power_regional,
+)
 
 
 def feature(lon, lat, values):
@@ -57,6 +62,49 @@ def test_parse_power_regional_ignores_fill_values():
     monthly = parse_power_regional(payload, "T2M")
     assert monthly["date"].tolist() == [pd.Timestamp("2000-01-01")]
     assert monthly.loc[0, "value"] == pytest.approx(6.0)
+
+
+GIOVANNI_SAMPLE = """Title:,Area-Averaged Time Series
+User Start Date:,2005-01-01T00:00:00Z
+User End Date:,2005-02-28T23:59:59Z
+Bounding Box:,"-109.05,37,-102.04,41"
+Fill Value (mean_OMNO2d_004_ColumnAmountNO2TropCloudScreened):,-1.26765e+30
+
+time,mean_OMNO2d_004_ColumnAmountNO2TropCloudScreened
+{rows}
+"""
+
+
+def write_giovanni(tmp_path, name, rows):
+    path = tmp_path / name
+    path.write_text(GIOVANNI_SAMPLE.format(rows="\n".join(rows)), encoding="utf-8")
+    return path
+
+
+def test_load_giovanni_csv_skips_metadata_and_fill_values(tmp_path):
+    path = write_giovanni(
+        tmp_path, "a.csv", ["2005-01-01,1.5e+15", "2005-01-02,-1.26765e+30", "2005-01-03,2.5e+15"]
+    )
+    daily = load_giovanni_csv(path)
+    assert len(daily) == 3
+    assert daily["value"].isna().sum() == 1
+    assert daily.loc[0, "date"] == pd.Timestamp("2005-01-01")
+
+
+def test_build_no2_requires_enough_valid_days_per_month(tmp_path):
+    january = [f"2005-01-{d:02d},2.0e+15" for d in range(1, 13)]  # 12 valid days
+    february = [f"2005-02-{d:02d},4.0e+15" for d in range(1, 6)]  # only 5 valid days
+    path = write_giovanni(tmp_path, "b.csv", january + february)
+    monthly = build_no2_from_giovanni([path], min_valid_days=10).set_index("date")
+    assert monthly.loc[pd.Timestamp("2005-01-01"), "value"] == pytest.approx(2.0)
+    assert np.isnan(monthly.loc[pd.Timestamp("2005-02-01"), "value"])
+
+
+def test_build_no2_merges_chunks_without_duplicate_days(tmp_path):
+    first = write_giovanni(tmp_path, "c1.csv", [f"2005-01-{d:02d},1.0e+15" for d in range(1, 21)])
+    second = write_giovanni(tmp_path, "c2.csv", [f"2005-01-{d:02d},1.0e+15" for d in range(15, 32)])
+    monthly = build_no2_from_giovanni([first, second], min_valid_days=10)
+    assert monthly.loc[0, "n_days"] == 31
 
 
 def test_daily_rate_to_monthly_total_uses_days_in_month():
