@@ -24,6 +24,7 @@ from scipy import stats as sps
 
 from trend.fetch import PROJECT_ROOT
 from trend.i18n import chance_phrase, num, p_phrase, variable_text
+from trend.linecheck import line_check
 from trend.stats import RECOMMENDED_YEARS, analyze_trend, to_annual
 from trend.variables import VARIABLES
 
@@ -352,7 +353,12 @@ def curvature_p(years, values) -> float:
 
 def why_not_confirmed(annual: pd.DataFrame, result, status: str, lang: str, variable_key: str,
                       witness_verdict: str | None = None) -> list[str]:
-    """Plain-language reasons why a trend is not verified (empty for a confirmed one)."""
+    """Plain-language reasons why a trend is not verified (empty for a confirmed one).
+
+    When the app shows the "not a straight line" note (trend/linecheck.py: a steady one-way change
+    that the straight-line verdict calls chance), the noise, years-needed and no-change lines are left
+    out: all three assume the straight line is the right shape, which that note has just ruled out.
+    """
     if status == "confirmed":
         return []
     text = verify_text(lang)
@@ -360,6 +366,7 @@ def why_not_confirmed(annual: pd.DataFrame, result, status: str, lang: str, vari
     unit = variable_text(lang, variable)["annual_unit"]
     decimals = getattr(variable, "decimals", 2)
     years, values = annual["year"], annual["value"]
+    steady_curve = not result.significant and line_check(years, values, result).show
     lines = []
     if status == "disputed":
         lines.append(text["disputed"])
@@ -371,12 +378,12 @@ def why_not_confirmed(annual: pd.DataFrame, result, status: str, lang: str, vari
         lines.append(text["close"].format(phrase=chance_phrase(result.p_value, lang)))
     swing = residual_swing(years, values)
     change = abs(result.total_change)
-    if math.isfinite(swing) and change < 2 * swing:
+    if not steady_curve and math.isfinite(swing) and change < 2 * swing:
         lines.append(text["noise"].format(swing=num(swing, lang, decimals), change=num(change, lang, decimals), unit=unit))
     p_curve, turning_inside = curvature(years, values)
     if p_curve < CURVE_P:
         lines.append(text["curve"] if turning_inside else text["accel"])
-    if not result.significant:
+    if not result.significant and not steady_curve:
         need = years_needed(result.slope_per_year, swing, result.lag1_autocorrelation)
         span = result.end_year - result.start_year + 1
         if math.isnan(need):

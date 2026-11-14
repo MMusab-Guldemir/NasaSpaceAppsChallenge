@@ -117,6 +117,25 @@ def test_years_needed_counts_the_span_and_says_it_is_rough():
     assert need and "spans 45 years" in need[0] and "rough estimate" in need[0]
 
 
+def test_reasons_that_assume_a_straight_line_step_aside_for_the_line_note():
+    from trend.linecheck import line_check
+    years = np.arange(2005, 2026)
+    medina_no2 = [0.95, 0.93, 0.98, 1.03, 1.05, 1.07, 1.07, 1.11, 1.11, 1.14, 1.14, 1.22, 1.18, 1.05,
+                  0.99, 0.93, 0.99, 1.09, 1.19, 1.20, 1.31]  # rises, dips 2016-2020, rises again
+    colorado_no2 = [1.09, 1.10, 1.01, 0.99, 0.92, 0.93, 0.94, 1.02, 0.98, 0.89, 0.84, 0.87, 0.90, 0.87,
+                    0.82, 0.73, 0.81, 0.87, 0.89, 0.95, 1.01]  # falls to 2020, then climbs back
+    for values, keeps_curve in ((medina_no2, False), (colorado_no2, True)):
+        annual = pd.DataFrame({"year": years, "value": values})
+        result = analyze_trend(annual["year"], annual["value"], min_years=VARIABLES["no2"].min_years)
+        assert line_check(annual["year"], annual["value"], result).show
+        for lang in ("en", "tr"):
+            text = vf.VERIFY_TEXT[lang]
+            lines = vf.why_not_confirmed(annual, result, status_of(result), lang, "no2")
+            for key in ("noise", "need_years", "no_change"):
+                assert not any(line.startswith(text[key].split("{")[0]) for line in lines), (key, lines)
+            assert (text["curve"] in lines) == keeps_curve
+
+
 def test_short_records_and_disputes_are_named():
     annual = annual_series(0.08, 0.3, years=range(2010, 2024), seed=5)
     result = analyze_trend(annual["year"], annual["value"])
