@@ -170,7 +170,7 @@ when NASA AppEEARS delivers it), and the same pipeline can be repeated for more 
 
 **Tools.** Python, Streamlit, Plotly, pandas, NumPy, SciPy, pymannkendall, requests, folium and
 streamlit-folium (Leaflet, Leaflet.draw, OpenStreetMap map tiles); NASA POWER API, Giovanni,
-AppEEARS and NASA GIBS imagery tiles; GitHub; Streamlit Community Cloud. 432 automated tests check the statistics, the data
+AppEEARS and NASA GIBS imagery tiles; GitHub; Streamlit Community Cloud. 434 automated tests check the statistics, the data
 loaders, the game, the map, the verification and the app.
 
 ## Use of Super Intelligence (SI)
