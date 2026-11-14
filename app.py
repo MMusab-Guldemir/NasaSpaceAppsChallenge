@@ -251,13 +251,28 @@ def grid_cells(variable_key: str, bbox: tuple[float, float, float, float]) -> pd
 
 
 @st.cache_data(show_spinner=False, max_entries=32)
-def grid_trends(variable_key: str, bbox: tuple[float, float, float, float], start: int | None,
-                end: int | None) -> tuple[pd.DataFrame, int, tuple[float, float]]:
-    """The trend test for every grid cell, the number of cells without snow, and the cell size."""
+def _grid_trends(variable_key: str, bbox: tuple[float, float, float, float], start: int | None,
+                 end: int | None) -> tuple[pd.DataFrame, int, tuple[float, float]]:
     cells = grid_cells(variable_key, bbox)
     trends = cell_trends(cells, variable_key, start, end)
     size = cell_size(cells) if len(cells) else (0.5, 0.625)
     return trends, int(trends.attrs.get("no_snow_cells", 0)), size
+
+
+def grid_trends(variable_key: str, bbox: tuple[float, float, float, float], start: int | None,
+                end: int | None) -> tuple[pd.DataFrame, int, tuple[float, float]]:
+    """The trend test for every grid cell, the number of cells without snow, and the cell size.
+
+    A period that covers the whole record reuses the full-record result, so opening a case (which
+    sets the period to the full record) does not test every cell a second time.
+    """
+    full = _grid_trends(variable_key, bbox, None, None)
+    trends = full[0]
+    if start is None or end is None or not len(trends):
+        return full
+    if start <= int(trends["start_year"].min()) and end >= int(trends["end_year"].max()):
+        return full
+    return _grid_trends(variable_key, bbox, start, end)
 
 
 @st.cache_data(show_spinner=False, max_entries=24)
