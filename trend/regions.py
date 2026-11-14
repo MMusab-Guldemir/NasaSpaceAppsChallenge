@@ -105,6 +105,25 @@ REGIONS: dict[str, Region] = {
 }
 
 
+def nearest_region(latitude: float, longitude: float) -> tuple[str, float]:
+    """The prepared region whose box centre is closest to a point, and the distance in km.
+
+    Great-circle distance on a sphere of radius 6371 km. The app offers it when NASA POWER does not
+    answer for a custom area: a prepared region works from the files in the repository, without the
+    network.
+    """
+    import math
+
+    def distance(region: Region) -> float:
+        lat1, lon1, (lat2, lon2) = math.radians(latitude), math.radians(longitude), region.center
+        lat2, lon2 = math.radians(lat2), math.radians(lon2)
+        h = math.sin((lat2 - lat1) / 2) ** 2 + math.cos(lat1) * math.cos(lat2) * math.sin((lon2 - lon1) / 2) ** 2
+        return 2 * 6371.0 * math.asin(min(1.0, math.sqrt(h)))
+
+    key = min(REGIONS, key=lambda name: distance(REGIONS[name]))
+    return key, distance(REGIONS[key])
+
+
 def get_region(key: str) -> Region:
     """Look up a region by key, with a clear error for unknown keys."""
     try:

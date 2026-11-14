@@ -73,7 +73,7 @@ from trend.i18n import (
 )
 from trend.linecheck import line_check, line_text
 from trend.records import last_year_rank, record_sentence, record_text, stripes_caption, stripes_figure
-from trend.regions import REGIONS, Region
+from trend.regions import REGIONS, Region, nearest_region
 from trend.replay import growing_record, replay_figure, replay_sentence, replay_summary, replay_text, replay_title
 from trend.seasons import (
     anomaly_figure,
@@ -412,6 +412,27 @@ def clear_area_error() -> None:
 
 
 LIVE_RETRY_SECONDS = 60  # a NASA POWER network error is not retried on reruns within this time
+
+
+NEAREST_MAX_KM = 1500  # the nearest prepared region is offered only when it is this close
+
+
+def offer_nearest_region(lang: str, bbox: tuple[float, float, float, float], key: str) -> None:
+    """When NASA POWER does not answer for a custom area: a button to the nearest prepared region,
+    which works from the files in the repository (no network needed)."""
+    west, south, east, north = bbox
+    region_key, km = nearest_region((south + north) / 2, (west + east) / 2)
+    if km > NEAREST_MAX_KM:  # a region on another continent is no help
+        return
+    name = region_name(lang, region_key, REGIONS[region_key].name)
+    st.info(t(lang, "nearest_offer", region=name, km=num(round(km, -1), lang, 0)))
+    case = st.session_state.get("case")
+    if case not in available_variable_keys(region_key):
+        case = "air_temperature"
+    st.button(
+        t(lang, "nearest_open", region=SHORT_NAMES.get(lang, SHORT_NAMES["en"]).get(region_key, name)),
+        key=key, on_click=open_world_case, args=(region_key, case),
+    )
 
 
 def forget_live_failures() -> None:
@@ -969,6 +990,7 @@ if custom_mode:
     if fetch_failed and monthly_by_key:
         st.error(t(lang, "err_fetch"))
         st.button(t(lang, "retry"), key="retry_fetch_partial", on_click=forget_live_failures)
+        offer_nearest_region(lang, active_bbox, "nearest_partial")
 else:
     cached = set(available_variable_keys(region_key))
     for key in VARIABLES:
@@ -995,6 +1017,7 @@ if not annual_by_key:
     if custom_mode and fetch_failed:
         st.error(t(lang, "fetch_failed_all"))
         st.button(t(lang, "retry"), key="retry_fetch", on_click=forget_live_failures)
+        offer_nearest_region(lang, active_bbox, "nearest_all")
     else:
         st.warning(t(lang, "no_data_region"))
     st.stop()

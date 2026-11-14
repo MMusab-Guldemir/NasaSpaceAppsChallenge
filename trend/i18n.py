@@ -201,6 +201,11 @@ TEXT: dict[str, dict[str, str]] = {
             "Try again, or pick a prepared region in the left panel."
         ),
         "retry": "Try again",
+        "nearest_offer": (
+            "Meanwhile, the nearest prepared region, {region} (about {km} km from the centre of this area), "
+            "works from files that are already in the app, without asking NASA POWER."
+        ),
+        "nearest_open": "Open {region}",
         "err_no_data": "There is no {variable} data over this area (for example, open sea).",
     },
     "tr": {
@@ -387,6 +392,11 @@ TEXT: dict[str, dict[str, str]] = {
             "panelden hazır bir bölge seç."
         ),
         "retry": "Tekrar dene",
+        "nearest_offer": (
+            "Bu arada en yakın hazır bölge olan {region} (bu alanın merkezinden yaklaşık {km} km uzakta), "
+            "NASA POWER'a sormadan, uygulamada zaten bulunan dosyalarla çalışır."
+        ),
+        "nearest_open": "{region} dosyasını aç",
         "err_no_data": "Bu alanın üzerinde {variable} verisi yok (örneğin açık deniz).",
     },
 }

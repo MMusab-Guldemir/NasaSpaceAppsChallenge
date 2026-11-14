@@ -311,3 +311,26 @@ def test_quick_pick_a_city_sets_its_box_and_names_the_case(monkeypatch):
         at.number_input(key=key).set_value(value)
     next(b for b in at.button if b.label == TEXT["tr"]["apply_coords"]).click().run()
     assert not at.exception and at.session_state["city_pick"] is None  # another box: no city shown
+
+
+def _failing_fetch(variable, bbox, start_year, end_year, timeout=300, **kwargs):
+    import requests
+
+    raise requests.ConnectionError("no network")
+
+
+def test_nasa_not_answering_offers_the_nearest_prepared_region(monkeypatch):
+    import trend.fetch
+
+    monkeypatch.setattr(trend.fetch, "fetch_power_area", _failing_fetch)
+    at = AppTest.from_file(APP, default_timeout=60)
+    at.session_state["lang"] = "tr"
+    at.query_params["region"] = "custom"
+    for key, value in zip("wsen", (32.11, 39.17, 33.61, 40.67)):  # around Ankara, a box no other test caches
+        at.query_params[key] = str(value)
+    at.run()
+    assert not at.exception
+    assert any("en yakın hazır bölge olan Konya Kapalı Havzası" in i.value for i in at.info)
+    at.button(key="nearest_all").click().run()
+    assert not at.exception
+    assert at.session_state["area_mode"] == "prepared" and at.session_state["region"] == "konya"
