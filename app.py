@@ -694,9 +694,12 @@ st.markdown(
 st.header(t(lang, "question", subject=subject, region=region_label))
 st.write(t(lang, "question_body", name=texts["name"], definition=texts["definition"], subject=subject))
 if st.session_state.pop("_jump", False):  # only after a click that opened a case
+    # An instant jump (smooth scrolling stalls in background tabs); the counter makes every jump a new
+    # element, so the script also runs after two clicks in a row.
+    st.session_state["_jump_n"] = st.session_state.get("_jump_n", 0) + 1
     components.html(
-        "<script>try{window.parent.document.getElementById('case-file')"
-        ".scrollIntoView({behavior:'smooth'})}catch(e){}</script>",
+        f"<script>/* jump {st.session_state['_jump_n']} */ try{{window.parent.document"
+        ".getElementById('case-file').scrollIntoView({block:'start'})}catch(e){}</script>",
         height=0,
     )
 
