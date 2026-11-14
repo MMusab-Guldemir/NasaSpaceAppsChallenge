@@ -459,7 +459,8 @@ METHODS = {
   We call a trend significant ("unlikely to be chance") when p < 0.05.
 - **Year-to-year persistence:** when a year's departure from the trend line tends to be followed by
   a similar departure (positive autocorrelation), the uncertainty is widened using an effective
-  sample size (Santer et al., 2000), so the result is not overconfident.
+  sample size (Santer et al., 2000), which makes the result less overconfident (for short records
+  the correction is only partial).
 - **Second witness:** the Mann-Kendall test checks for a steady rise or fall without assuming a
   straight line; Sen's slope is a robust estimate of the rate. When neighbouring years are
   positively correlated, its uncertainty is widened with the same effective sample size as the
@@ -491,7 +492,8 @@ METHODS = {
   zor") kabul ederiz.
 - **Yıldan yıla süreklilik:** bir yılın trend çizgisinden sapması, ardından gelen yılda benzer bir
   sapmayla devam ediyorsa (pozitif otokorelasyon), belirsizlik etkin örneklem büyüklüğüyle büyütülür
-  (Santer ve ark., 2000); böylece sonuç olduğundan iddialı çıkmaz.
+  (Santer ve ark., 2000); böylece sonuç daha az iddialı çıkar (kısa kayıtlarda bu düzeltme
+  kısmidir).
 - **İkinci tanık:** Mann-Kendall testi, düz bir çizgi varsaymadan istikrarlı bir artış ya da azalış
   olup olmadığına bakar; Sen eğimi, değişim hızının sağlam bir tahminidir. Komşu yıllar birbiriyle
   pozitif ilişkiliyse, bu testin belirsizliği de ana testteki aynı etkin örneklem büyüklüğüyle

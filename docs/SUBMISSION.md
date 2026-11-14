@@ -64,7 +64,8 @@ in English (default) or Turkish.
    using only complete years.
 3. *Headline test:* ordinary least squares slope, 95% confidence interval and two-sided t-test. When
    consecutive years are positively correlated, the uncertainty is widened with an effective sample
-   size (Santer et al., 2000), so results are not overconfident.
+   size (Santer et al., 2000), so results are less overconfident (for short records the correction
+   is only partial).
 4. *Second witness:* Mann-Kendall test with Sen's slope, widened with the same effective sample size
    (in the spirit of Yue and Wang, 2004); the app says whether it agrees with the headline result.
 5. *Guards:* fewer than 10 years is blocked, fewer than 20 years gets a warning, and a
@@ -76,7 +77,7 @@ in English (default) or Turkish.
 |---|---|---|
 | Air temperature, annual mean (1981-2025) | +0.33 °C per decade, about +1.4 °C along the trend line (p < 0.001), Confirmed | +0.55 °C per decade, about +2.4 °C along the trend line (p < 0.001), Confirmed |
 | Snowfall, water-year total (1982-2026) | no significant trend (p = 0.66) | no significant trend (p = 0.61) |
-| Tropospheric NO₂, annual mean (2005-2025) | no significant straight-line trend (p = 0.23): a decline until a 2020 low, then a rise; the 2005-2019 decline alone is significant (p = 0.016) | no significant trend (p = 0.87; 2024 left out as incomplete) |
+| Tropospheric NO₂, annual mean (2005-2025) | no significant straight-line trend (p = 0.23): a decline until a 2020 low, then a rise; the pre-pandemic decline 2005-2019 alone is significant (p = 0.016) | no significant trend (p = 0.87; 2024 left out as incomplete) |
 | Vegetation greenness, May-Sep NDVI (2000-2025) | no significant trend (p = 0.39) | +0.014 per decade (p = 0.03), but the second witness disagrees (p = 0.07), so the case is Disputed |
 
 The same measurement can behave differently in two places: both regions are warming, Istanbul–
@@ -94,7 +95,7 @@ repeated for more regions. **[TEAM: confirm or reword.]**
 
 **Tools.** Python, Streamlit, Plotly, pandas, NumPy, SciPy, pymannkendall, requests, folium and
 streamlit-folium (Leaflet, Leaflet.draw, OpenStreetMap map tiles); NASA POWER API, Giovanni and
-AppEEARS; GitHub; Streamlit Community Cloud. 80 automated tests check the statistics, the data
+AppEEARS; GitHub; Streamlit Community Cloud. 91 automated tests check the statistics, the data
 loaders and the app.
 
 ## Use of Super Intelligence (SI)

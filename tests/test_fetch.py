@@ -207,3 +207,91 @@ def test_unexpected_payload_becomes_a_data_source_error(monkeypatch):
     _patched_get(monkeypatch, [_Answer(200, {"header": {}, "features": "oops"})])
     with pytest.raises(DataSourceError):
         fetch_power_variable(get_variable("air_temperature"), REGIONS["marmara"], 2025, 2026)
+
+
+@pytest.mark.parametrize("body", [["Too many requests"], "Too many requests"])
+def test_error_answer_that_is_not_an_object_is_a_data_source_error(monkeypatch, body):
+    from trend.fetch import DataSourceError, request_power_regional
+    from trend.regions import REGIONS
+
+    _patched_get(monkeypatch, [_Answer(429, body)])
+    with pytest.raises(DataSourceError) as info:
+        request_power_regional("T2M", REGIONS["marmara"], 2025, 2026)
+    assert info.value.status == 429
+
+
+def _retry_setup(monkeypatch, outcomes):
+    import trend.fetch
+
+    calls, pauses = [], []
+
+    def fake(variable, region, start_year, end_year, timeout=300):
+        calls.append(timeout)
+        outcome = outcomes[len(calls) - 1]
+        if isinstance(outcome, Exception):
+            raise outcome
+        return outcome
+
+    monkeypatch.setattr(trend.fetch, "fetch_power_variable", fake)
+    monkeypatch.setattr(trend.fetch, "_sleep", pauses.append)
+    return calls, pauses
+
+
+def _retry_call():
+    from trend.fetch import fetch_power_variable_retrying
+    from trend.regions import REGIONS
+    from trend.variables import get_variable
+
+    return fetch_power_variable_retrying(get_variable("air_temperature"), REGIONS["marmara"], 1981, 2026, timeout=(10, 45))
+
+
+def test_quick_failures_are_retried_until_an_answer_arrives(monkeypatch):
+    import requests
+
+    calls, pauses = _retry_setup(monkeypatch, [requests.ConnectionError("reset"), requests.ConnectionError("reset"), ("data", "MERRA2")])
+    assert _retry_call() == ("data", "MERRA2")
+    assert calls == [(10, 45)] * 3
+    assert pauses == [1.5, 3.0]
+
+
+@pytest.mark.parametrize("status", [429, 503])
+def test_busy_server_gets_three_attempts_then_the_error(monkeypatch, status):
+    from trend.fetch import DataSourceError
+
+    busy = DataSourceError("busy", status=status)
+    calls, _ = _retry_setup(monkeypatch, [busy, busy, busy])
+    with pytest.raises(DataSourceError):
+        _retry_call()
+    assert len(calls) == 3
+
+
+def test_unexpected_answer_is_retried(monkeypatch):
+    from trend.fetch import UNEXPECTED_RESPONSE, DataSourceError
+
+    calls, _ = _retry_setup(monkeypatch, [DataSourceError(UNEXPECTED_RESPONSE), ("data", "MERRA2")])
+    assert _retry_call() == ("data", "MERRA2")
+    assert len(calls) == 2
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        "timeout",
+        "box",
+        "fill",
+    ],
+)
+def test_timeouts_rejections_and_empty_areas_are_not_retried(monkeypatch, error):
+    import requests
+
+    from trend.fetch import DataSourceError
+
+    exception = {
+        "timeout": requests.ReadTimeout("slow"),
+        "box": DataSourceError("Please provide at least a 2 degree range", status=422),
+        "fill": DataSourceError("POWER returned only fill values for this request."),
+    }[error]
+    calls, pauses = _retry_setup(monkeypatch, [exception])
+    with pytest.raises(type(exception)):
+        _retry_call()
+    assert len(calls) == 1 and pauses == []

@@ -12,7 +12,8 @@ Method
    slope and a two-sided t-test of "slope = 0". When the residuals are positively autocorrelated
    (lag-1 correlation r1 > 0), the standard error and degrees of freedom use the effective sample
    size n_eff = n (1 - r1) / (1 + r1) (Santer et al., 2000, J. Geophys. Res. 105, 7337-7356),
-   so persistent year-to-year swings do not produce overconfident results.
+   so persistent year-to-year swings produce less overconfident results (for short records the
+   correction is only partial).
 3. Robustness check: the Mann-Kendall test with Sen's slope. It follows the same persistence rule
    as the headline test: when r1 > 0, the variance of the Mann-Kendall statistic is inflated by
    n / n_eff (its z-score is scaled by sqrt(n_eff / n)), an effective-sample-size correction in the

@@ -7,7 +7,7 @@
 Pick a place and a measurement from NASA Earth data, and find out **what** is changing,
 **where**, **by how much**, and **whether the change is statistically significant**.
 
-> Work in progress during the hackathon (14-15 November 2026).
+> Built during the NASA Space Apps Challenge hackathon, 14-15 November 2026.
 
 ## What it does
 
@@ -38,7 +38,7 @@ Pick a place and a measurement from NASA Earth data, and find out **what** is ch
 |---|---|---|
 | Air temperature, annual mean (1981-2025) | **+0.33 °C per decade** (p < 0.001), Confirmed | **+0.55 °C per decade** (p < 0.001), Confirmed |
 | Snowfall, water-year total (1982-2026) | no significant trend (p = 0.66) | no significant trend (p = 0.61) |
-| Tropospheric NO₂, annual mean (2005-2025) | no significant straight-line trend (p = 0.23); the 2005-2019 decline is significant (p = 0.016) | no significant trend (p = 0.87)¹ |
+| Tropospheric NO₂, annual mean (2005-2025) | no significant straight-line trend (p = 0.23); the pre-pandemic decline 2005-2019 is significant (p = 0.016) | no significant trend (p = 0.87)¹ |
 | Vegetation greenness, May-Sep NDVI (2000-2025) | no significant trend (p = 0.39) | +0.014 per decade (p = 0.03), but the second witness disagrees (p = 0.07), Disputed |
 
 ¹ 2024 is left out because January 2024 has fewer than 10 valid OMI days.
@@ -118,7 +118,7 @@ trend/i18n.py          English and Turkish texts, number formatting
 trend/share.py         share links
 scripts/prefetch.py    fetches and caches data for a region
 data/processed/        small cached monthly CSVs used by the app
-tests/                 unit and app tests (80)
+tests/                 unit and app tests (91)
 docs/ARCHITECTURE.md   design and methods
 docs/SUBMISSION.md     draft of the Space Apps project page
 ```

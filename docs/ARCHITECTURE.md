@@ -50,7 +50,7 @@ own area statistics over the same boxes; we do not claim cosine weighting for th
    `giovanni_no2_<region>_*.csv` and `appeears_ndvi_<region>_*.csv`, and are converted by loaders
    that handle metadata header rows, fill values and scale factors.
 3. Custom rectangles: the app fetches temperature and snowfall live from the POWER API with a short
-   timeout, retries a dropped connection once, and caches each rectangle for 24 hours. NO2 and NDVI
+   timeout, retries quick failures (a dropped connection, a garbled answer or a busy server) up to two more times, and caches each rectangle for 24 hours. NO2 and NDVI
    are marked "Prepared regions only" there.
 
 ## Statistics (the core of the Validity score)
@@ -129,7 +129,7 @@ NasaSpaceAppsChallenge/
 
 ## Testing
 
-80 automated tests (`python -m pytest -q`), all offline:
+91 automated tests (`python -m pytest -q`), all offline:
 - statistics: known-slope series, white and autocorrelated noise (false-positive rates of both
   tests), completeness rules, water-year labelling, total change, constant series;
 - loaders: POWER payload parsing, fill values, land-only cells, Giovanni CSVs, retry rules;

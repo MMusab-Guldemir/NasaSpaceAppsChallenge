@@ -10,8 +10,8 @@ Run locally:  streamlit run app.py
 from __future__ import annotations
 
 import html
+import logging
 import math
-import time
 
 import pandas as pd
 import streamlit as st
@@ -27,7 +27,7 @@ from trend.fetch import (
     POWER_VARIABLES,
     DataSourceError,
     available_variable_keys,
-    fetch_power_variable,
+    fetch_power_variable_retrying,
     load_processed,
 )
 from trend.i18n import (
@@ -49,6 +49,7 @@ from trend.stats import MIN_YEARS, RECOMMENDED_YEARS, TrendResult, analyze_trend
 from trend.variables import VARIABLES
 
 st.set_page_config(page_title="Earth System Trend Detective", page_icon="🔎", layout="wide")
+LOG = logging.getLogger("trend_detective")
 
 STYLE = """
 <style>
@@ -103,33 +104,17 @@ def load_monthly(region_key: str, variable_key: str) -> pd.DataFrame | None:
     return load_processed(region_key, variable_key)
 
 
-TRANSIENT_STATUS = {429, 500, 502, 503, 504}
-
-
 @st.cache_data(show_spinner=False, ttl=24 * 3600, max_entries=64)
 def live_monthly(variable_key: str, bbox: tuple[float, float, float, float]) -> pd.DataFrame:
     """Fetch a POWER variable live for any rectangle (cached for a day per rectangle).
 
-    A quick failure (dropped connection or a temporary server error) is retried once; a timeout is
-    not, so a NASA POWER that hangs does not keep the page waiting twice.
+    Quick failures are retried a couple of times inside ``fetch_power_variable_retrying``; a
+    timeout is not, so a NASA POWER that hangs does not keep the page waiting several times.
     """
     variable = VARIABLES[variable_key]
-    region = Region("custom", "custom", *bbox)
-    for attempt in (1, 2):
-        try:
-            monthly, sources = fetch_power_variable(variable, region, 1981, 2026, timeout=(10, 45))
-            break
-        except requests.Timeout:
-            raise
-        except requests.ConnectionError as error:
-            if attempt == 2:
-                raise
-            print(f"NASA POWER connection problem ({variable_key}, {bbox}): {error!r}; retrying once.")
-        except DataSourceError as error:
-            if attempt == 2 or error.status not in TRANSIENT_STATUS:
-                raise
-            print(f"NASA POWER answered HTTP {error.status} ({variable_key}, {bbox}); retrying once.")
-        time.sleep(2)
+    monthly, sources = fetch_power_variable_retrying(
+        variable, Region("custom", "custom", *bbox), 1981, 2026, timeout=(10, 45)
+    )
     monthly = monthly.copy()
     monthly["source"] = f"{variable.product}; live NASA POWER request; POWER sources: {sources}"
     return monthly
@@ -176,11 +161,21 @@ def clear_area_error() -> None:
 
 
 def on_mode_change() -> None:
-    """Start a custom rectangle from the region that was on screen, not from the default one."""
+    """Entering custom mode: keep a rectangle the user made, otherwise start from the region on screen.
+
+    The corner inputs are rewritten in both cases, because Streamlit forgets the values of inputs
+    that were not on screen.
+    """
     clear_area_error()
-    if st.session_state.get("area_mode") == "custom" and not st.session_state.get("_custom_set"):
+    if st.session_state.get("area_mode") != "custom":
+        return
+    if st.session_state.get("_custom_set"):
+        bbox = tuple(st.session_state["custom_bbox"])
+        set_custom_bbox(bbox, st.session_state.get("area_widened", False))
+    else:
         region_key = st.session_state.get("region", next(iter(REGIONS)))
         set_custom_bbox(REGIONS[region_key].bbox, False)
+        st.session_state["_custom_set"] = False  # seeded from a region, not made by the user
 
 
 def apply_coords() -> None:
@@ -300,6 +295,9 @@ if "_url_loaded" not in st.session_state:
 default_region = next(iter(REGIONS))
 st.session_state.setdefault("area_mode", "prepared")
 st.session_state.setdefault("region", default_region)
+# The region selectbox is only on screen in prepared mode; re-assigning its key keeps the choice
+# while the user visits "Anywhere on Earth".
+st.session_state["region"] = st.session_state["region"]
 st.session_state.setdefault("custom_bbox", REGIONS[st.session_state["region"]].bbox)
 for corner, value in zip(("bbox_w", "bbox_s", "bbox_e", "bbox_n"), st.session_state["custom_bbox"]):
     st.session_state.setdefault(corner, float(value))
@@ -403,10 +401,10 @@ if custom_mode:
                     name = lower_first(variable_text(lang, VARIABLES[key])["name"])
                     no_data_messages.append(t(lang, "err_no_data", variable=name))
                 else:
-                    print(f"Live fetch failed for {key} {active_bbox}: {error!r}")
+                    LOG.warning("Live fetch failed for %s %s: %r", key, active_bbox, error)
                     fetch_failed = True
             except requests.RequestException as error:
-                print(f"Live fetch failed for {key} {active_bbox}: {error!r}")
+                LOG.warning("Live fetch failed for %s %s: %r", key, active_bbox, error)
                 unavailable_status[key] = "open"
                 fetch_failed = True
     for message in no_data_messages:

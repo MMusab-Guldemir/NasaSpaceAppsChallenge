@@ -6,6 +6,8 @@ NASA Space Apps Challenge 2026.
 from __future__ import annotations
 
 import io
+import logging
+import time
 from pathlib import Path
 
 import numpy as np
@@ -14,6 +16,8 @@ import requests
 
 from trend.regions import Region
 from trend.variables import Variable
+
+LOG = logging.getLogger(__name__)
 
 POWER_MONTHLY_REGIONAL_URL = "https://power.larc.nasa.gov/api/temporal/monthly/regional"
 
@@ -57,7 +61,8 @@ def request_power_regional(
     response = requests.get(POWER_MONTHLY_REGIONAL_URL, params=params, timeout=timeout)
     if response.status_code != 200:
         try:
-            detail = response.json().get("messages") or response.json()
+            body = response.json()
+            detail = (body.get("messages") if isinstance(body, dict) else None) or body
         except ValueError:
             detail = response.text[:500]
         raise DataSourceError(
@@ -125,6 +130,46 @@ def daily_rate_to_monthly_total(monthly: pd.DataFrame) -> pd.DataFrame:
     return out
 
 
+UNEXPECTED_RESPONSE = "POWER returned an unexpected response."
+TRANSIENT_STATUS = {429, 500, 502, 503, 504}
+RETRY_PAUSES = (1.5, 3.0)  # seconds to wait before the second and the third attempt
+_sleep = time.sleep  # replaced in tests
+
+
+def is_transient(error: Exception) -> bool:
+    """A quick failure worth another try: a dropped connection, a garbled answer or a busy server.
+
+    Timeouts are not retried, so a NASA POWER that hangs does not keep the page waiting several
+    times; neither are rejected requests or areas without data.
+    """
+    if isinstance(error, requests.Timeout):
+        return False
+    if isinstance(error, requests.RequestException):
+        return True
+    if isinstance(error, DataSourceError):
+        return error.status in TRANSIENT_STATUS or str(error) == UNEXPECTED_RESPONSE
+    return False
+
+
+def fetch_power_variable_retrying(
+    variable: Variable, region: Region, start_year: int, end_year: int, timeout: Timeout = 300,
+    pauses: tuple[float, ...] = RETRY_PAUSES,
+) -> tuple[pd.DataFrame, str]:
+    """``fetch_power_variable`` with a few quick retries for transient failures (used by the app)."""
+    for attempt, pause in enumerate((*pauses, None), start=1):
+        try:
+            return fetch_power_variable(variable, region, start_year, end_year, timeout)
+        except (requests.RequestException, DataSourceError) as error:
+            if pause is None or not is_transient(error):
+                raise
+            LOG.warning(
+                "NASA POWER attempt %d failed for %s %s: %r; trying again in %.1f s.",
+                attempt, variable.key, region.bbox, error, pause,
+            )
+            _sleep(pause)
+    raise AssertionError("unreachable")
+
+
 def fetch_power_variable(
     variable: Variable, region: Region, start_year: int, end_year: int, timeout: Timeout = 300
 ) -> tuple[pd.DataFrame, str]:
@@ -148,7 +193,7 @@ def fetch_power_variable(
     try:
         monthly = parse_power_regional(payload, parameter)
     except (KeyError, AttributeError, TypeError, ValueError, IndexError) as exc:
-        raise DataSourceError("POWER returned an unexpected response.") from exc
+        raise DataSourceError(UNEXPECTED_RESPONSE) from exc
     if is_daily_rate:
         monthly = daily_rate_to_monthly_total(monthly)
     return monthly, power_sources(payload)
