@@ -174,6 +174,7 @@ NasaSpaceAppsChallenge/
 │   ├── linecheck.py        # "not a straight line" note
 │   ├── examples.py         # famous cases (checked against the data by tests)
 │   ├── hotdays.py          # hot days: daily maximum temperature counted per grid cell
+│   │                       # (scripts/build_grid_cells.py writes per-cell yearly values for the time map)
 │   ├── trendmap.py         # crime scene map: grid-cell trends with a Benjamini-Hochberg filter
 │   ├── verify.py           # third witness and "why is it not verified?"
 │   └── game.py             # Detective exam
@@ -188,7 +189,7 @@ NasaSpaceAppsChallenge/
 
 ## Testing
 
-352 automated tests (`python -m pytest -q`), all offline:
+407 automated tests (`python -m pytest -q`), all offline:
 - statistics: known-slope series, white and autocorrelated noise (false-positive rates of both
   tests), completeness rules, water-year labelling, total change, constant series;
 - loaders: POWER payload parsing, fill values, land-only cells, Giovanni CSVs, retry rules;

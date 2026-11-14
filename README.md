@@ -12,11 +12,11 @@ Pick a place and a measurement from NASA Earth data, and find out **what** is ch
 
 ## What it does
 
-1. **Where?** Pick one of ten prepared regions with up to ten measurements each (Colorado,
-   Istanbul–Marmara, Medina, Beijing, Los Angeles, Cairo and the Nile Delta, the Amazon, the Sahel,
-   the Alps and Siberia; vegetation greenness is ready for Colorado, Istanbul–Marmara, Medina,
-   Beijing, Los Angeles, Cairo and the Nile Delta and the Amazon, and the other regions and tree cover
-   are added as NASA AppEEARS delivers them; a measurement with no data yet is not shown), or
+1. **Where?** Pick one of ten prepared regions with up to ten measurements each, out of eleven
+   NASA measurements in the app (Colorado, Istanbul–Marmara, Medina, Beijing, Los Angeles, Cairo and
+   the Nile Delta, the Amazon, the Sahel, the Alps and Siberia; vegetation greenness is ready for all
+   ten regions, while tree cover is added when NASA AppEEARS delivers it and is not shown until then),
+   or
    investigate **anywhere on Earth**: draw a rectangle on the world map,
    move or resize it with the edit tool (then click Save), or type its corners in the left panel.
    Any size from 0.01° to 40° per side works: a rectangle smaller than NASA's grid uses the nearest
@@ -273,7 +273,7 @@ scripts/prefetch.py    fetches and caches data for a region
 scripts/build_gistemp_witness.py  NASA GISTEMP area means for the temperature witness
 data/processed/        small cached monthly CSVs used by the app
 data/witness/          second-dataset series for the third witness (GISTEMP, GPCP, IMERG, MODIS, GLDAS)
-tests/                 unit and app tests (352)
+tests/                 unit and app tests (407)
 docs/ARCHITECTURE.md   design and methods
 docs/SUBMISSION.md     draft of the Space Apps project page
 ```

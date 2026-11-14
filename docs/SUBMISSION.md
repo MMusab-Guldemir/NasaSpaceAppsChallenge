@@ -153,13 +153,12 @@ uncertainty and its data source.
 
 **What we hope to achieve.** In Team Avni's own words: "In the future, the project should become a
 place where anyone who is really interested in NASA or in this topic can come to do research and
-learn." Ten regions are prepared today; vegetation greenness is ready for Colorado,
-Istanbul–Marmara, Medina, Beijing, Los Angeles and Cairo and the Nile Delta, the other regions and tree cover are added as
-NASA AppEEARS delivers them, and the same pipeline can be repeated for more regions.
+learn." Ten regions are prepared today with vegetation greenness for all of them (tree cover is added
+when NASA AppEEARS delivers it), and the same pipeline can be repeated for more regions.
 
 **Tools.** Python, Streamlit, Plotly, pandas, NumPy, SciPy, pymannkendall, requests, folium and
 streamlit-folium (Leaflet, Leaflet.draw, OpenStreetMap map tiles); NASA POWER API, Giovanni and
-AppEEARS; GitHub; Streamlit Community Cloud. 352 automated tests check the statistics, the data
+AppEEARS; GitHub; Streamlit Community Cloud. 407 automated tests check the statistics, the data
 loaders, the game, the map, the verification and the app.
 
 ## Use of Super Intelligence (SI)
