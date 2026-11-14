@@ -59,3 +59,30 @@ def test_measurements_without_any_prepared_file_are_hidden():
     assert keys <= measured
     if "tree_cover" not in measured:
         assert "tree_cover" not in keys
+
+
+def test_failed_live_requests_are_not_repeated_on_every_rerun(monkeypatch):
+    import requests
+
+    import trend.fetch
+
+    calls = []
+
+    def offline(parameter, region, start_year, end_year, timeout=300):
+        calls.append(parameter)
+        raise requests.ConnectionError("offline")
+
+    monkeypatch.setattr(trend.fetch, "request_power_regional", offline)
+    monkeypatch.setattr(trend.fetch, "_sleep", lambda seconds: None)
+    at = AppTest.from_file(APP, default_timeout=90)
+    at.session_state["area_mode"] = "custom"
+    at.session_state["custom_bbox"] = (61.0, 21.0, 64.0, 24.0)  # not cached by other tests
+    at.run()
+    assert not at.exception
+    first = len(calls)
+    assert first > 0
+    at.run()  # a rerun (slider move, language switch) within a minute: no new requests
+    assert len(calls) == first
+    retry = next(b for b in at.button if b.key == "retry_fetch")
+    retry.click().run()  # the Retry button asks again
+    assert len(calls) > first

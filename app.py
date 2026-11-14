@@ -12,6 +12,7 @@ from __future__ import annotations
 import html
 import logging
 import math
+import time
 
 import pandas as pd
 import streamlit as st
@@ -217,6 +218,14 @@ def set_custom_bbox(bbox: tuple[float, float, float, float]) -> None:
 
 def clear_area_error() -> None:
     st.session_state["area_error"] = None
+
+
+LIVE_RETRY_SECONDS = 60  # a NASA POWER network error is not retried on reruns within this time
+
+
+def forget_live_failures() -> None:
+    """The Retry button: ask NASA POWER again for everything that failed."""
+    st.session_state.pop("_live_fail", None)
 
 
 def reset_periods() -> None:
@@ -539,13 +548,26 @@ unavailable_status: dict[str, str] = {}
 fetch_failed = False
 if custom_mode:
     no_data_messages: list[str] = []
+    # Failed requests are not cached by st.cache_data. Remember them, so a slider move or a language
+    # switch does not ask NASA POWER again: "no data" for the session, network errors for a minute.
+    failures = st.session_state.setdefault("_live_fail", {})
     with st.spinner(t(lang, "fetching")):
         for key in VARIABLES:
             if key not in POWER_VARIABLES:
                 unavailable_status[key] = "prepared_only"
                 continue
+            remembered = failures.get((key, active_bbox))
+            if remembered and (remembered[0] == "no_data" or time.time() - remembered[1] < LIVE_RETRY_SECONDS):
+                unavailable_status[key] = remembered[0]
+                if remembered[0] == "no_data":
+                    name = lower_first(variable_text(lang, VARIABLES[key])["name"])
+                    no_data_messages.append(t(lang, "err_no_data", variable=name))
+                else:
+                    fetch_failed = True
+                continue
             try:
                 monthly_by_key[key] = live_monthly(key, active_bbox)
+                failures.pop((key, active_bbox), None)
             except DataSourceError as error:
                 unavailable_status[key] = "open"
                 message = str(error).lower()
@@ -556,10 +578,12 @@ if custom_mode:
                 else:
                     LOG.warning("Live fetch failed for %s %s: %r", key, active_bbox, error)
                     fetch_failed = True
+                failures[(key, active_bbox)] = (unavailable_status[key], time.time())
             except requests.RequestException as error:
                 LOG.warning("Live fetch failed for %s %s: %r", key, active_bbox, error)
                 unavailable_status[key] = "open"
                 fetch_failed = True
+                failures[(key, active_bbox)] = ("open", time.time())
     for message in no_data_messages:
         st.warning(message)
     if fetch_failed and monthly_by_key:
@@ -589,7 +613,7 @@ for key in VARIABLES:
 if not annual_by_key:
     if custom_mode and fetch_failed:
         st.error(t(lang, "fetch_failed_all"))
-        st.button(t(lang, "retry"), key="retry_fetch")  # any click reruns; failures are not cached
+        st.button(t(lang, "retry"), key="retry_fetch", on_click=forget_live_failures)
     else:
         st.warning(t(lang, "no_data_region"))
     st.stop()

@@ -15,19 +15,26 @@ Pick a place and a measurement from NASA Earth data, and find out **what** is ch
 1. **Where?** Pick one of ten prepared regions with up to ten measurements each (Colorado,
    Istanbul–Marmara, Medina, Beijing, Los Angeles, Cairo and the Nile Delta, the Amazon, the Sahel,
    the Alps and Siberia; vegetation greenness is ready for Colorado, Istanbul–Marmara, Medina,
-   Beijing, Los Angeles and Cairo and the Nile Delta, and the other regions and tree cover are added
-   as NASA AppEEARS delivers them), or investigate **anywhere on Earth**: draw a rectangle on the world map,
+   Beijing, Los Angeles, Cairo and the Nile Delta and the Amazon, and the other regions and tree cover
+   are added as NASA AppEEARS delivers them; a measurement with no data yet is not shown), or
+   investigate **anywhere on Earth**: draw a rectangle on the world map,
    move or resize it with the edit tool (then click Save), or type its corners in the left panel.
    Any size from 0.01° to 40° per side works: a rectangle smaller than NASA's grid uses the nearest
    grid cell, and a large one is fetched in pieces. Temperature, precipitation, snowfall and dust and
    smoke come live from NASA POWER for any rectangle; NO₂, carbon monoxide, soot (black carbon),
-   CO₂, vegetation greenness and tree cover are prepared in advance for the prepared regions. The
-   cards are grouped into Climate, Air, and Carbon and green land.
+   CO₂ and vegetation greenness are prepared in advance for the prepared regions. The cards are
+   grouped into Climate, Air, and Carbon and green land.
 2. An **investigation board** shows every clue for the area: one card per measurement with its
    rate of change and a verdict stamp (Confirmed, Disputed, No evidence, Weak clue, Open case; plus No snow, Not enough data and No data where they apply).
+   A "Case on the desk" strip at the top always shows the open case's stamp and rate, and opening a
+   case scrolls straight to its case file.
 3. The user picks a clue, chooses the **period**, and immediately gets a large
    **"Real or chance?"** verdict with a chance meter, followed by the evidence (chart) and a
    second witness. An **EN / TR** switch (top right) shows the whole app in English or Turkish.
+   **How the evidence built up:** the same test is run as if the record had ended in each year, so
+   students see when a trend became solid ("solid since 2012") or that the evidence went back and
+   forth. A **start-year check** counts how many possible start years give the same verdict, so a
+   cherry-picked period is easy to spot.
 4. Behind the scenes, NASA monthly data become one value per year (removing the seasonal cycle).
 5. The app fits a linear trend and reports:
    - the **rate of change per decade** with its 95% confidence interval,
@@ -46,7 +53,13 @@ Pick a place and a measurement from NASA Earth data, and find out **what** is ch
    something changed, not *why*.
 7. Charts, a data table, CSV downloads, share links and a "How the detective works" section make
    every result checkable.
-8. **Detective exam (game):** switch from "Investigation" to "Detective exam" at the top. A secret,
+8. **World board:** switch to "World board" at the top (link: `?view=world`). Every prepared
+   region and measurement is tested with the same rules and shown in one table (click a cell to open
+   the case). A "Same clue, opposite trends" box answers the challenge's key point automatically:
+   for example rain is rising in the Sahel and Beijing but falling in the Amazon, and NO₂ is rising
+   in the Sahel but falling over the Alps. It also reminds readers how many of the roughly 80
+   Confirmed stamps chance alone could produce.
+9. **Detective exam (game):** switch from "Investigation" to "Detective exam" at the top. A secret,
    unlabeled chart draws itself year by year; the earlier the player decides "real increase",
    "real decrease" or "chance", the more points they get. Then the stamp, the place and a possible
    explanation appear. A full exam has 20 cases from all prepared regions (a quick exam has 5),
