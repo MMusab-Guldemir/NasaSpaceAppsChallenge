@@ -52,7 +52,7 @@ SOURCES = {
     ),
     "gldassnow": Source(
         "snowfall", "mm", "per_second", (0, 1000),
-        "GLDAS Noah land surface model monthly 0.25 deg V2.1 snowfall (GLDAS_NOAH025_M v2.1), NASA GES "
+        "GLDAS Noah land surface model monthly 0.25 deg V2.1 snowfall rate Snowf_tavg (GLDAS_NOAH025_M v2.1), NASA GES "
         "DISC, area average via NASA Giovanni; doi:10.5067/SXAVCZFAQLNO",
     ),
     "mod08aod": Source(
