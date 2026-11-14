@@ -1,3 +1,5 @@
+# Runtime dependencies for Streamlit Community Cloud (pinned). Editing this file makes the
+# Cloud rebuild the app from scratch, which also reloads every module in trend/.
 streamlit==1.67.0
 plotly==7.1.0
 pandas==3.1.1
