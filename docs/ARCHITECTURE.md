@@ -175,7 +175,8 @@ Tests on the annual series:
 - Then: "How does this place compare?" (the same measurement in every prepared region, full records,
   ranked with 95% intervals) and one stripe per year with a record-year sentence under the evidence
   chart; a quick pick of 60 cities for the any-place rectangle (a 2° × 2° box around the city); and
-  when NASA POWER does not answer for a custom area, a button to the nearest prepared region.
+  when NASA POWER does not answer for a custom area, a button to the nearest prepared region; and
+  "Can chance fool the detective?" (pretend trendless worlds, a naive test against the detective).
 
 ## Project structure
 
@@ -200,6 +201,7 @@ NasaSpaceAppsChallenge/
 │   ├── compare.py          # "how does this place compare?": the same measurement ranked across regions
 │   ├── records.py          # one stripe per year; is the last year among the highest or lowest?
 │   ├── cities.py           # quick pick: 60 cities with a 2° × 2° box each
+│   ├── chance.py           # "can chance fool the detective?": pretend trendless worlds, two tests
 │   ├── linecheck.py        # "not a straight line" note
 │   ├── examples.py         # famous cases (checked against the data by tests)
 │   ├── guide.py            # guided start: two questions (what, where) lead to up to three prepared cases
@@ -223,7 +225,7 @@ NasaSpaceAppsChallenge/
 
 ## Testing
 
-662 automated tests (`python -m pytest -q`), all offline:
+702 automated tests (`python -m pytest -q`), all offline:
 - statistics: known-slope series, white and autocorrelated noise (false-positive rates of both
   tests), completeness rules, water-year labelling, total change, constant series;
 - loaders: POWER payload parsing, fill values, land-only cells, Giovanni CSVs, retry rules;

@@ -35,6 +35,9 @@ from trend.area import (
     power_request_boxes,
 )
 from trend.bundle import bundle_text, data_bundle
+from trend.chance import (
+    DEFAULT_RUNS, chance_text, clip_phi, example_figure, intro_line, simulate, summary_lines,
+)
 from trend.charts import annual_trend_figure, monthly_figure, sparkline_figure
 from trend.cities import (
     CITY_BY_KEY, city_bbox, city_for_bbox, city_label, city_options, city_text, near_label,
@@ -1552,6 +1555,28 @@ st.download_button(
     help=report_text(lang, "button_help"),
     key="case_report_download",
 )
+
+# Can chance fool the detective? Pretend worlds with no trend, as long and as persistent as this record,
+# tested by a naive test and by the detective (trend/chance.py). Run only on a click, kept for this case.
+with st.expander(chance_text(lang, "title")):
+    chance_n, chance_phi = int(result.n_years), float(result.lag1_autocorrelation)
+    chance_case = (region_key, tuple(active_bbox), case_key, chance_n, round(clip_phi(chance_phi), 2))
+    st.caption(intro_line(lang, DEFAULT_RUNS, chance_n, chance_phi))
+    if st.button(chance_text(lang, "button", runs=DEFAULT_RUNS), key="chance_run"):
+        with st.spinner(chance_text(lang, "running", runs=DEFAULT_RUNS)):
+            st.session_state["chance_result"] = (chance_case, simulate(chance_n, chance_phi))
+    chance_stored = st.session_state.get("chance_result")
+    if chance_stored and chance_stored[0] == chance_case:  # a result made for another case is not shown
+        chance_outcome = chance_stored[1]
+        st.markdown("  \n".join(summary_lines(lang, chance_outcome, result.p_value)))
+        if chance_outcome.get("example"):
+            st.plotly_chart(
+                example_figure(chance_outcome["example"], lang, separators), width="stretch", theme=None,
+                config={"displaylogo": False, "displayModeBar": False}, key="chance_chart",
+            )
+        else:
+            st.caption(chance_text(lang, "no_example"))
+        st.caption(chance_text(lang, "note"))
 
 with st.expander(t(lang, "methods_title")):
     st.markdown(METHODS[lang].format(region=region_label, min_years=MIN_YEARS))

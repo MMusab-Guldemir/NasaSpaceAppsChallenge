@@ -94,6 +94,11 @@ Under the evidence chart, one stripe per year shows the whole record at a glance
 notes when the last year is among the three highest or lowest ("2025 is the 3rd driest of 45 years"
 in Konya), adding that a record year is not a trend by itself.
 
+**Can chance fool the detective?** One click in the case file makes 400 pretend worlds with no
+trend, as long and as persistent as the open record, and shows how often a naive test and the
+detective are fooled (for a persistence of 0.35, about 18% against 4%), next to the real case's
+p-value.
+
 **Case report and open data.** One button downloads the case as a printable, self-contained HTML
 page that opens offline: the verdict, a chart of the yearly values with the trend line, the second
 witness, possible reasons, caveats, the data source with its DOI and the share link. The World
@@ -212,7 +217,7 @@ added when NASA AppEEARS delivers it), and the same pipeline can be repeated for
 
 **Tools.** Python, Streamlit, Plotly, pandas, NumPy, SciPy, pymannkendall, requests, folium and
 streamlit-folium (Leaflet, Leaflet.draw, OpenStreetMap map tiles); NASA POWER API, Giovanni,
-AppEEARS and NASA GIBS imagery tiles; GitHub; Streamlit Community Cloud. 662 automated tests check
+AppEEARS and NASA GIBS imagery tiles; GitHub; Streamlit Community Cloud. 702 automated tests check
 the statistics, the data loaders, the game, the maps, the verification, the guided start, the season
 test, the case report, the open-data ZIP and the app.
 

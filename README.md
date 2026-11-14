@@ -74,7 +74,10 @@ Pick a place and a measurement from NASA Earth data, and find out **what** is ch
      moderate persistence over 15+ years, and about 9-18% for very persistent series such as soot;
      a real trend of one typical year-to-year swing per decade is confirmed about 7 times in 100
      with 10 years, 51 with 20, 81 with 25 and over 99 with 35 years; reproduce with
-     `scripts/accuracy_report.py`),
+     `scripts/accuracy_report.py`). **Can chance fool the detective?** in the case file lets anyone
+     check this live: one click makes 400 pretend worlds with no trend, as long and as persistent as
+     the open record, and counts how often a naive test (no correction for persistence) and the
+     detective are fooled; for groundwater-like persistence (0.35) that is about 18% against 4%,
    - a **second opinion** from the Mann-Kendall test with Sen's slope, adjusted for persistence in
      the same way,
    - a plain-language summary for students and the public.
@@ -341,11 +344,12 @@ trend/bundle.py        open data: every prepared series and the witness records 
 trend/compare.py       "how does this place compare?": one measurement's full-record trend in every region, ranked
 trend/records.py       one stripe per year, and whether the last year is among the highest or lowest
 trend/cities.py        quick pick: 60 cities, each with a 2° × 2° box for the any-place rectangle
+trend/chance.py        "can chance fool the detective?": pretend trendless worlds, a naive test vs the detective
 scripts/prefetch.py    fetches and caches data for a region
 scripts/build_gistemp_witness.py  NASA GISTEMP area means for the temperature witness
 data/processed/        small cached monthly CSVs used by the app
 data/witness/          second-dataset series for the third witness (GISTEMP, GPCP, IMERG, MODIS, GLDAS)
-tests/                 unit and app tests (662)
+tests/                 unit and app tests (702)
 docs/ARCHITECTURE.md   design and methods
 docs/SUBMISSION.md     draft of the Space Apps project page
 ```

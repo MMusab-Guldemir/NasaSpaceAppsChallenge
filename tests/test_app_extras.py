@@ -143,3 +143,17 @@ def test_stripes_and_record_sentence_in_the_case_file():
     at.run()
     assert not at.exception
     assert any(m.value.startswith("📌 2025, 45 yılın en kurak 3. yılı") for m in at.markdown)
+
+
+def test_chance_lab_runs_on_a_click_and_compares_with_the_case():
+    at = AppTest.from_file(APP, default_timeout=90)
+    at.query_params["lang"] = "tr"
+    at.query_params["region"] = "konya"
+    at.query_params["case"] = "air_temperature"
+    at.run()
+    assert not at.exception
+    assert "🎲 Tesadüf dedektifi kandırabilir mi?" in [e.label for e in at.expander]
+    at.button(key="chance_run").click().run()
+    assert not at.exception
+    text = " ".join(m.value for m in at.markdown)
+    assert "Dedektif ise" in text and "Gerçek dosyada p < 0,001" in text
