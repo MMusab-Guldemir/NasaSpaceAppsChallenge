@@ -159,7 +159,7 @@ NASA AppEEARS delivers them, and the same pipeline can be repeated for more regi
 
 **Tools.** Python, Streamlit, Plotly, pandas, NumPy, SciPy, pymannkendall, requests, folium and
 streamlit-folium (Leaflet, Leaflet.draw, OpenStreetMap map tiles); NASA POWER API, Giovanni and
-AppEEARS; GitHub; Streamlit Community Cloud. 329 automated tests check the statistics, the data
+AppEEARS; GitHub; Streamlit Community Cloud. 350 automated tests check the statistics, the data
 loaders, the game, the map, the verification and the app.
 
 ## Use of Super Intelligence (SI)
@@ -191,6 +191,7 @@ so on every slide; no other AI-generated images, video or audio are used.
 | Measurement | Product | Access | Reference |
 |---|---|---|---|
 | Air temperature at 2 m | NASA POWER monthly `T2M` (MERRA-2 based) | POWER API | Gelaro et al. (2017), doi:10.1175/JCLI-D-16-0758.1 |
+| Hot days (daily maximum above 30 °C) | NASA POWER daily `T2M_MAX` (MERRA-2 based), counted per grid cell | POWER daily API | Gelaro et al. (2017), doi:10.1175/JCLI-D-16-0758.1 |
 | Snowfall | NASA POWER monthly `PRECSNOLAND` (MERRA-2 based) | POWER API | Gelaro et al. (2017), doi:10.1175/JCLI-D-16-0758.1 |
 | Tropospheric NO₂ | OMI `OMNO2d` v004, 30% cloud screened | Giovanni (NASA GES DISC) | Krotkov et al. (2024), doi:10.5067/AURA/OMI/DATA3407 |
 | Vegetation greenness | MODIS Terra `MOD13A3` v061, monthly 1 km NDVI | AppEEARS (NASA LP DAAC) | Didan (2021), doi:10.5067/MODIS/MOD13A3.061 |

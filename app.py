@@ -140,7 +140,7 @@ STYLE = """
 .stamp.confirmed { color: #1c5cab; }
 .stamp.noevidence { color: #52514e; }
 .stamp.disputed, .stamp.weak { color: #a8501b; }
-.stamp.open, .stamp.prepared_only, .stamp.insufficient, .stamp.no_snow, .stamp.no_data {
+.stamp.open, .stamp.prepared_only, .stamp.insufficient, .stamp.no_snow, .stamp.no_hot, .stamp.no_data {
   color: #898781; border-style: dashed;
 }
 .clue-name { font-size: 0.78rem; letter-spacing: 0.06em; color: #52514e; min-height: 2.2em; }
@@ -794,7 +794,7 @@ if st.session_state.get("case") not in available:
 st.markdown(f"<div class='step'>{html.escape(t(lang, 'step_what'))}</div>", unsafe_allow_html=True)
 st.caption(t(lang, "step1_caption"))
 BOARD_GROUPS = (
-    ("group_climate", ("air_temperature", "precipitation", "snowfall")),
+    ("group_climate", ("air_temperature", "precipitation", "snowfall", "hot_days")),
     ("group_air", ("no2", "co", "black_carbon", "aod")),
     ("group_carbon_green", ("co2", "ndvi", "tree_cover")),
 )

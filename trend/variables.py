@@ -154,6 +154,36 @@ VARIABLES: dict[str, Variable] = {
             "Reanalysis trends can partly reflect changes in the observing system over the decades.",
         ),
     ),
+    "hot_days": Variable(
+        key="hot_days",
+        name="Hot days (above 30 °C)",
+        definition=(
+            "How many days a year the day's highest air temperature, about 2 meters above the ground, "
+            "goes above 30 °C (86 °F)."
+        ),
+        unit="days per month",
+        annual_label="Hot days per year (daily maximum above 30 °C)",
+        annual_unit="days",
+        year_axis_label="Year",
+        aggregation="sum",
+        season_months=ALL_MONTHS,
+        year_starts_month=1,
+        product="NASA POWER daily T2M_MAX (MERRA-2 based), days above 30 °C",
+        provider="NASA Langley Research Center POWER Project",
+        doi="10.1175/JCLI-D-16-0758.1",
+        citation=f"{POWER_ACKNOWLEDGMENT} {MERRA2_REFERENCE}",
+        caveats=(
+            "Each grid cell (about 50 km) counts its own days above 30 °C, and the card shows the "
+            "average over the region's cells: the number of hot days a typical spot in the region gets.",
+            "30 °C is a fixed line: in a desert almost every summer day is above it, in Siberia only a "
+            "few days are. The trend shows whether such days are becoming more or less common.",
+            "Comes from a reanalysis (a weather model combined with observations), not from one weather "
+            "station; a city centre can be hotter than its grid cell.",
+            "The newest months in NASA POWER can come from a near-real-time product and may be "
+            "revised later.",
+        ),
+        decimals=1,
+    ),
     "no2": Variable(
         key="no2",
         name="Air pollution (NO₂)",

@@ -13,7 +13,8 @@ and **is the change statistically significant?** Visualization plus analysis is 
 ## Decisions made by the team
 
 - End users explore the data themselves; the audience is the team, the judges and later the public.
-- Variables: **air temperature**, **precipitation**, **snowfall**, **air pollution (NO2)**,
+- Variables: **air temperature**, **precipitation**, **snowfall**, **hot days above 30 °C** (added
+  Saturday evening, from daily maximum temperature), **air pollution (NO2)**,
   **carbon monoxide**, **soot (black carbon)**, **dust and smoke (aerosols)** so that air pollution is
   available for any rectangle, **CO2**, **vegetation greenness (NDVI)** and **tree cover**.
 - Regions: **Colorado**, **Istanbul–Marmara**, then eight world regions picked from options:
@@ -172,6 +173,7 @@ NasaSpaceAppsChallenge/
 │   ├── seasons.py          # monthly values with the seasonal cycle removed
 │   ├── linecheck.py        # "not a straight line" note
 │   ├── examples.py         # famous cases (checked against the data by tests)
+│   ├── hotdays.py          # hot days: daily maximum temperature counted per grid cell
 │   ├── trendmap.py         # crime scene map: grid-cell trends with a Benjamini-Hochberg filter
 │   ├── verify.py           # third witness and "why is it not verified?"
 │   └── game.py             # Detective exam
@@ -186,7 +188,7 @@ NasaSpaceAppsChallenge/
 
 ## Testing
 
-329 automated tests (`python -m pytest -q`), all offline:
+350 automated tests (`python -m pytest -q`), all offline:
 - statistics: known-slope series, white and autocorrelated noise (false-positive rates of both
   tests), completeness rules, water-year labelling, total change, constant series;
 - loaders: POWER payload parsing, fill values, land-only cells, Giovanni CSVs, retry rules;

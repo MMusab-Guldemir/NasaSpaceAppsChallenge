@@ -106,3 +106,12 @@ def test_world_board_view_renders_and_opens_a_case():
     assert not at.exception
     assert at.session_state["view"] == "case"
     assert f"{at.session_state['region']}_{at.session_state['case']}" == target
+
+
+def test_a_place_that_is_never_that_hot_gets_no_hot():
+    import numpy as np
+    import pandas as pd
+
+    dates = pd.date_range("1981-01-01", periods=12 * 30, freq="MS")
+    cool = pd.DataFrame({"date": dates, "value": np.zeros(len(dates))})
+    assert board_verdict(cool, "hot_days").status == "no_hot"

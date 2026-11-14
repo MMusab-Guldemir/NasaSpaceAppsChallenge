@@ -23,6 +23,7 @@ from trend.stats import TrendResult, analyze_trend, to_annual
 from trend.variables import VARIABLES
 
 NO_SNOW_MM = 1.0  # a snowfall record whose yearly totals all stay below this means "it never snows here"
+NO_HOT_DAYS = 1.0  # fewer hot days than this in every year means "it is never that hot here"
 # Share of trendless cases that still get a "Confirmed" stamp (scripts/accuracy_report.py): about 3%
 # with independent years; with persistent years about 5-7% over 15 years or more and about 10% for the
 # short records (7-10 years) and strongly persistent ones on this board.
@@ -153,6 +154,8 @@ def board_verdict(monthly: pd.DataFrame | None, variable_key: str) -> Verdict:
     annual, incomplete = to_annual(monthly, variable)
     if variable_key == "snowfall" and len(annual) and annual["value"].max() < NO_SNOW_MM:
         return Verdict(None, incomplete, None, "no_snow")
+    if variable_key == "hot_days" and len(annual) and annual["value"].max() < NO_HOT_DAYS:
+        return Verdict(None, incomplete, None, "no_hot")
     if len(annual) < variable.min_years:
         return Verdict(None, incomplete, None, "insufficient")
     result = analyze_trend(annual["year"], annual["value"], min_years=variable.min_years)

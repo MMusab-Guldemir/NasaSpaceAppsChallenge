@@ -168,9 +168,9 @@ TEXT: dict[str, dict[str, str]] = {
         "apply_coords": "Investigate these coordinates",
         "custom_help": (
             "Temperature, precipitation, snowfall and dust and smoke come live from NASA POWER for "
-            "any rectangle up to 40° × 40°. NO₂, carbon monoxide, soot, CO₂ and vegetation greenness "
-            "are available for prepared regions only, because NASA delivers them through slower "
-            "services that need a login."
+            "any rectangle up to 40° × 40°. NO₂, carbon monoxide, soot, CO₂, vegetation greenness and "
+            "hot days are available for prepared regions only, because NASA delivers them through "
+            "slower services or as large daily files."
         ),
         "map_help": (
             "Draw a rectangle with the square tool on the left of the map, or move and resize the "
@@ -357,8 +357,9 @@ TEXT: dict[str, dict[str, str]] = {
         "apply_coords": "Bu koordinatları incele",
         "custom_help": (
             "Sıcaklık, yağış, kar yağışı ve toz-duman, 40° × 40°'ye kadar her dikdörtgen için NASA "
-            "POWER'dan canlı gelir. NO₂, karbon monoksit, is, CO₂ ve bitki yeşilliği ise NASA'nın giriş "
-            "gerektiren daha yavaş servislerinden geldiği için sadece hazır bölgelerde var."
+            "POWER'dan canlı gelir. NO₂, karbon monoksit, is, CO₂, bitki yeşilliği ve sıcak gün sayısı ise "
+            "NASA'nın daha yavaş servislerinden ya da büyük günlük dosyalarından geldiği için sadece "
+            "hazır bölgelerde var."
         ),
         "map_help": (
             "Haritanın solundaki kare aracıyla bir dikdörtgen çiz ya da mevcut dikdörtgeni "
@@ -403,6 +404,7 @@ STATUS: dict[str, dict[str, tuple[str, str]]] = {
             "polar winter.",
         ),
         "no_snow": ("No snow", "It practically never snows here."),
+        "no_hot": ("No hot days", "Days above 30 °C practically never happen here."),
         "no_data": ("No data", "NASA has no values for this measurement here, for example over open sea."),
         "prepared_only": (
             "Prepared regions only",
@@ -420,6 +422,7 @@ STATUS: dict[str, dict[str, tuple[str, str]]] = {
             "Burada yeterince tam yıl yok; örneğin uydu kutup kışında ölçüm yapamıyor.",
         ),
         "no_snow": ("Kar yok", "Burada neredeyse hiç kar yağmıyor."),
+        "no_hot": ("Sıcak gün yok", "Burada 30 °C'yi geçen gün neredeyse hiç olmuyor."),
         "no_data": ("Veri yok", "NASA'nın burada bu ölçüm için değeri yok; örneğin açık deniz."),
         "prepared_only": (
             "Sadece hazır bölgeler",
@@ -477,6 +480,22 @@ REASONS: dict[str, dict[str, dict[str, list[str]]]] = {
             "none": [
                 "Snowfall depends on both temperature and precipitation, which can push in "
                 "opposite directions, and it varies strongly from winter to winter.",
+            ],
+        },
+        "hot_days": {
+            "up": [
+                "The whole region is warming (see the air temperature card), and even a small rise in "
+                "the average makes days above 30 °C much more common.",
+                "As the climate warms, heat waves are becoming more frequent and longer in many regions.",
+                "Soil that dries out in summer heats up faster, which can add hot days.",
+            ],
+            "down": [
+                "Fewer hot days are rare in recent decades. They can come from wetter summers, more "
+                "irrigation, or more cloud and haze that block sunlight.",
+            ],
+            "none": [
+                "Hot summers come and go with the weather from year to year; the record may be too short, "
+                "or the region too cool or too hot, for a steady change to stand out.",
             ],
         },
         "no2": {
@@ -614,6 +633,22 @@ REASONS: dict[str, dict[str, dict[str, list[str]]]] = {
             "none": [
                 "Kar yağışı hem sıcaklığa hem yağışa bağlıdır; bunlar ters yönlere itebilir ve kar "
                 "kıştan kışa çok değişir.",
+            ],
+        },
+        "hot_days": {
+            "up": [
+                "Bölgenin tamamı ısınıyor (hava sıcaklığı kartına bak); ortalamadaki küçük bir artış bile "
+                "30 °C'yi geçen günleri çok daha sık yapar.",
+                "İklim ısındıkça birçok bölgede sıcak hava dalgaları daha sık ve daha uzun oluyor.",
+                "Yazın kuruyan toprak daha çabuk ısınır; bu da sıcak gün sayısını artırabilir.",
+            ],
+            "down": [
+                "Son on yıllarda sıcak günlerin azalması nadirdir. Daha yağışlı yazlardan, daha çok "
+                "sulamadan ya da güneşi engelleyen bulut ve pustan kaynaklanabilir.",
+            ],
+            "none": [
+                "Sıcak yazlar yıldan yıla hava durumuyla gelir ve gider; kayıt kısa olabilir ya da bölge, "
+                "düzenli bir değişimin öne çıkması için fazla serin veya fazla sıcak olabilir.",
             ],
         },
         "no2": {
@@ -880,6 +915,28 @@ VARIABLE_TEXT: dict[str, dict[str, dict]] = {
                 "modeli); doğrudan kar ölçümü ya da kar derinliği değildir.",
                 "Reanaliz trendleri, on yıllar içinde gözlem sistemindeki değişimleri de kısmen "
                 "yansıtabilir.",
+                "NASA POWER'daki en yeni aylar neredeyse gerçek zamanlı bir üründen gelebilir ve "
+                "sonradan düzeltilebilir.",
+            ],
+        },
+        "hot_days": {
+            "name": "Sıcak günler (30 °C üstü)",
+            "definition": (
+                "Yerden yaklaşık 2 metre yükseklikteki günlük en yüksek hava sıcaklığının yılda kaç gün "
+                "30 °C'yi geçtiği."
+            ),
+            "annual_label": "Yıllık sıcak gün sayısı (günlük en yüksek sıcaklık 30 °C üstü)",
+            "unit": "ayda gün",
+            "annual_unit": "gün",
+            "year_axis_label": "Yıl",
+            "caveats": [
+                "Her ızgara hücresi (yaklaşık 50 km) 30 °C'yi geçen kendi günlerini sayar; kart, bölgedeki "
+                "hücrelerin ortalamasını gösterir: bölgede tipik bir noktanın yaşadığı sıcak gün sayısı.",
+                "30 °C sabit bir çizgidir: çölde neredeyse her yaz günü bu çizginin üstündedir, Sibirya'da "
+                "ise yalnızca birkaç gün. Trend, bu günlerin daha sık mı yoksa daha seyrek mi olduğunu "
+                "gösterir.",
+                "Reanaliz verisidir (gözlemlerle birleştirilmiş bir hava modeli), tek bir meteoroloji "
+                "istasyonu değildir; bir şehir merkezi kendi ızgara hücresinden daha sıcak olabilir.",
                 "NASA POWER'daki en yeni aylar neredeyse gerçek zamanlı bir üründen gelebilir ve "
                 "sonradan düzeltilebilir.",
             ],

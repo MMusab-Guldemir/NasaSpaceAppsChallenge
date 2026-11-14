@@ -22,7 +22,7 @@ Pick a place and a measurement from NASA Earth data, and find out **what** is ch
    Any size from 0.01° to 40° per side works: a rectangle smaller than NASA's grid uses the nearest
    grid cell, and a large one is fetched in pieces. Temperature, precipitation, snowfall and dust and
    smoke come live from NASA POWER for any rectangle; NO₂, carbon monoxide, soot (black carbon),
-   CO₂ and vegetation greenness are prepared in advance for the prepared regions. The cards are
+   CO₂, vegetation greenness and hot days are prepared in advance for the prepared regions. The cards are
    grouped into Climate, Air, and Carbon and green land.
 2. An **investigation board** shows every clue for the area: one card per measurement with its
    rate of change and a verdict stamp (Confirmed, Disputed, No evidence, Weak clue, Open case; plus No snow, Not enough data and No data where they apply).
@@ -120,6 +120,9 @@ Highlights from the world regions (full records unless stated):
 - Air temperature rose significantly in nine of the ten prepared regions, from +0.12 °C per decade
   in the Sahel to +0.55 °C per decade in Istanbul–Marmara (1981-2025); in Beijing the rise
   (+0.23 °C per decade) is borderline (p = 0.06).
+- Hot days above 30 °C became much more common: in Istanbul–Marmara a typical spot had about 10 a
+  year in the early 1980s and 30-45 in recent years (+5.0 days per decade, 1981-2025, Confirmed);
+  Colorado +4.1 and Medina +5.2 days per decade, both Confirmed.
 - Independent check with NASA GISTEMP weather stations (1981-2025): Istanbul–Marmara +0.55 °C per
   decade, almost exactly the app's +0.547, both Confirmed. Beijing +0.42 °C per decade (p < 0.001,
   Confirmed): Beijing is probably warming too, and the app's record shows a slower rise that just
@@ -131,6 +134,7 @@ Highlights from the world regions (full records unless stated):
 |---|---|---|
 | Air temperature | NASA POWER monthly `T2M` (MERRA-2 based) | POWER API |
 | Snowfall | NASA POWER monthly `PRECSNOLAND` (MERRA-2 based) | POWER API |
+| Hot days (above 30 °C) | NASA POWER daily `T2M_MAX` (MERRA-2 based): days above 30 °C counted per grid cell, then averaged over the region (`scripts/prefetch_hot_days.py`) | POWER daily API (one request per year) |
 | Air pollution (NO₂) | OMI `OMNO2d` v004 tropospheric column (daily, averaged per month) | Giovanni area-averaged time series |
 | Vegetation greenness (NDVI) | MODIS Terra `MOD13A3` v061 (monthly, 1 km) | AppEEARS area statistics |
 | Dust and smoke (aerosols) | NASA POWER monthly `AOD_55` (CERES SYN1deg, about 1°) | POWER API |
@@ -268,7 +272,7 @@ scripts/prefetch.py    fetches and caches data for a region
 scripts/build_gistemp_witness.py  NASA GISTEMP area means for the temperature witness
 data/processed/        small cached monthly CSVs used by the app
 data/witness/          second-dataset series for the third witness (GISTEMP, GPCP, IMERG, MODIS, GLDAS)
-tests/                 unit and app tests (329)
+tests/                 unit and app tests (350)
 docs/ARCHITECTURE.md   design and methods
 docs/SUBMISSION.md     draft of the Space Apps project page
 ```

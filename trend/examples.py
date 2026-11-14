@@ -55,8 +55,9 @@ EXAMPLES: tuple[Example, ...] = (
         "down",
     ),
     Example(
-        "marmara", "air_temperature", None, None,
-        {"en": "🏠 Home: is Istanbul warming?", "tr": "🏠 Evimiz: İstanbul ısınıyor mu?"},
+        "marmara", "hot_days", None, None,
+        {"en": "🏠 Home: are days above 30 °C becoming common in Istanbul?",
+         "tr": "🏠 Evimiz: İstanbul'da 30 °C'yi geçen günler artıyor mu?"},
         "up",
     ),
     Example(
