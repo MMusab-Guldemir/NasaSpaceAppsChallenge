@@ -44,6 +44,7 @@ DESERT_REGIONS = {"medina", "cairo_nile"}  # rain records disagree a lot where i
 WITNESS_LAST_YEAR = {"aod": 2021}  # the app's aerosol data follow another satellite from April 2022
 MODEL_WITNESSES = {"snowfall"}  # a model cross-check, not a measurement: never a contradiction
 WEAK_SUPPORT_P = 0.20  # a witness that points the same way this clearly counts as weak support
+STATION_WITNESSES = {"air_temperature"}  # GISTEMP stations: independent of MERRA-2 over land
 
 # High-resolution checks that are close cousins of the witness (shown, not counted as a witness).
 EXTRA_CHECKS = {
@@ -149,6 +150,14 @@ VERIFY_TEXT = {
         "witness_sees": "🔍 Over the compared years the second dataset sees a significant change ({rate} per "
                         "decade), but the main data do not reach the evidence line there. The change may be "
                         "real; see below why the main data could not prove it.",
+        "stations_sees": "🔍 Weather stations (GISTEMP) show clear {change} here ({rate} per decade). The app's "
+                         "record points the same way but more slowly ({main_rate} per decade) and {miss} the "
+                         "5% line. The stations are independent of the app's data, so the {change} is "
+                         "probably real.",
+        "stations_up": "warming",
+        "stations_down": "cooling",
+        "stations_close": "just misses",
+        "stations_far": "does not reach",
         "neither": "Over the compared years neither dataset shows a clear trend.",
         "same_way_weak": "Over the compared years the second dataset points the same way ({rate} per decade) "
                          "but does not reach the evidence line: weak support, not a contradiction.",
@@ -236,6 +245,14 @@ VERIFY_TEXT = {
         "witness_sees": "🔍 Karşılaştırılan yıllarda ikinci veri anlamlı bir değişim görüyor (on yılda {rate}), "
                         "ama ana veri bu yıllarda kanıt eşiğine ulaşmıyor. Değişim gerçek olabilir; ana "
                         "verinin neden kanıtlayamadığı aşağıda.",
+        "stations_sees": "🔍 Meteoroloji istasyonları (GISTEMP) burada belirgin bir {change} gösteriyor (on yılda "
+                         "{rate}). Uygulamanın kaydı aynı yönü gösteriyor ama daha yavaş (on yılda {main_rate}) "
+                         "ve {miss}. İstasyonlar uygulamanın verisinden bağımsız olduğu için bu {change} "
+                         "muhtemelen gerçek.",
+        "stations_up": "ısınma",
+        "stations_down": "soğuma",
+        "stations_close": "%5 sınırını kıl payı kaçırıyor",
+        "stations_far": "%5 sınırına ulaşmıyor",
         "neither": "Karşılaştırılan yıllarda iki veri de belirgin bir trend görmüyor.",
         "same_way_weak": "Karşılaştırılan yıllarda ikinci veri aynı yönü gösteriyor (on yılda {rate}) ama kanıt "
                          "eşiğine ulaşmıyor: zayıf destek, çelişki değil.",
@@ -588,10 +605,17 @@ def compare_witness(result, witness_monthly: pd.DataFrame, lang: str, variable_k
     if (variable_key == "precipitation" and region_key in AFRICA_RAIN_REGIONS
             and verdict in ("confirmed", "confirmed_direction", "confirmed_weak")):
         verdict = "same_family"  # related records: their agreement is expected, not independent support
-    lines = [text[verdict].format(
+    line_key = verdict
+    if (verdict == "witness_sees" and variable_key in STATION_WITNESSES and same_sign
+            and abs(result.slope_per_year) < abs(witness.slope_per_year)):
+        line_key = "stations_sees"  # independent stations see it clearly; the app's record is slower
+    lines = [text[line_key].format(
         rate=rate,
         a=num(result.slope_per_decade, lang, decimals, signed=True),
         b=num(witness.slope_per_decade, lang, decimals, signed=True),
+        main_rate=f"{num(result.slope_per_decade, lang, decimals, signed=True)} {unit}".strip(),
+        change=text["stations_up" if witness.slope_per_year > 0 else "stations_down"],
+        miss=text["stations_close" if result.p_value < 0.10 else "stations_far"],
     )]
     found_break = None
     if variable_key in BREAK_VARIABLES and main_years is not None and verdict != "too_little":

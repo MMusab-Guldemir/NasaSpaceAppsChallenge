@@ -161,7 +161,19 @@ def test_witness_verdicts_on_synthetic_records():
     quiet = analyze_trend(quiet_annual["year"], quiet_annual["value"])
     rescue = vf.compare_witness(quiet, monthly_from_annual(annual_series(0.05, 0.3, seed=11)), "tr",
                                 "air_temperature", 1981, 2025, main_annual=quiet_annual)
-    assert rescue["verdict"] == "witness_sees" and "Karşılaştırılan yıllarda" in rescue["lines"][0]
+    assert rescue["verdict"] == "witness_sees"
+    slower_same_way = quiet.slope_per_year > 0 and abs(quiet.slope_per_year) < abs(rescue["witness"].slope_per_year)
+    expected = "Meteoroloji istasyonları (GISTEMP)" if slower_same_way else "Karşılaştırılan yıllarda"
+    assert expected in rescue["lines"][0]
+
+
+def test_beijing_warming_is_said_plainly():
+    for lang, words in (("en", ("Weather stations (GISTEMP) show clear warming", "just misses", "probably real")),
+                        ("tr", ("belirgin bir ısınma", "kıl payı kaçırıyor", "muhtemelen gerçek"))):
+        beijing = compare_real("beijing", "air_temperature", lang)
+        assert beijing["verdict"] == "witness_sees"
+        assert all(word in beijing["lines"][0] for word in words), beijing["lines"][0]
+    assert compare_real("beijing", "air_temperature")["lines"][0].count("+0.23 °C") == 1
 
 
 def test_a_disputed_side_cannot_make_a_case_verified():
