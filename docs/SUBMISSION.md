@@ -77,6 +77,29 @@ case such as a rise-then-fall or a record too short to prove a trend. The answer
 same statistics as the investigation board, so the game teaches what "significant" means with real
 NASA data.
 
+**Crime scene map.** A switch above the "Where?" map shows a trend test for every NASA POWER grid
+cell of the area (about 50 km). Colour shows the direction and speed; a dot marks a trend that holds
+up in the app's test, in the rank-based test and after the Benjamini-Hochberg correction for testing
+many cells at once (q = 0.10, Wilks 2016), with the honest note that about 1 dot in 10 may still be
+chance. This answers the challenge's "where is it changing?" directly: Colorado snowfall, for
+example, rises in some cells and falls in others. Under the map the page counts the rising and
+falling cells, names where the fastest change is, explains why the other cells have no dot, and
+gives possible reasons.
+
+**Third witness and "Why is it not verified?".** For the prepared regions, each case is compared
+with a second NASA dataset over exactly the years both have, and the page says how independent that
+dataset is: NASA GISTEMP v4 weather-station records for temperature (independent of the MERRA-2
+reanalysis), GPCP for precipitation (partly independent; GPM IMERG is shown as a high-resolution
+check, not as an extra witness), MODIS for dust and smoke, and GLDAS for snowfall. The GISTEMP
+stations show significant warming in every prepared region (the speeds match closely in five; in
+four only the direction does), including Beijing, where the main record falls just short of the
+evidence line. GPCP backs the direction of Amazon drying and Sahel wetting, at different speeds.
+Where the two records disagree, the page says so and why; where the gap between them jumps, it says
+one record has a break. Every case that is not Confirmed lists its reasons
+(short record, a change small next to the year-to-year swings, a curved shape, the two tests
+disagreeing) and a rough record length that would give a 90% chance of detecting the change if it
+continued (Weatherhead et al., 1998).
+
 **How it works.**
 1. *Data:* monthly area averages over the region, from NASA POWER (MERRA-2 based temperature,
    precipitation and snowfall; aerosol optical depth from CERES SYN1deg), Giovanni area-averaged
@@ -132,8 +155,8 @@ NASA AppEEARS delivers them, and the same pipeline can be repeated for more regi
 
 **Tools.** Python, Streamlit, Plotly, pandas, NumPy, SciPy, pymannkendall, requests, folium and
 streamlit-folium (Leaflet, Leaflet.draw, OpenStreetMap map tiles); NASA POWER API, Giovanni and
-AppEEARS; GitHub; Streamlit Community Cloud. 168 automated tests check the statistics, the data
-loaders, the game and the app.
+AppEEARS; GitHub; Streamlit Community Cloud. 285 automated tests check the statistics, the data
+loaders, the game, the map, the verification and the app.
 
 ## Use of Super Intelligence (SI)
 
@@ -146,7 +169,10 @@ choose the period → "real or chance?" flow, the Turkish option, the any-place-
 any size and the "possible reasons" step. Where the team asked for options (for example page layouts and candidate regions), the
 AI offered some and the team chose. The Detective exam game was one of several feature ideas the
 AI offered when the team asked for creative additions; the team picked it, tested a preview and
-directed its changes. Claude Opus 5.5 (Anthropic) wrote the code, the tests, the
+directed its changes. The crime scene map was another offered idea that the team chose and shaped;
+the verification step (a second NASA dataset as a third witness, and why a result is not verified)
+was the team's own request, with witness datasets and methods suggested by the AI and reviewed by
+Claude Fable before they were added. Claude Opus 5.5 (Anthropic) wrote the code, the tests, the
 interface texts (English and Turkish) and the documentation drafts, translated the team's own
 Turkish answers for this page into English, and suggested the NASA data products and statistical
 methods that implement the team's choices. Claude Fable 5.2 (Anthropic)
@@ -178,9 +204,24 @@ DISC. NDVI and tree-cover area statistics were produced with AppEEARS (NASA EOSD
 EROS Center). Precipitation trends for the Amazon, the Sahel and Beijing were checked against NASA's
 GPCP V3.3 satellite-gauge record (Huffman, G. J., Behrangi, A., Bolvin, D. T., & Nelkin, E. J. (2025). GPCP Precipitation Level 3 Monthly 0.5-Degree V3.3. NASA GES DISC. doi:10.5067/MEASURES/GPCP/DATA306).
 
+Second datasets used only as the "third witness": NASA GISTEMP v4, 250 km smoothing (GISTEMP Team,
+2026, NASA GISS; Lenssen et al., 2019, doi:10.1029/2018JD029522); GPCP V3.3 (above); GPM IMERG Final
+V07 monthly (Huffman et al., 2023, doi:10.5067/GPM/IMERG/3B-MONTH/07); MODIS Terra MOD08_M3 C6.1
+aerosol optical depth (Platnick et al., 2017, doi:10.5067/MODIS/MOD08_M3.061); GLDAS-2.1 Noah monthly
+snowfall (Beaudoing & Rodell, 2020, doi:10.5067/SXAVCZFAQLNO). Area averages of the last four were
+produced with Giovanni.
+
 ## Space Agency Partner Data and Other References
 
 - No Space Agency Partner data used.
+- Benjamini, Y., & Hochberg, Y. (1995). Controlling the false discovery rate: a practical and
+  powerful approach to multiple testing. *J. R. Stat. Soc. B*, 57, 289-300.
+- Wilks, D. S. (2016). "The stippling shows statistically significant grid points": How research
+  results are routinely overstated and overinterpreted, and what to do about it. *Bull. Amer.
+  Meteor. Soc.*, 97, 2263-2273. doi:10.1175/BAMS-D-15-00267.1
+- Weatherhead, E. C., et al. (1998). Factors affecting the detection of trends: Statistical
+  considerations and applications to environmental data. *J. Geophys. Res.*, 103(D14),
+  17149-17161. doi:10.1029/98JD00995
 - IPCC (2021). Summary for Policymakers. In: *Climate Change 2021: The Physical Science Basis*.
   Cambridge University Press, 3-32. doi:10.1017/9781009157896.001
 - Duncan, B. N., Lamsal, L. N., Thompson, A. M., et al. (2016). A space-based, high-resolution view

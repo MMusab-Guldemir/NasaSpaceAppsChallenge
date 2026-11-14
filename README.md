@@ -65,6 +65,23 @@ Pick a place and a measurement from NASA Earth data, and find out **what** is ch
    explanation appear. A full exam has 20 cases from all prepared regions (a quick exam has 5),
    with badges, streaks and a tricky double-points case at the end. The answers come from the same
    statistics as the investigation board. Link: `?view=exam`.
+10. **Crime scene map:** above the "Where?" map, switch from "Pick the area" to "Crime scene map
+    (dots)". Every NASA POWER grid cell of the area (about 50 km) gets its own trend test for the
+    picked clue (temperature, precipitation, snowfall or dust and smoke). Colour shows the direction
+    and speed; a dot marks a trend that holds up: significant in the app's test, backed by the
+    rank-based test, and still significant after the Benjamini-Hochberg correction for testing many
+    cells at once (q = 0.10, as Wilks 2016 recommends for maps; about 1 dot in 10 may still be
+    chance). Under the map: how many cells rise or fall, where the fastest change is, why the other
+    cells have no dot, and possible reasons. Colorado snowfall, for example, rises in some cells and
+    falls in others. Link: `?map=scene`.
+11. **Third witness and "Why is it not verified?":** for the prepared regions, the case file
+    compares the result with a second NASA dataset over exactly the years both have, and says how
+    independent that dataset is: NASA GISTEMP v4 weather stations for temperature, GPCP for
+    precipitation (with GPM IMERG as a high-resolution check, not an extra witness), MODIS for dust
+    and smoke, GLDAS for snowfall. Every case that is not Confirmed lists the reasons: a short record,
+    a change small next to the year-to-year swings, a curved shape, the two tests disagreeing, and a
+    rough record length that would give a 90% chance of detecting the change (Weatherhead et al.,
+    1998). Where the gap between two records jumps, the page says one of them has a break.
 
 ## First results (full records)
 
@@ -139,6 +156,30 @@ Highlights from the world regions (full records unless stated):
 - DiMiceli, C., Sohlberg, R., & Townshend, J. (2022). MODIS/Terra Vegetation Continuous Fields
   Yearly L3 Global 250m SIN Grid V061. NASA LP DAAC. https://doi.org/10.5067/MODIS/MOD44B.061
 
+Second datasets used only as the "third witness" (monthly area means in `data/witness/`):
+- GISTEMP Team (2026). GISS Surface Temperature Analysis (GISTEMP), version 4, 250 km smoothing.
+  NASA Goddard Institute for Space Studies. https://data.giss.nasa.gov/gistemp/ (accessed
+  14 November 2026); Lenssen, N. J. L., et al. (2019). Improvements in the GISTEMP uncertainty
+  model. *J. Geophys. Res. Atmos.*, 124, 6307-6326. https://doi.org/10.1029/2018JD029522
+- GPCP V3.3 (Huffman et al., 2025, cited above), area averages via Giovanni.
+- Huffman, G. J., Stocker, E. F., Bolvin, D. T., Nelkin, E. J., & Tan, J. (2023). GPM IMERG Final
+  Precipitation L3 1 month 0.1 degree x 0.1 degree V07. NASA GES DISC.
+  https://doi.org/10.5067/GPM/IMERG/3B-MONTH/07
+- Platnick, S., et al. (2017). MODIS Atmosphere L3 Monthly Product (MOD08_M3), Collection 6.1. NASA
+  MODIS Adaptive Processing System, Goddard Space Flight Center. https://doi.org/10.5067/MODIS/MOD08_M3.061
+- Beaudoing, H., & Rodell, M. (2020). GLDAS Noah Land Surface Model L4 monthly 0.25 x 0.25 degree
+  V2.1. NASA GES DISC. https://doi.org/10.5067/SXAVCZFAQLNO
+
+Methods for the map and the verification:
+- Benjamini, Y., & Hochberg, Y. (1995). Controlling the false discovery rate: a practical and
+  powerful approach to multiple testing. *J. R. Stat. Soc. B*, 57, 289-300.
+- Wilks, D. S. (2016). "The stippling shows statistically significant grid points": How research
+  results are routinely overstated and overinterpreted, and what to do about it. *Bull. Amer.
+  Meteor. Soc.*, 97, 2263-2273. https://doi.org/10.1175/BAMS-D-15-00267.1
+- Weatherhead, E. C., et al. (1998). Factors affecting the detection of trends: Statistical
+  considerations and applications to environmental data. *J. Geophys. Res.*, 103(D14),
+  17149-17161. https://doi.org/10.1029/98JD00995
+
 - Huffman, G. J., Behrangi, A., Bolvin, D. T., & Nelkin, E. J. (2025). GPCP Precipitation Level 3 Monthly 0.5-Degree V3.3. NASA GES DISC. https://doi.org/10.5067/MEASURES/GPCP/DATA306
   (used as a second check of the precipitation trends for the Amazon, the Sahel and Beijing)
 
@@ -206,9 +247,13 @@ trend/charts.py        Plotly charts
 trend/i18n.py          English and Turkish texts, number formatting
 trend/share.py         share links
 trend/game.py          Detective exam game: cases, answers, explanations and the game page
+trend/trendmap.py      crime scene map: a trend test per grid cell, the many-cells correction, the map layer
+trend/verify.py        third witness (a second NASA dataset) and the reasons a result is not verified
 scripts/prefetch.py    fetches and caches data for a region
+scripts/build_gistemp_witness.py  NASA GISTEMP area means for the temperature witness
 data/processed/        small cached monthly CSVs used by the app
-tests/                 unit and app tests (168)
+data/witness/          second-dataset series for the third witness (GISTEMP, GPCP, IMERG, MODIS, GLDAS)
+tests/                 unit and app tests (285)
 docs/ARCHITECTURE.md   design and methods
 docs/SUBMISSION.md     draft of the Space Apps project page
 ```
@@ -225,7 +270,11 @@ example page layouts and candidate regions), the AI offered some and the team ch
 Detective exam game was one of several feature ideas the AI offered when the team asked for
 creative additions; the team picked it, tested a preview and asked for the self-drawing chart,
 faster play, a "why?" explanation after each answer instead of a guessing question, and a 20-case
-exam.
+exam. The crime scene map was another of those offered ideas; the team chose it and asked to build
+it into the "Where?" map with a dots-on/dots-off switch and the place's results and reasons
+underneath. The verification step was the team's own request ("fetch more and more detailed NASA
+data, verify, and explain why a result could not be verified"); the AI suggested the witness
+datasets and methods, and Claude Fable reviewed that code before it was added.
 
 The code, tests, interface texts (English and Turkish) and documentation drafts were written with
 AI assistance: **Claude Opus 5.5** (Anthropic) wrote them, translated the team's own Turkish answers

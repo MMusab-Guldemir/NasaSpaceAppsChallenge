@@ -12,7 +12,10 @@ from __future__ import annotations
 import html
 import logging
 import math
+import os
+import tempfile
 import time
+from pathlib import Path
 
 import pandas as pd
 import streamlit as st
@@ -66,6 +69,26 @@ from trend.timeline import (
     timeline_figure,
     timeline_text,
     year_ranges,
+)
+from trend.verify import (
+    compare_witness,
+    extra_check_line,
+    load_witness,
+    no_witness_reason,
+    verify_text,
+    why_not_confirmed,
+)
+from trend.trendmap import (
+    MAX_MAP_SPAN,
+    add_overlay,
+    cell_size,
+    cell_trends,
+    fetch_cells,
+    legend_html,
+    map_reasons,
+    map_text,
+    summarize,
+    why_text,
 )
 from trend.variables import VARIABLES
 from trend.world import (
@@ -187,17 +210,43 @@ def live_monthly(variable_key: str, bbox: tuple[float, float, float, float]) -> 
     return monthly
 
 
-def area_map(bbox: tuple[float, float, float, float]) -> folium.Map:
-    """World map with the active rectangle, editable with the draw tools."""
+GRID_CACHE = Path(os.environ.get("TREND_GRID_CACHE") or Path(tempfile.gettempdir()) / "trend_grid_cache")
+
+
+@st.cache_data(show_spinner=False, ttl=24 * 3600, max_entries=64)
+def grid_cells(variable_key: str, bbox: tuple[float, float, float, float]) -> pd.DataFrame:
+    """Monthly values of every NASA POWER grid cell in the area (kept on disk and for a day)."""
+    cells, _ = fetch_cells(variable_key, bbox, cache_dir=GRID_CACHE, timeout=(10, 45))
+    return cells
+
+
+@st.cache_data(show_spinner=False, max_entries=128)
+def grid_trends(variable_key: str, bbox: tuple[float, float, float, float], start: int | None,
+                end: int | None) -> tuple[pd.DataFrame, int, tuple[float, float]]:
+    """The trend test for every grid cell, the number of cells without snow, and the cell size."""
+    cells = grid_cells(variable_key, bbox)
+    trends = cell_trends(cells, variable_key, start, end)
+    size = cell_size(cells) if len(cells) else (0.5, 0.625)
+    return trends, int(trends.attrs.get("no_snow_cells", 0)), size
+
+
+def area_map(bbox: tuple[float, float, float, float], scene=None) -> folium.Map:
+    """World map with the active rectangle, editable with the draw tools.
+
+    ``scene`` is ``(trends, cell size, language, variable)`` for the crime scene layer: coloured grid
+    cells with dots on real trends; the rectangle is then drawn as an outline only.
+    """
     west, south, east, north = bbox
     fmap = folium.Map(
         location=[(south + north) / 2, (west + east) / 2], zoom_start=4, tiles="OpenStreetMap",
         control_scale=True,
     )
+    if scene is not None:
+        add_overlay(fmap, *scene)
     group = folium.FeatureGroup(name="area")
     folium.Rectangle(
         bounds=[[south, west], [north, east]], color="#2a78d6", weight=2, fill=True,
-        fill_color="#2a78d6", fill_opacity=0.15,
+        fill_color="#2a78d6", fill_opacity=0.0 if scene is not None else 0.15,
     ).add_to(group)
     group.add_to(fmap)
     Draw(
@@ -430,6 +479,8 @@ if "_url_loaded" not in st.session_state:
         st.session_state["_url_period"] = (params.get("case"), params.get("start"), params.get("end"))
     if params.get("view") in ("exam", "world"):
         st.session_state["view"] = params.get("view")
+    if params.get("map") == "scene":
+        st.session_state["map_layer"] = "scene"
     st.session_state["_url_loaded"] = True
 
 default_region = next(iter(REGIONS))
@@ -524,12 +575,68 @@ else:
     active_bbox = region.bbox
 
 st.markdown(f"<div class='step'>{html.escape(t(lang, 'step_where'))}</div>", unsafe_allow_html=True)
+mtext = map_text(lang)
+st.session_state.setdefault("map_layer", "area")
+st.segmented_control(
+    "Map layer", options=["area", "scene"], format_func=lambda key: mtext[f"layer_{key}"],
+    key="map_layer", label_visibility="collapsed", required=True,
+)
+# Crime scene layer (idea chosen by Team Avni): a trend test for every grid cell of the area, for
+# the clue picked below (air temperature when that clue has no NASA POWER grid).
+scene = scene_summary = scene_reasons = scene_trends = None
+scene_variable = scene_years = None
+if st.session_state["map_layer"] == "scene":
+    picked = st.session_state.get("case")
+    scene_variable = picked if picked in POWER_VARIABLES else "air_temperature"
+    if picked and picked not in POWER_VARIABLES and picked in VARIABLES:
+        st.info(mtext["fallback"].format(picked=variable_text(lang, VARIABLES[picked])["name"]))
+    if max(active_bbox[2] - active_bbox[0], active_bbox[3] - active_bbox[1]) > MAX_MAP_SPAN:
+        st.info(mtext["too_big"].format(max=num(MAX_MAP_SPAN, lang, 0)))
+    else:
+        chosen = st.session_state.get(f"period_{scene_variable}") or st.session_state.get("periods", {}).get(scene_variable)
+        start_pick, end_pick = (int(chosen[0]), int(chosen[1])) if chosen else (None, None)
+        try:
+            with st.spinner(mtext["loading"]):
+                scene_trends, no_snow_cells, scene_size = grid_trends(scene_variable, active_bbox, start_pick, end_pick)
+        except (DataSourceError, requests.RequestException, ValueError, KeyError, TypeError, IndexError) as error:
+            LOG.warning("Crime scene map failed for %s %s: %r", scene_variable, active_bbox, error)
+            st.warning(mtext["fetch_failed"])
+        else:
+            scene_trends = scene_trends.copy()
+            scene_trends.attrs["no_snow_cells"] = no_snow_cells
+            scene_summary = summarize(scene_trends, lang, scene_variable, active_bbox)
+            scene_reasons = map_reasons(lang, scene_variable, scene_summary,
+                                        None if custom_mode else region_key)
+            if len(scene_trends):
+                scene = (scene_trends, scene_size, lang, scene_variable)
+                scene_years = (int(scene_trends["start_year"].min()), int(scene_trends["end_year"].max()))
 st.caption(t(lang, "map_help"))
 map_state = st_folium(
-    area_map(active_bbox), height=420, use_container_width=True,
+    area_map(active_bbox, scene), height=460 if scene else 420, use_container_width=True,
     returned_objects=["last_active_drawing", "all_drawings"],
-    key=f"area_map_{region_key}_{active_bbox}",
+    key=f"area_map_{region_key}_{active_bbox}_{st.session_state['map_layer']}_{scene_variable}_{scene_years}",
 )
+if scene_summary is not None:
+    # The place's results under the map: what the cells show, where, and possible reasons.
+    if scene_years:
+        st.caption(mtext["showing"].format(
+            variable=variable_text(lang, VARIABLES[scene_variable])["name"],
+            start=scene_years[0], end=scene_years[1]))
+        st.markdown(legend_html(scene_trends, lang, scene_variable), unsafe_allow_html=True)
+        st.caption(mtext["dots"])
+    st.subheader(("🔎 " if scene_summary["both"] else "") + scene_summary["headline"])
+    for line in scene_summary["details"]:
+        st.markdown(f"- {line}")
+    if scene_summary.get("no_dot"):
+        st.markdown(f"**{why_text(lang)['why_head']}**")
+        st.markdown("\n".join(f"- {line}" for line in scene_summary["no_dot"]))
+    if scene_years and scene_reasons["lines"]:
+        with st.container(border=True):
+            st.markdown(f"**{scene_reasons['title']}**")
+            st.markdown("\n".join(f"- {line}" for line in scene_reasons["lines"]))
+            if scene_reasons["context"]:
+                st.markdown(f"**{mtext['context']}:** {scene_reasons['context']}")
+            st.caption(scene_reasons["note"])
 drawn_bbox = pick_drawn_bbox(map_state, active_bbox)
 if drawn_bbox:
     try:
@@ -756,6 +863,8 @@ periods[case_key] = (start_year, end_year)
 state = {"lang": lang, "region": region_key, "case": case_key, "start": str(start_year), "end": str(end_year)}
 for corner, value in zip(("w", "s", "e", "n"), active_bbox if custom_mode else ()):
     state[corner] = str(value)
+if st.session_state.get("map_layer") == "scene":
+    state["map"] = "scene"
 st.query_params.from_dict(state)
 annual = annual_all[annual_all["year"].between(start_year, end_year)].reset_index(drop=True)
 min_years = variable.min_years
@@ -920,6 +1029,31 @@ if result.end_year == last_year and result.n_years - 1 >= min_years:
             sig=t(lang, "significant" if without_last.significant else "not_significant"),
         )
     )
+
+# Verification (asked for by Team Avni): an independent NASA dataset as a third witness, and the
+# reasons why a result is not verified.
+vtext = verify_text(lang)
+witness_monthly = None if custom_mode else load_witness(region_key, case_key)
+comparison = None
+if witness_monthly is not None:
+    comparison = compare_witness(result, witness_monthly, lang, case_key, result.start_year, result.end_year,
+                                 main_annual=annual, region_key=region_key)
+if comparison is not None:
+    st.markdown(f"<div class='step'>{html.escape(comparison['title'])}</div>", unsafe_allow_html=True)
+    st.caption(f"{comparison['intro']} {comparison['kind']}")
+    if comparison["overlap"]:
+        st.caption(comparison["overlap"])
+    st.markdown(comparison["lines"][0])
+    extra = extra_check_line(region_key, case_key, lang, result.start_year, result.end_year)
+    st.markdown("\n".join(f"- {line}" for line in comparison["lines"][1:] + ([extra] if extra else [])))
+else:
+    st.caption(f"🧾 {no_witness_reason(lang, case_key, custom_mode, incomplete=witness_monthly is not None)}")
+not_verified = why_not_confirmed(annual, result, status, lang, case_key,
+                                 witness_verdict=comparison["verdict"] if comparison else None)
+if not_verified:
+    with st.container(border=True):
+        st.markdown(f"**{vtext['why_title']}**")
+        st.markdown("\n".join(f"- {line}" for line in not_verified))
 
 # Step 7: possible reasons (the test shows that something changed, not why)
 st.markdown(f"<div class='step'>{html.escape(t(lang, 'step_reasons'))}</div>", unsafe_allow_html=True)
