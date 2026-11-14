@@ -138,6 +138,13 @@ STYLE = """
 }
 .strip .stamp { margin: 0 8px; font-size: 0.85rem; }
 .strip a { white-space: nowrap; }
+@keyframes slam {
+  0% { transform: scale(2.2) rotate(-12deg); opacity: 0; }
+  60% { transform: scale(0.94) rotate(-3deg); opacity: 1; }
+  100% { transform: scale(1) rotate(-3deg); opacity: 1; }
+}
+.stamp.slam { animation: slam 0.45s ease-out 1; font-size: 1.1rem; }
+@media (prefers-reduced-motion: reduce) { .stamp.slam { animation: none; } }
 </style>
 """
 
@@ -282,8 +289,9 @@ def use_drawn() -> None:
     set_custom_bbox(bbox)
 
 
-def stamp(lang: str, status: str) -> str:
-    return f"<span class='stamp {status}' lang='{lang}'>{html.escape(status_text(lang, status)[0])}</span>"
+def stamp(lang: str, status: str, extra: str = "") -> str:
+    classes = f"stamp {status} {extra}".strip()
+    return f"<span class='{classes}' lang='{lang}'>{html.escape(status_text(lang, status)[0])}</span>"
 
 
 def upper(text: str, lang: str) -> str:
@@ -791,7 +799,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 st.markdown(
-    stamp(lang, status) + f"&nbsp; {html.escape(status_text(lang, status)[1])}",
+    stamp(lang, status, "slam") + f"&nbsp; {html.escape(status_text(lang, status)[1])}",
     unsafe_allow_html=True,
 )
 tile_how, tile_total, tile_used = st.columns(3)
